@@ -1,4 +1,18 @@
 #!/usr/bin/env bash
 
-dotfiles ls-files |rm -rf
+# define config alias locally since the dotfiles
+# aren't installed on the system yet
+function dotfiles {
+   git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME $@
+}
 
+echo "Removing tracked files"
+dotfiles ls-files |xargs -I{} rm -rf {}
+
+echo "Reinstalling backup"
+cp -rT ~/.dotfiles-backup/ .
+
+echo "Removing .dotfiles"
+rm -rf ~/.dotfiles
+
+echo "Uninstall completed, restart your shell"
