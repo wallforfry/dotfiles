@@ -27,7 +27,13 @@ fi
 # checkout dotfiles from repo
 dotfiles checkout -f
 
-dotfiles submodule update --init --recursive
+while read -r name url path; do
+  if [ ! -d "$HOME/$path" ]; then
+    git clone "$url" "$HOME/$path"
+  else
+    git -C "$HOME/$path" pull
+  fi
+done < "$HOME/submodules.list"
 
 dotfiles config status.showUntrackedFiles no
 
