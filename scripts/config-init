@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-git clone --bare git@github.com:wallforfry/dotfiles.git $HOME/.dotfiles
+
+DOTFILES_REPO=https://github.com/wallforfry/dotfiles
+#DOTFILES_REPO=git@github.com:wallforfry/dotfiles.git
+
+
+git clone --bare $DOTFILES_REPO $HOME/.dotfiles
 
 # define config alias locally since the dotfiles
 # aren't installed on the system yet
@@ -11,7 +16,7 @@ function dotfiles {
 dotfiles checkout
 
 if [ $? = 0 ]; then
-  echo "Checked out dotfiles from git@github.com:wallforfry/dotfiles.git";
+  echo "Checked out dotfiles from $DOTFILES_REPO";
   else
     # create a directory to backup existing dotfiles to
     mkdir -p .dotfiles-backup
