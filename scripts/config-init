@@ -25,3 +25,5 @@ dotfiles checkout
 dotfiles config status.showUntrackedFiles no
 
 dotfiles config user.name Wallerand Delevacq && dotfiles config user.email wallforfry@gmail.com
+
+echo "Installation completed, restart your shell"
