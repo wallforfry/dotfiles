@@ -1,6 +1,0 @@
-[submodule "shells/zsh/oh-my-zsh-core"]
-	path = shells/zsh/oh-my-zsh-core
-	url = https://github.com/robbyrussell/oh-my-zsh.git
-[submodule "shells/zsh/powerlevel10k"]
-	path = shells/zsh/custom/powerlevel10k
-	url = https://github.com/romkatv/powerlevel10k.git
