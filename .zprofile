@@ -27,7 +27,6 @@ export GPG_TTY=$(tty)
 export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
 gpgconf --launch gpg-agent
 
-
 # Bellman
 export DOPPLER_LOCAL_CONFIG=local_wall
 export BELLMAN_PROJECT_PATH=~/Projects/bellman/
@@ -51,4 +50,8 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 
+# Postgres
+export PATH="/usr/local/opt/postgresql@16/bin:$PATH"
 
+# HomeBrew
+export HOMEBREW_NO_AUTO_UPDATE=1
