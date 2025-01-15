@@ -1,45 +1,96 @@
 #!/usr/bin/env bash
 
+# Define git user name and email
+GIT_USER_NAME="Wallerand Delevacq"
+GIT_USER_EMAIL="wallforfry@gmail.com"
 
+# Define dotfiles repo
 DOTFILES_REPO=https://github.com/wallforfry/dotfiles
 #DOTFILES_REPO=git@github.com:wallforfry/dotfiles.git
 
 
-git clone --bare $DOTFILES_REPO $HOME/.dotfiles
+
+OS=$(uname)
+PACKAGE_MANAGER=""
+INSTALL_CMD=""
+
+# Determine package manager
+if [ "$OS" = "Linux" ]; then
+  if [[ -f /etc/redhat-release ]]; then
+    PACKAGE_MANAGER=yum
+  elif [[ -f /etc/debian_version ]]; then
+    PACKAGE_MANAGER=apt
+  fi
+
+  if [ $PACKAGE_MANAGER = "yum" ]; then
+    INSTALL_CMD="yum install -y"
+  elif [ $PACKAGE_MANAGER = "apt" ]; then
+    INSTALL_CMD="apt install -y"
+  fi
+
+  if [ "$EUID" -ne 0 ]; then
+    INSTALL_CMD="sudo $INSTALL_CMD"
+  fi
+
+elif [ "$OS" = "Darwin" ]; then
+  PACKAGE_MANAGER=brew
+  INSTALL_CMD="brew install"
+
+else
+  echo "Unsupported OS"
+  exit 1
+fi
+
+# Functions
+function check_install {
+  if ! command -v $1 >/dev/null 2>&1; then
+    echo "$2 is not installed. Installing $2..."
+    $INSTALL_CMD $2
+  else
+    echo "$2 is already installed."
+  fi
+}
 
 # define config alias locally since the dotfiles
 # aren't installed on the system yet
 function dotfiles {
-   git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME $@
+  git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME $@
 }
 
-dotfiles checkout
+function setup_dotfiles {
+  git clone --bare $DOTFILES_REPO $HOME/.dotfiles
 
-if [ $? = 0 ]; then
-  echo "Checked out dotfiles from $DOTFILES_REPO";
+  dotfiles checkout
+
+  if [ $? = 0 ]; then
+    echo "Checked out dotfiles from $DOTFILES_REPO"
   else
     # create a directory to backup existing dotfiles to
     mkdir -p .dotfiles-backup
-    echo "Moving existing dotfiles to ~/.dotfiles-backup";
+    echo "Moving existing dotfiles to ~/.dotfiles-backup"
     dotfiles checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} mv {} .dotfiles-backup/{}
-fi
+  fi
 
-# checkout dotfiles from repo
-dotfiles checkout -f
+  # checkout dotfiles from repo
+  dotfiles checkout -f
 
-#while read -r name url path; do
-#  if [ ! -d "$HOME/$path" ]; then
-#    dotfiles clone "$url" "$HOME/$path"
-#  else
-#    dotfiles -C "$HOME/$path" pull
-#  fi
-#done < "$HOME/submodules.list"
+  # update submodules
+  cd $HOME && dotfiles submodule update --init --recursive
 
-cd $HOME && dotfiles submodule update --init --recursive
+  dotfiles config status.showUntrackedFiles no
 
+  dotfiles config user.name $GIT_USER_NAME && dotfiles config user.email $GIT_USER_EMAIL
+}
 
-dotfiles config status.showUntrackedFiles no
+# Install dependencies
+## git
+check_install git git
+## zsh
+check_install zsh zsh
+## curl
+check_install curl curl
 
-dotfiles config user.name Wallerand Delevacq && dotfiles config user.email wallforfry@gmail.com
+# Setup dotfiles
+setup_dotfiles
 
 echo "Installation completed, restart your shell"
