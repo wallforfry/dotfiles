@@ -29,9 +29,9 @@ dotfiles checkout -f
 
 while read -r name url path; do
   if [ ! -d "$HOME/$path" ]; then
-    git clone "$url" "$HOME/$path"
+    dotfiles clone "$url" "$HOME/$path"
   else
-    git -C "$HOME/$path" pull
+    dotfiles -C "$HOME/$path" pull
   fi
 done < "$HOME/submodules.list"
 
