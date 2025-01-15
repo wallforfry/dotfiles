@@ -27,13 +27,16 @@ fi
 # checkout dotfiles from repo
 dotfiles checkout -f
 
-while read -r name url path; do
-  if [ ! -d "$HOME/$path" ]; then
-    dotfiles clone "$url" "$HOME/$path"
-  else
-    dotfiles -C "$HOME/$path" pull
-  fi
-done < "$HOME/submodules.list"
+#while read -r name url path; do
+#  if [ ! -d "$HOME/$path" ]; then
+#    dotfiles clone "$url" "$HOME/$path"
+#  else
+#    dotfiles -C "$HOME/$path" pull
+#  fi
+#done < "$HOME/submodules.list"
+
+cd $HOME && dotfiles submodule update --init --recursive
+
 
 dotfiles config status.showUntrackedFiles no
 
