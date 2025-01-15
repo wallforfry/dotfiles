@@ -120,3 +120,39 @@ alias dotfiles="git --git-dir=$HOME/.dotfiles --work-tree=$HOME"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+
+# Add deno completions to search path
+if [[ ":$FPATH:" != *":/Users/delevacw/.zsh/completions:"* ]]; then export FPATH="/Users/delevacw/.zsh/completions:$FPATH"; fi
+
+# Bellman
+alias doppler-api-prod="doppler run -p api -c prod_qovery_private --"
+alias doppler-api-local="doppler run -p api -c local_personal --"
+
+# TheFuck
+eval $(thefuck --alias)
+
+# Bun
+[ -s "/Users/delevacw/.bun/_bun" ] && source "/Users/delevacw/.bun/_bun"
+
+# Java
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+# Chrome
+export CHROME_EXECUTABLE=/Applications/Arc.app/Contents/MacOS/Arc
+
+# Aliases
+alias cat=bat
+alias df=duf
+alias rm=rip
+alias e=nvim
+alias switch-card=gpg-connect-agent "scd serialno" "learn --force" /bye
+alias cdb="cd ~/Projects/bellman"
+
+# Utils
+function ssh_tmux() { ssh -A -t "$1" "tmux a || tmux"; }
+
+function giga-blame() {
+  git log --author="$1" --pretty=tformat: --numstat -- $2 | awk 'NF==3 {plus+=$1; minus+=$2} END {printf "+%d, -%d\n", plus, minus}'
+}
+
