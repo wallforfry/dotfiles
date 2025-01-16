@@ -126,11 +126,18 @@ alias dotfiles="git --git-dir=$HOME/.dotfiles --work-tree=$HOME"
 if [[ ":$FPATH:" != *":/Users/delevacw/.zsh/completions:"* ]]; then export FPATH="/Users/delevacw/.zsh/completions:$FPATH"; fi
 
 # Bellman
-alias doppler-api-prod="doppler run -p api -c prod_qovery_private --"
-alias doppler-api-local="doppler run -p api -c local_personal --"
+if [[ "$BELLMAN_PROJECT_PATH" ]]; then
+  alias doppler-api-prod="doppler run -p api -c prod_qovery_private --"
+  alias doppler-api-local="doppler run -p api -c local_personal --"
+  alias cdb="cd ~/Projects/bellman"
+  echo "🚀 Bellman aliases added"
+fi
 
 # TheFuck
-eval $(thefuck --alias)
+if command -v thefuck &> /dev/null; then
+  eval $(thefuck --alias)
+  echo "🤬  TheFuck alias added"
+fi
 
 # Bun
 [ -s "/Users/delevacw/.bun/_bun" ] && source "/Users/delevacw/.bun/_bun"
@@ -142,12 +149,30 @@ eval $(thefuck --alias)
 export CHROME_EXECUTABLE=/Applications/Arc.app/Contents/MacOS/Arc
 
 # Aliases
-alias cat=bat
-alias df=duf
-alias rm=rip
-alias e=nvim
-alias switch-card=gpg-connect-agent "scd serialno" "learn --force" /bye
-alias cdb="cd ~/Projects/bellman"
+if command -v bat &> /dev/null; then
+  alias cat=bat
+  echo "🦇  Bat alias added"
+fi
+
+if command -v duf &> /dev/null; then
+  alias df=duf
+  echo "📦  Duf alias added"
+fi
+
+if command -v rip &> /dev/null; then
+  alias rm=rip
+  echo "🪓  Rip alias added"
+fi
+
+if command -v nvim &> /dev/null; then
+  alias vim=nvim
+  echo "🚀  Neovim alias added"
+fi
+
+if command -v gpg-connect-agent &> /dev/null; then
+  alias switch-card=gpg-connect-agent "scd serialno" "learn --force" /bye
+  echo "🔑  GPG card switch alias added"
+fi
 
 # Utils
 function ssh_tmux() { ssh -A -t "$1" "tmux a || tmux"; }
