@@ -33,11 +33,17 @@ if command -v go &> /dev/null; then
 fi
 
 # GPG
-if command -v gpg-agent &> /dev/null; then
+# Le lancement doit réussir avant qu'on touche à SSH_AUTH_SOCK : sur une
+# machine sans agent GPG utilisable (NAS), l'écraser avec un socket mort
+# couperait l'agent ssh transmis par ForwardAgent.
+if command -v gpg-agent &> /dev/null && gpgconf --launch gpg-agent &> /dev/null; then
   export GPG_TTY=$(tty)
-  export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
-  gpgconf --launch gpg-agent
-  echo "🔑  GPG agent started"
+  gpg_sock=$(gpgconf --list-dirs agent-ssh-socket 2> /dev/null)
+  if [[ -S "$gpg_sock" ]]; then
+    export SSH_AUTH_SOCK="$gpg_sock"
+    echo "🔑  GPG agent started"
+  fi
+  unset gpg_sock
 fi
 {{ if eq .profile "pro" }}
 # REDACTED
