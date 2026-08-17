@@ -88,15 +88,3 @@ conséquences non voulues d'un changement — et en priorité :
 4. **Secret ou donnée personnelle** — rien de sensible dans un fichier versionné,
    une URL, un log ou un message de commit. Les secrets de ce dépôt passent par
    `encrypted_private_dot_secrets.age`.
-
-## À confirmer
-
-Ces lignes sont déduites de l'observation des dépôts et de la configuration, non
-d'une consigne explicite. À corriger ou supprimer :
-
-- Le tutoiement et le registre exact (→ `SOUL.md`).
-- « Un worktree par tâche » : constaté dans l'historique des sessions, jamais
-  énoncé.
-- « Le coût compte » : déduit de l'usage de RTK et du niveau d'effort configuré.
-- Le style fonctionnel immuable : repris de `AGENTS.md` de Bellman, donc valable
-  là-bas ; à confirmer comme préférence générale.
