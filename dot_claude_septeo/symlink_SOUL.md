@@ -1,0 +1,1 @@
+../.claude/SOUL.md
