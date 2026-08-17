@@ -1,4 +1,4 @@
-# ADR-007 — Outillage installé par un `run_onchange`, `~/bin` via `.zshenv`
+# ADR-007 - Outillage installé par un `run_onchange`, `~/bin` via `.zshenv`
 
 - **Statut** : accepté
 - **Date** : 2026-08
@@ -10,7 +10,7 @@ Trois outils conditionnent le fonctionnement des dotfiles : `age` déchiffre
 `~/.secrets` ([ADR-002](002-depot-prive-secrets-age.md)), `gh` sert de helper
 d'identifiants ([ADR-003](003-bootstrap-pat-puis-gh.md)), starship fournit le
 prompt ([ADR-006](006-starship-comme-prompt.md)). Aucun n'est présent sur une
-machine neuve, et le NAS n'a ni Homebrew ni gestionnaire de paquets — l'absence de
+machine neuve, et le NAS n'a ni Homebrew ni gestionnaire de paquets - l'absence de
 starship y produisait une erreur au login.
 
 `.zprofile` avait d'abord porté l'ajout de `~/bin` au `PATH`. Le commit `473405f`
@@ -48,7 +48,7 @@ réexécution.
 - La règle « jamais fatal » a un revers : une installation ratée ne se remarque
   qu'en lisant les avertissements de l'apply.
 - `.zshenv` étant lu par tout shell zsh, y compris non interactif, il ne doit
-  contenir que des ajustements de `PATH` et des gardes d'existence — jamais de
+  contenir que des ajustements de `PATH` et des gardes d'existence - jamais de
   sortie sur stdout, qui casserait `scp` et `rsync`.
 
 ## Alternatives écartées
@@ -59,5 +59,5 @@ réexécution.
   d'une version épinglée.
 - **Rendre l'absence d'un outil fatale** : abandonner l'apply au milieu laisse un
   `$HOME` à moitié configuré, pire que l'absence de starship.
-- **`~/bin` dans `.zprofile`** : essayé, insuffisant — les shells non interactifs
+- **`~/bin` dans `.zprofile`** : essayé, insuffisant - les shells non interactifs
   et le planificateur DSM n'y voient rien (`473405f`).

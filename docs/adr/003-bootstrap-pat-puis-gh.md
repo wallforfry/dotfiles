@@ -1,4 +1,4 @@
-# ADR-003 — Bootstrap par PAT puis bascule sur `gh`
+# ADR-003 - Bootstrap par PAT puis bascule sur `gh`
 
 - **Statut** : accepté
 - **Date** : 2026-08
@@ -7,7 +7,7 @@
 ## Contexte
 
 Le dépôt est privé ([ADR-002](002-depot-prive-secrets-age.md)) : `chezmoi init`
-échoue sans authentification. Sur une machine neuve, rien n'est encore installé —
+échoue sans authentification. Sur une machine neuve, rien n'est encore installé -
 ni clé SSH utilisable, ni `gh`, ni helper d'identifiants.
 
 La clé SSH n'est pas une option de bootstrap : elle vit sur une YubiKey exposée
@@ -25,7 +25,7 @@ L'installation se fait en deux temps.
    remote réécrite sans lui.
 
 `dot_gitconfig.tmpl` déclare le helper avec le chemin de `gh` résolu à l'apply par
-`lookPath`, et omet le bloc entier là où `gh` est absent — un chemin codé en dur
+`lookPath`, et omet le bloc entier là où `gh` est absent - un chemin codé en dur
 fait échouer git sur chaque opération réseau des machines où le binaire est
 ailleurs.
 
@@ -38,7 +38,7 @@ ailleurs.
 - `gh` devient une dépendance des mises à jour, d'où sa présence dans le script
   d'outillage ([ADR-007](007-outillage-run-onchange.md)).
 - Le champ personnalisé Bitwarden n'est accessible qu'avec `bw get item` et `jq`,
-  pas `bw get password` — donc pas sur une machine nue, où le passage par le
+  pas `bw get password` - donc pas sur une machine nue, où le passage par le
   coffre web est la seule voie.
 
 ## Alternatives écartées

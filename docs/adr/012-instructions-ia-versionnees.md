@@ -1,4 +1,4 @@
-# ADR-012 — Instructions IA versionnées, `harness/` source unique
+# ADR-012 - Instructions IA versionnées, `harness/` source unique
 
 - **Statut** : accepté
 - **Date** : 2026-08
@@ -8,7 +8,7 @@
 
 `~/.claude` n'était pas versionné. Son `CLAUDE.md` se réduisait à un `@RTK.md` de
 huit octets, aucune skill personnelle n'existait, et le second répertoire de
-configuration `~/.claude_REDACTED` — ouvert par l'alias `claude-REDACTED` — était une
+configuration `~/.claude_REDACTED` - ouvert par l'alias `claude-REDACTED` - était une
 copie à maintenir à la main.
 
 Les instructions données à un agent sont de la configuration comme une autre : leur

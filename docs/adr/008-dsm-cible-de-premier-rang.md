@@ -1,4 +1,4 @@
-# ADR-008 — Synology DSM comme cible de premier rang
+# ADR-008 - Synology DSM comme cible de premier rang
 
 - **Statut** : accepté
 - **Date** : 2026-08
@@ -32,7 +32,7 @@ DSM est traité comme une cible de premier rang. Quatre règles en découlent :
    des binaires statiques dans `~/bin`, et signale explicitement ce qu'il ne sait
    pas installer ([ADR-007](007-outillage-run-onchange.md)).
 3. **La bascule vers zsh se fait côté client**, par `RemoteCommand` dans un
-   fragment ssh versionné ([ADR-009](009-fragments-ssh-versionnes.md)) — aucun
+   fragment ssh versionné ([ADR-009](009-fragments-ssh-versionnes.md)) - aucun
    point d'accroche n'existe côté serveur.
 4. **`sh` POSIX pour tout script de bootstrap**, aucune dépendance à bash 4 ni aux
    options GNU.

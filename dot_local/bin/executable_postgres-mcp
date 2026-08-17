@@ -12,7 +12,7 @@
 # processus de la machine.
 #
 # Pourquoi ce script existe : enregistrer « docker run -i --rm crystaldba/postgres-mcp »
-# fuit un conteneur par session. Mesuré sur ce poste avant correction — six
+# fuit un conteneur par session. Mesuré sur ce poste avant correction - six
 # conteneurs simultanés, le plus ancien depuis trois jours, tous en --rm sans
 # jamais avoir été retirés puisque leur processus ne s'était pas terminé.
 #
@@ -38,11 +38,11 @@ require_uri() {
     exit 64
   fi
   # localhost dans un conteneur désigne le conteneur, jamais l'hôte : une telle URI
-  # ne peut pas fonctionner ici. On avertit sans réécrire — une chaîne de connexion
+  # ne peut pas fonctionner ici. On avertit sans réécrire - une chaîne de connexion
   # modifiée en silence est pire que le défaut qu'elle corrige.
   case "$DATABASE_URI" in
   *@localhost:* | *@127.0.0.1:*)
-    echo "postgres-mcp: DATABASE_URI pointe sur localhost, injoignable depuis un conteneur — utiliser host.docker.internal" >&2
+    echo "postgres-mcp: DATABASE_URI pointe sur localhost, injoignable depuis un conteneur - utiliser host.docker.internal" >&2
     ;;
   esac
 }

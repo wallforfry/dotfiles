@@ -1,4 +1,4 @@
-# ADR-015 — Serveurs MCP lourds en conteneurs nommés
+# ADR-015 - Serveurs MCP lourds en conteneurs nommés
 
 - **Statut** : accepté
 - **Date** : 2026-08
@@ -63,8 +63,8 @@ obscurément.
   sans daemon ([ADR-008](008-dsm-cible-de-premier-rang.md)).
 - Un pilote de plus à maintenir par serveur, là où une ligne de configuration
   suffisait.
-- `~/.cursor/mcp.json` reste hors du dépôt — il contient des mots de passe et des
-  jetons en clair ([ADR-002](002-depot-prive-secrets-age.md)) — donc la bascule vers
+- `~/.cursor/mcp.json` reste hors du dépôt - il contient des mots de passe et des
+  jetons en clair ([ADR-002](002-depot-prive-secrets-age.md)) - donc la bascule vers
   les pilotes s'y fait à la main, sans être rejouable par `chezmoi apply`.
 
 Vérifié contre une base jetable : trois sessions simultanées obtiennent chacune une
@@ -77,12 +77,12 @@ conteneur.
   ci-dessus. C'est l'alternative la plus tentante, puisque c'est celle que
   recommandent les documentations amont.
 - **Installation native des serveurs** : les dépendances navigateur de Scrapling sont
-  ingérables sur le poste. Le cas de CloakBrowser montre la limite inverse — son
+  ingérables sur le poste. Le cas de CloakBrowser montre la limite inverse - son
   paquet npm *est* installé, mais ne fournit que le CLI de licence, pas le serveur
   CDP, qui reste dans l'image.
 - **Un nettoyage périodique** des conteneurs orphelins, par `cron` ou par hook : traite
   le symptôme, et ne sait pas distinguer un conteneur orphelin d'un conteneur servant
-  une session vivante — il finirait par couper une session en cours.
+  une session vivante - il finirait par couper une session en cours.
 - **Un conteneur par session avec un hook d'arrêt côté client** : suppose que chaque
   client MCP en exécute un à la mort de la session, ce qui n'est vrai d'aucun de ceux
   utilisés ici. C'est précisément parce que rien ne s'exécute à la mort du client que

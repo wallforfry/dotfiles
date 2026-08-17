@@ -14,7 +14,7 @@
 # Le script s'appelle « cloak » et non « cloakbrowser » : le paquet npm
 # cloakbrowser est installé et Volta place son shim avant ~/.local/bin dans le
 # PATH. Ce paquet ne fournit d'ailleurs que le CLI de licence et d'installation du
-# binaire Chromium — « cloakserve », le serveur CDP dont on a besoin ici,
+# binaire Chromium - « cloakserve », le serveur CDP dont on a besoin ici,
 # n'existe que dans l'image Docker.
 #
 # Adapté de github.com/SebastienElet/dotfiles, harness/AGENTS.md (BSD 2-Clause,
@@ -29,7 +29,7 @@
 #
 # Le cdp_url est host.docker.internal et non localhost : scrapling tourne lui-même
 # dans un conteneur, où localhost désignerait le conteneur scrapling. Cela suppose
-# que host.docker.internal atteigne un port publié sur la boucle locale de l'hôte —
+# que host.docker.internal atteigne un port publié sur la boucle locale de l'hôte -
 # vrai avec OrbStack et Docker Desktop sur macOS, faux sur Linux, où il faudrait
 # mettre les deux conteneurs sur un réseau docker commun et viser « http://cloak:9222 ».
 
@@ -73,7 +73,7 @@ case "${1:-}" in
   echo "http://host.docker.internal:${PORT}"
   ;;
 *)
-  echo "cloak: usage — --start, --stop, --status, --url" >&2
+  echo "cloak: usage - --start, --stop, --status, --url" >&2
   exit 64
   ;;
 esac

@@ -1,5 +1,5 @@
 # Lu par toute invocation de zsh, y compris non interactive (ssh nas '...',
-# planificateur DSM, cron) — contrairement à .zprofile, réservé aux shells de
+# planificateur DSM, cron) - contrairement à .zprofile, réservé aux shells de
 # login. C'est ici que doivent vivre les binaires posés à la main (chezmoi,
 # starship, age…) sur les machines sans gestionnaire de paquets.
 case ":$PATH:" in

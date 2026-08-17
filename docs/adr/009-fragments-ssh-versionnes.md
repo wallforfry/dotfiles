@@ -1,4 +1,4 @@
-# ADR-009 — Fragments SSH versionnés, `~/.ssh/config` non
+# ADR-009 - Fragments SSH versionnés, `~/.ssh/config` non
 
 - **Statut** : accepté
 - **Date** : 2026-08
@@ -30,7 +30,7 @@ options déjà définies.
 - Ce qui nous appartient est versionné, ce qui appartient à d'autres outils est
   laissé tranquille. Aucun conflit récurrent au diff.
 - La ligne `Include` est une étape manuelle sur chaque machine neuve, non
-  automatisable sans reprendre la propriété du fichier — c'est-à-dire sans annuler
+  automatisable sans reprendre la propriété du fichier - c'est-à-dire sans annuler
   la décision.
 - L'ordre du `Include` est une condition de correction silencieuse : placé trop
   bas, les fragments sont chargés mais ignorés, sans erreur.

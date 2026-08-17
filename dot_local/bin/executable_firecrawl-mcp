@@ -26,13 +26,13 @@ require_docker() {
     exit 69
   fi
   if [ ! -r "$COMPOSE" ]; then
-    echo "firecrawl-mcp: composition absente ($COMPOSE) — lancer chezmoi apply" >&2
+    echo "firecrawl-mcp: composition absente ($COMPOSE) - lancer chezmoi apply" >&2
     exit 69
   fi
 }
 
 # /v0/health/liveness et non / : les deux répondent 200, mais le premier est un
-# contrôle de vivacité explicite. /health et /v1/health n'existent pas — ils
+# contrôle de vivacité explicite. /health et /v1/health n'existent pas - ils
 # renvoient la page 404 HTML de l'API.
 api_responds() { curl -fsS --max-time 2 "$API_URL/v0/health/liveness" >/dev/null 2>&1; }
 
@@ -57,7 +57,7 @@ case "${1:-}" in
   # l'attente que si l'API ne répond pas.
   if ! api_responds; then
     compose up --detach --wait --wait-timeout "$WAIT_TIMEOUT" >&2 || {
-      echo "firecrawl-mcp: pile non démarrée — lancer « firecrawl-mcp --start » une fois" >&2
+      echo "firecrawl-mcp: pile non démarrée - lancer « firecrawl-mcp --start » une fois" >&2
       exit 69
     }
   fi

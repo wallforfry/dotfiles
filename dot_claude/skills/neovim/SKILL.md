@@ -11,7 +11,7 @@ description: >
 ## Overview
 
 The configuration lives at `dot_config/nvim/` in the dotfiles repository and chezmoi deploys it to
-`~/.config/nvim`. Edit the repository source, never the deployed copy — `chezmoi apply` would
+`~/.config/nvim`. Edit the repository source, never the deployed copy - `chezmoi apply` would
 overwrite it.
 
 It is close to the LazyVim starter: the customisation surface is `lua/config/` for editor behaviour
@@ -33,7 +33,7 @@ active configuration; do not treat its contents as this setup's conventions.
    preserve lazy loading with the appropriate `event`, `cmd`, `ft`, or `keys` trigger.
 4. Place keymaps by ownership: global editor mappings in `lua/config/keymaps.lua`; plugin-owned,
    lazy-loading, and LSP mappings in the owning spec's `keys` field.
-5. Change `lazy-lock.json` only through Lazy — `nvim --headless '+Lazy! sync' +qa` — never by hand.
+5. Change `lazy-lock.json` only through Lazy - `nvim --headless '+Lazy! sync' +qa` - never by hand.
 6. After a sync, bring the regenerated lockfile back into the repository with
    `chezmoi add ~/.config/nvim/lazy-lock.json`. Lazy writes to the deployed copy, so the source
    otherwise stays behind and the next `chezmoi apply` silently reverts the plugin versions.
@@ -42,17 +42,17 @@ active configuration; do not treat its contents as this setup's conventions.
 
 ## Gotchas
 
-- **Editing `~/.config/nvim` directly** — chezmoi owns that path from `dot_config/nvim/`. The edit
+- **Editing `~/.config/nvim` directly** - chezmoi owns that path from `dot_config/nvim/`. The edit
   survives until the next `chezmoi apply`, then disappears.
-- **Forgetting `chezmoi add` after a Lazy sync** — the single most likely way to lose plugin updates
+- **Forgetting `chezmoi add` after a Lazy sync** - the single most likely way to lose plugin updates
   in this setup. The lockfile is generated at the destination, not at the source.
-- **Adding configuration to `example.lua`** — it is the starter's inert catalogue. Create a named file
+- **Adding configuration to `example.lua`** - it is the starter's inert catalogue. Create a named file
   for a real spec.
-- **Centralising every keymap** — moving a plugin-owned mapping out of `keys` breaks its lazy loading.
+- **Centralising every keymap** - moving a plugin-owned mapping out of `keys` breaks its lazy loading.
   Determine ownership first.
-- **Running a formatter across all Lua files during a focused change** — unrelated files may already
+- **Running a formatter across all Lua files during a focused change** - unrelated files may already
   differ from current StyLua output; check only what you changed.
-- **Installing tooling to verify** — use `stylua` if it is on `PATH` or under
+- **Installing tooling to verify** - use `stylua` if it is on `PATH` or under
   `~/.local/share/nvim/mason/bin/`; otherwise report that check as unavailable and continue.
 
 ## Constraints

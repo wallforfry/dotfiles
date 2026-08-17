@@ -1,4 +1,4 @@
-# ADR-011 — Identité git par répertoire via `includeIf`
+# ADR-011 - Identité git par répertoire via `includeIf`
 
 - **Statut** : accepté
 - **Date** : 2026-08
@@ -40,7 +40,7 @@ dépôt.
   **doit** vivre sous `~/Projects/REDACTED/`. Ailleurs, il hérite silencieusement de
   l'identité personnelle.
 - Le fichier inclus est un prérequis non versionné : sur une machine neuve, son
-  absence est silencieuse — git ignore un `includeIf` dont le chemin manque.
+  absence est silencieuse - git ignore un `includeIf` dont le chemin manque.
 - `~/.gitconfig` reste un template pour une seule autre raison, le chemin de `gh`
   résolu par `lookPath` ([ADR-003](003-bootstrap-pat-puis-gh.md)).
 

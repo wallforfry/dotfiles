@@ -1,4 +1,4 @@
-# ADR-010 — GPG comme agent SSH, sous condition
+# ADR-010 - GPG comme agent SSH, sous condition
 
 - **Statut** : accepté
 - **Date** : 2026-08
@@ -7,12 +7,12 @@
 ## Contexte
 
 La clé SSH vit sur une YubiKey, exposée par l'agent GPG. `.zprofile` doit donc
-pointer `SSH_AUTH_SOCK` sur le socket ssh de `gpg-agent` — et les commits signés
+pointer `SSH_AUTH_SOCK` sur le socket ssh de `gpg-agent` - et les commits signés
 (`commit.gpgsign = true`) dépendent du même agent.
 
 Sur le NAS, il n'y a pas d'agent GPG utilisable. La version initiale exportait
 malgré tout le socket : `gpgconf` échouait, mais l'export avait lieu, ce qui
-**coupait l'agent ssh transmis par `ForwardAgent`** — le seul qui fonctionnait là —
+**coupait l'agent ssh transmis par `ForwardAgent`** - le seul qui fonctionnait là -
 en plus d'afficher deux erreurs `gpgconf` à chaque login (`b59ac4e`).
 
 ## Décision

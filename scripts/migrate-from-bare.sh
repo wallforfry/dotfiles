@@ -43,7 +43,7 @@ fi
 # La liste est matérialisée dans un fichier AVANT la boucle : un `ls-files |
 # while read` s'exécute dans un sous-shell, et si la boucle n'itère jamais,
 # la sauvegarde est silencieusement vide. C'est exactement ce qui s'est
-# produit lors de la première migration réelle — d'où le décompte vérifié
+# produit lors de la première migration réelle - d'où le décompte vérifié
 # en fin d'étape, qui transforme cet échec silencieux en arrêt net.
 echo "==> Sauvegarde dans $BACKUP"
 run mkdir -p "$BACKUP"
@@ -83,7 +83,7 @@ if [ "$EXPECTED" -eq 0 ]; then
 fi
 
 if [ "$MISSING" -ne 0 ]; then
-  echo "ERREUR: sauvegarde incomplète — $MISSING entrée(s) sur $EXPECTED absente(s)." >&2
+  echo "ERREUR: sauvegarde incomplète - $MISSING entrée(s) sur $EXPECTED absente(s)." >&2
   echo "Rien n'a été supprimé. Backup partiel : $BACKUP" >&2
   exit 1
 fi

@@ -1,4 +1,4 @@
-# ADR-002 — Dépôt privé et secrets chiffrés par `age`
+# ADR-002 - Dépôt privé et secrets chiffrés par `age`
 
 - **Statut** : accepté
 - **Date** : 2026-08
@@ -17,7 +17,7 @@ pas :
   téléchargement, donc à une attaque hors ligne sans limite de temps contre la
   seule passphrase.
 - `dot_gitconfig.tmpl` et le bloc `pro` de `dot_zshrc.tmpl` portent des
-  informations d'employeur — noms de projets et de configurations Doppler — qui
+  informations d'employeur - noms de projets et de configurations Doppler - qui
   n'ont pas à être publiées, chiffrement ou non.
 
 ## Décision
@@ -38,7 +38,7 @@ ne gère pas les passphrases et échoue sur « no identities specified ».
 - Le dépôt privé impose une authentification avant le premier clone, d'où le
   bootstrap par PAT ([ADR-003](003-bootstrap-pat-puis-gh.md)).
 - Toute commande chezmoi qui touche un fichier chiffré devient interactive. En
-  contexte non interactif — CI, agent, script — il faut restreindre la portée
+  contexte non interactif - CI, agent, script - il faut restreindre la portée
   (`chezmoi apply ~/.chemin`) ou passer `--exclude=encrypted`.
 
 ## Alternatives écartées

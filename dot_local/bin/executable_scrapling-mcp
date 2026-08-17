@@ -13,7 +13,7 @@
 #
 # Un seul conteneur nommé, réutilisé par toutes les sessions. Enregistrer
 # « docker run … scrapling mcp » directement fuit un conteneur par session d'agent,
-# qui ne s'arrête jamais quand la session meurt — c'est la panne observée sur ce
+# qui ne s'arrête jamais quand la session meurt - c'est la panne observée sur ce
 # poste avec postgres-mcp, six conteneurs dont le plus ancien depuis trois jours.
 #
 # L'image suit :latest, comme l'amont le fait pour la sous-commande mcp, encore

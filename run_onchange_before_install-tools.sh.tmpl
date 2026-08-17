@@ -7,7 +7,7 @@
 # JQ_VERSION: 1.8.2
 # RG_VERSION: 15.2.0
 #
-# age      : déchiffre ~/.secrets. Indispensable — l'implémentation intégrée à
+# age      : déchiffre ~/.secrets. Indispensable - l'implémentation intégrée à
 #            chezmoi ne gère pas les passphrases et échoue sur
 #            « no identities specified ».
 # gh       : helper d'identifiants git pour ce repo privé (cf. .gitconfig).
@@ -35,7 +35,7 @@ fi
 
 # zsh ne s'installe pas en binaire statique : il lui faut son arborescence de
 # fonctions (/usr/share/zsh) à côté. Il passe donc par le gestionnaire de
-# paquets quand il y en a un — cas des conteneurs, pas du NAS.
+# paquets quand il y en a un - cas des conteneurs, pas du NAS.
 if ! command -v zsh >/dev/null; then
   if [ "$(id -u)" = 0 ]; then sudo=""; elif command -v sudo >/dev/null; then sudo="sudo"; else sudo="none"; fi
 
@@ -91,7 +91,7 @@ if ! command -v gh >/dev/null; then
   if fetch "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${arch}.tar.gz" "$tmp/gh.tgz" &&
      tar xzf "$tmp/gh.tgz" -C "$tmp"; then
     mv "$tmp/gh_${GH_VERSION}_linux_${arch}/bin/gh" "$BIN/" && chmod +x "$BIN/gh"
-    echo "🐙  gh $GH_VERSION installé dans ~/bin — pense à « gh auth login »"
+    echo "🐙  gh $GH_VERSION installé dans ~/bin - pense à « gh auth login »"
   else
     echo "⚠️   gh non installé : les pulls demanderont un mot de passe" >&2
   fi

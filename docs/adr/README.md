@@ -14,7 +14,7 @@ Les trois conditions doivent être réunies :
 1. **La décision contraint la suite.** Choisir autrement obligerait à retoucher
    plusieurs fichiers, à changer une habitude, ou à migrer des machines déjà
    installées.
-2. **Une alternative crédible existe.** Quelqu'un — toi dans six mois, un agent —
+2. **Une alternative crédible existe.** Quelqu'un - toi dans six mois, un agent -
    pourrait raisonnablement proposer l'inverse. Sans alternative, il n'y a pas de
    décision, juste un fait.
 3. **La justification n'est pas déjà lisible.** Si un commentaire dans le fichier
@@ -30,7 +30,7 @@ c'est une ADR qui cherche à sortir.
   éditer une skill : routine, aucune ADR.
 - Un correctif, même subtil : son message de commit est le bon support. Le
   correctif devient une ADR seulement s'il révèle une contrainte durable de la
-  plateforme — c'est le cas d'[ADR-008](008-dsm-cible-de-premier-rang.md).
+  plateforme - c'est le cas d'[ADR-008](008-dsm-cible-de-premier-rang.md).
 - Une préférence de style : elle va dans `AGENTS.md`, pas ici.
 - Un sujet déjà couvert par une ADR en vigueur : l'amender, ou la remplacer.
 
@@ -78,7 +78,7 @@ de celle qui l'a remplacée.
 
 C'est un choix, contre l'usage courant qui conserve les ADR périmées avec un
 statut `superseded`. Il garde le répertoire lisible et rend l'index digne de
-confiance — tout ce qui y figure s'applique. Il perd l'historique de la
+confiance - tout ce qui y figure s'applique. Il perd l'historique de la
 délibération, récupérable par `git log -- docs/adr/`.
 
 ## Langue
@@ -94,7 +94,7 @@ Ce dépôt commence à l'adoption de chezmoi, en 2026-08 ; l'historique du bare 
 qui l'a précédé n'a pas été repris. Les ADR antérieures à cette bascule
 reconstituent donc une motivation depuis l'état du code et le contenu des
 commits, sans historique pour l'étayer. Le champ **Contexte** est une
-reconstitution a posteriori, sauf lorsqu'il cite le corps d'un commit — dans ce
+reconstitution a posteriori, sauf lorsqu'il cite le corps d'un commit - dans ce
 cas la citation est explicite.
 
 ## Index

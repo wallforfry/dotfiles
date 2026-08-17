@@ -6,7 +6,7 @@ Mes dotfiles macOS, Linux et NAS Synology, gérés avec
 ## Installation
 
 Ce repo est **privé** : il faut s'authentifier auprès de GitHub avant de
-pouvoir le cloner. L'authentification se fait en deux temps — un PAT tiré de
+pouvoir le cloner. L'authentification se fait en deux temps - un PAT tiré de
 Bitwarden pour le clone initial, puis `gh` pour tous les `chezmoi update`
 suivants.
 
@@ -23,7 +23,7 @@ export GH_PAT=$(bw get item github.com | jq -r '.fields[] | select(.name == "Dot
 personnalisés ne sont accessibles que via `bw get item`, d'où le passage par
 `jq`. Déverrouiller le coffre au préalable (`bw unlock`) si nécessaire.
 
-Sinon, copie le champ depuis le coffre web et `export GH_PAT=...` à la main —
+Sinon, copie le champ depuis le coffre web et `export GH_PAT=...` à la main -
 c'est la seule option sur une machine sans `bw` ni `jq`, typiquement un NAS.
 
 ### 2. Installer
@@ -35,7 +35,7 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply "https://${GH_PAT}@github.c
 chezmoi s'installe, clone ce repo, demande le profil de la machine (`perso`
 ou `pro`) et la passphrase de déchiffrement des secrets, puis applique la
 configuration. Au passage, un script `run_onchange` installe les outils
-manquants (`age`, `gh`, `jq`, `ripgrep`, `starship`) — voir [Outillage](#outillage).
+manquants (`age`, `gh`, `jq`, `ripgrep`, `starship`) - voir [Outillage](#outillage).
 
 ### 3. Basculer sur gh
 
@@ -57,7 +57,7 @@ saisir.
 
 `chezmoi init git@github.com:wallforfry/dotfiles.git` fonctionne aussi, mais
 suppose une clé SSH déjà utilisable sur la machine neuve. Avec une clé sur
-YubiKey, l'agent GPG qui l'expose est configuré par `.zprofile` — que chezmoi
+YubiKey, l'agent GPG qui l'expose est configuré par `.zprofile` - que chezmoi
 n'a pas encore appliqué à ce stade. Le chemin par token évite cette
 dépendance circulaire.
 
@@ -75,7 +75,7 @@ apply où le script a changé :
 | `starship` | prompt | `.zshrc` retombe sur le prompt zsh par défaut |
 
 Sur macOS il passe par Homebrew. Ailleurs il pose des binaires statiques dans
-`~/bin`, que `.zshenv` met en tête du `PATH` — `.zshenv` et pas `.zprofile`,
+`~/bin`, que `.zshenv` met en tête du `PATH` - `.zshenv` et pas `.zprofile`,
 pour que les shells non interactifs (`ssh nas '...'`, planificateur DSM) les
 trouvent aussi. Les versions d'`age`, `gh`, `jq` et `ripgrep` sont épinglées en
 tête du script ; les modifier suffit à déclencher une réinstallation.
@@ -176,7 +176,7 @@ deux n'est déployé.
 ### Skills
 
 `dot_claude/skills/<slug>/SKILL.md`, une skill par répertoire, déployées dans
-`~/.claude/skills` — voir `dot_claude/skills/README.md` pour l'index et
+`~/.claude/skills` - voir `dot_claude/skills/README.md` pour l'index et
 l'origine des skills reprises d'un dépôt tiers.
 
 ### Profil pro
@@ -189,13 +189,13 @@ copie à synchroniser. Le répertoire est ignoré hors profil `pro`.
 
 `harness/AGENTS.md` décrit une escalade à trois paliers : fetch intégré, Firecrawl
 auto-hébergé, puis CloakBrowser pour l'anti-bot. Les deux derniers sont pilotés par des
-scripts de `~/.local/bin`, tous bâtis sur le même principe — **un conteneur nommé,
+scripts de `~/.local/bin`, tous bâtis sur le même principe - **un conteneur nommé,
 réutilisé par toutes les sessions**.
 
 | Script | Rôle | Enregistrement MCP |
 |---|---|---|
 | `firecrawl-mcp` | palier 2, pile de `~/.config/firecrawl/compose.yml` | oui |
-| `cloak` | palier 3, navigateur exposé en CDP | non — consommé par Scrapling |
+| `cloak` | palier 3, navigateur exposé en CDP | non - consommé par Scrapling |
 | `scrapling-mcp` | client CDP de `cloak` ; aussi `get`, `fetch`, `screenshot` | oui |
 | `postgres-mcp` | hors escalade, même discipline de conteneur | oui |
 
@@ -219,12 +219,12 @@ claude mcp add --scope user firecrawl -- "$HOME/.local/bin/firecrawl-mcp"
 claude mcp add --scope user scrapling -- "$HOME/.local/bin/scrapling-mcp"
 ```
 
-Aucune pile ne redémarre avec le daemon docker, volontairement — elles ne servent
+Aucune pile ne redémarre avec le daemon docker, volontairement - elles ne servent
 qu'à la demande, et CloakBrowser s'arrête seul après cinq minutes d'inactivité.
 L'API Firecrawl écoute sur `127.0.0.1` uniquement : elle tourne sans
 authentification.
 
-`~/.cursor/mcp.json` n'est **pas** versionné — il contient des mots de passe et des
+`~/.cursor/mcp.json` n'est **pas** versionné - il contient des mots de passe et des
 jetons en clair. C'est pourtant lui qui enregistre `postgres-mcp` ; la bascule vers
 le script à conteneur nommé y est faite à la main.
 
@@ -232,7 +232,7 @@ le script à conteneur nommé y est faite à la main.
 
 `~/.claude/settings.json` reste local : il mêle des chemins absolus écrits par
 des installeurs (OpenIsland) et l'état des plugins. Le hook `Stop`
-`~/.claude/hooks/agent-handoff` est donc déployé mais **pas enregistré** —
+`~/.claude/hooks/agent-handoff` est donc déployé mais **pas enregistré** -
 l'ajouter à la main dans `settings.json` :
 
 ```bash
@@ -250,7 +250,7 @@ conflit à chaque `chezmoi diff`. Seuls des fragments le sont, sous
 `private_dot_ssh/private_config.d/`.
 
 Ils supposent une ligne présente en tête de `~/.ssh/config`, à ajouter une
-fois par machine — en tête, parce que ssh retient la première valeur vue pour
+fois par machine - en tête, parce que ssh retient la première valeur vue pour
 chaque option :
 
 ```bash
@@ -294,7 +294,7 @@ backup horodaté est conservé dans `~/.dotfiles-backup-<stamp>`.
 ### `chezmoi: .secrets: no identities specified`
 
 `age` n'est pas dans le `PATH`. chezmoi bascule alors sur son implémentation
-intégrée, qui ne déchiffre que par identité et jamais par passphrase — d'où
+intégrée, qui ne déchiffre que par identité et jamais par passphrase - d'où
 un message qui parle d'identités alors que le problème est l'absence du
 binaire. `command -v age` pour confirmer, puis relancer un `chezmoi apply`
 une fois `~/bin` dans le `PATH`.
@@ -304,7 +304,7 @@ une fois `~/bin` dans le `PATH`.
 `/tmp` est monté `noexec` (cas de DSM), donc chezmoi ne peut pas exécuter les
 scripts `run_*` qu'il y extrait. La config générée définit `scriptTempDir`
 pour les sortir de `/tmp`. Sur une machine installée avant ce réglage, la
-config n'est pas régénérée par `chezmoi update` — `chezmoi init` s'en charge,
+config n'est pas régénérée par `chezmoi update` - `chezmoi init` s'en charge,
 ou ajouter la clé à la main **avant toute section** du fichier TOML :
 
 ```bash
@@ -330,7 +330,7 @@ git config --global --unset-all credential."https://gist.github.com".helper
 
 `.zshenv` s'en charge, mais n'est lu qu'au démarrage d'un shell : ouvrir un
 nouveau shell après le premier `chezmoi apply`. Si l'apply s'est interrompu
-sur une erreur de script, aucun fichier n'a été écrit — les scripts
+sur une erreur de script, aucun fichier n'a été écrit - les scripts
 `run_*_before` s'exécutent avant l'écriture des dotfiles.
 
 ### zsh n'est pas le shell de login

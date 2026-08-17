@@ -1,4 +1,4 @@
-# ADR-005 — oh-my-zsh en external, auto-update désactivé
+# ADR-005 - oh-my-zsh en external, auto-update désactivé
 
 - **Statut** : accepté
 - **Date** : 2026-08

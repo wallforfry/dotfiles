@@ -1,4 +1,4 @@
-# ADR-004 — Profils `perso` et `pro` demandés à l'init
+# ADR-004 - Profils `perso` et `pro` demandés à l'init
 
 - **Statut** : accepté
 - **Date** : 2026-08
@@ -18,7 +18,7 @@ exploitable.
 ## Décision
 
 `.chezmoi.toml.tmpl` demande le profil à l'init, parmi `perso` et `pro`, avec
-`promptChoiceOnce` — la valeur est mémorisée dans la configuration locale et n'est
+`promptChoiceOnce` - la valeur est mémorisée dans la configuration locale et n'est
 plus redemandée.
 
 Le profil pilote deux mécanismes :
@@ -26,7 +26,7 @@ Le profil pilote deux mécanismes :
 - des blocs `{{ if eq .profile "pro" }}` dans les templates, pour un fragment de
   fichier ;
 - des entrées conditionnelles dans `.chezmoiignore`, lui-même un template, pour un
-  fichier ou un répertoire entier — c'est ainsi que `.claude_REDACTED` reste absent
+  fichier ou un répertoire entier - c'est ainsi que `.claude_REDACTED` reste absent
   hors profil `pro`.
 
 Les blocs propres à un système restent portés par `.chezmoi.os`, indépendamment du
@@ -42,7 +42,7 @@ profil.
   seulement celle de la machine courante : `chezmoi execute-template` avec une
   configuration alternative est le seul moyen de le faire sans changer de poste.
 - Le nombre de combinaisons à vérifier est le produit des profils par les systèmes.
-  Un troisième profil doublerait ce coût — raison de s'en tenir à deux.
+  Un troisième profil doublerait ce coût - raison de s'en tenir à deux.
 
 ## Alternatives écartées
 

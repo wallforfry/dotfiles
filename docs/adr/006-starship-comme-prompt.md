@@ -1,4 +1,4 @@
-# ADR-006 — starship comme prompt unique
+# ADR-006 - starship comme prompt unique
 
 - **Statut** : accepté
 - **Date** : 2026-08
@@ -10,7 +10,7 @@ Le prompt doit être identique sur macOS, Linux et le NAS. Un prompt écrit en z
 suit le shell ; un prompt fourni par un thème oh-my-zsh suit oh-my-zsh, dont les
 mises à jour ne sont pas maîtrisées ([ADR-005](005-oh-my-zsh-en-external.md)).
 
-Le NAS n'avait pas starship, ce qui produisait une erreur au login — le commit
+Le NAS n'avait pas starship, ce qui produisait une erreur au login - le commit
 `ec5bd58` traite les deux sujets ensemble : l'installation et la forme de la
 configuration.
 
@@ -37,7 +37,7 @@ par défaut sans erreur.
   dump complet les aurait gelés à la version d'écriture.
 - Contrepartie : une évolution amont peut changer l'apparence du prompt sans
   qu'aucun fichier du dépôt n'ait bougé.
-- starship devient une dépendance d'installation, mais facultative — d'où son
+- starship devient une dépendance d'installation, mais facultative - d'où son
   traitement en dégradation dans le script d'outillage
   ([ADR-007](007-outillage-run-onchange.md)).
 
@@ -46,6 +46,6 @@ par défaut sans erreur.
 - **Un thème oh-my-zsh** (`robbyrussell` seul, powerlevel10k) : lie le prompt au
   cycle de vie d'oh-my-zsh, et powerlevel10k impose ses polices.
 - **Un prompt écrit à la main en zsh** : portable, mais tout est à écrire et à
-  maintenir — segments git, statut, durée.
+  maintenir - segments git, statut, durée.
 - **Dump complet de `starship.toml`** : configuration exhaustive et auto-documentée,
   au prix du gel de tous les défauts et d'un fichier illisible au diff.

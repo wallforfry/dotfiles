@@ -24,7 +24,7 @@ where a new file goes from where it must land.
 | `dot_config/` | deployed to `~/.config/` |
 | `dot_local/bin/` | executables deployed to `~/.local/bin`, `executable_` and extensionless |
 | `private_dot_ssh/` | deployed to `~/.ssh` with restricted permissions |
-| `harness/` | agent instructions, agnostic of any single agent — not deployed as such |
+| `harness/` | agent instructions, agnostic of any single agent - not deployed as such |
 | `scripts/` | one-shot maintenance scripts, not deployed |
 | `docs/`, `README.md` | documentation, not deployed |
 
@@ -33,21 +33,21 @@ stores the file `age`-encrypted, `symlink_` makes the destination a symlink whos
 file's rendered content, `executable_` sets the executable bit, `run_onchange_` re-runs a script
 when its rendered content changes.
 
-Everything not deployed is listed in `.chezmoiignore` — which is itself a template, so an entry can
+Everything not deployed is listed in `.chezmoiignore` - which is itself a template, so an entry can
 be conditioned on `.profile` or on the OS.
 
 ## Agent Configuration
 
 - `harness/AGENTS.md`, `harness/SOUL.md` and `harness/USER.md` are the canonical instruction
   sources: technical rules, agent voice, user preferences respectively. Edit these.
-- `dot_claude/{AGENTS,SOUL,USER}.md.tmpl` are one-line projections — `{{ include "harness/…" }}` —
+- `dot_claude/{AGENTS,SOUL,USER}.md.tmpl` are one-line projections - `{{ include "harness/…" }}` -
   and `dot_claude/CLAUDE.md` is the Claude adapter that imports them. Never move content into them.
 - `dot_claude/skills/<slug>/SKILL.md` holds the skills. One skill per directory; optional
   `references/`, `assets/`, `scripts/` subdirectories.
 - `dot_claude_REDACTED/` contains only `symlink_` entries pointing into `~/.claude`, so the work
   profile shares one source instead of a second copy. It is ignored outside the `pro` profile.
-- **Never add the `exact_` attribute to `dot_claude/`.** `~/.claude` holds live state — sessions,
-  projects, plugins — that chezmoi would delete.
+- **Never add the `exact_` attribute to `dot_claude/`.** `~/.claude` holds live state - sessions,
+  projects, plugins - that chezmoi would delete.
 
 ## Architecture Decisions
 
@@ -55,7 +55,7 @@ be conditioned on `.profile` or on the OS.
   Only decisions still in force are recorded.
 - Never contradict an ADR silently. Either follow it, or state the conflict, then deliver what was
   asked along with the ADR that would need superseding.
-- Routine changes — adding a tool to the install script, moving a pinned version, editing a skill —
+- Routine changes - adding a tool to the install script, moving a pinned version, editing a skill -
   need no ADR. `docs/adr/README.md` carries the test, and the `adr` skill the procedure.
 
 ## Language
@@ -73,9 +73,9 @@ be conditioned on `.profile` or on the OS.
 
 Nothing here runs in CI, so verify locally before delivering:
 
-- `chezmoi diff` — the deployed effect of the change. Read it in full; it is the only barrier.
-- `chezmoi execute-template < <file>` — render a template in isolation when the diff is unclear.
-- `bash -n <script>` — syntax of any shell script touched.
+- `chezmoi diff` - the deployed effect of the change. Read it in full; it is the only barrier.
+- `chezmoi execute-template < <file>` - render a template in isolation when the diff is unclear.
+- `bash -n <script>` - syntax of any shell script touched.
 - Templates using `.profile` must be checked against both values, not just the current machine's.
 - Say which OS you exercised. This repository targets macOS, Linux and Synology DSM; DSM notably
   mounts `/tmp` with `noexec`, which is why `scriptTempDir` is set in `.chezmoi.toml.tmpl`.
