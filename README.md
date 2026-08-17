@@ -4,13 +4,39 @@ Mes dotfiles NixOS et macOS, gérés avec [chezmoi](https://www.chezmoi.io).
 
 ## Installation
 
+Ce repo est **privé** : il faut s'authentifier auprès de GitHub avant de
+pouvoir le cloner.
+
 ```bash
+# 1. authentification (macOS ; sur Linux, installer gh via le gestionnaire local)
+brew install gh && gh auth login
+
+# 2. installation
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply wallforfry
 ```
+
+`gh auth login` configure le helper d'identifiants git globalement, ce qui
+suffit à chezmoi pour cloner en HTTPS.
 
 chezmoi s'installe, clone ce repo, demande le profil de la machine
 (`perso` ou `pro`) et la passphrase de déchiffrement des secrets, puis
 applique la configuration.
+
+### Pourquoi pas en SSH ?
+
+`chezmoi init git@github.com:wallforfry/dotfiles.git` fonctionne aussi, mais
+suppose une clé SSH déjà utilisable sur la machine neuve. Avec une clé sur
+YubiKey, l'agent GPG qui l'expose est configuré par `.zprofile` — que chezmoi
+n'a pas encore appliqué à ce stade. Le chemin `gh` évite cette dépendance
+circulaire.
+
+### Pourquoi le repo reste privé
+
+Le rendre public exposerait `encrypted_private_dot_secrets.age` au
+téléchargement, donc à une attaque hors ligne sans limite de temps contre la
+seule passphrase. `dot_gitconfig` et le bloc pro de `dot_zshrc.tmpl`
+contiennent par ailleurs des informations d'employeur (noms de projets et de
+configurations Doppler) qui n'ont pas à être publiées.
 
 ## Usage
 
