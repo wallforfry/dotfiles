@@ -1,0 +1,85 @@
+# Path to your Oh My Zsh installation (géré par chezmoi, cf. .chezmoiexternal.toml)
+export ZSH="$HOME/.oh-my-zsh"
+
+ZSH_THEME="robbyrussell"
+
+# oh-my-zsh est fourni par un external chezmoi : son auto-update désynchroniserait
+# le répertoire de l'état source. Les mises à jour passent par `chezmoi update`.
+zstyle ':omz:update' mode disabled
+
+plugins=(git)
+
+source $ZSH/oh-my-zsh.sh
+
+# User configuration
+
+# Add deno completions to search path
+if [[ ":$FPATH:" != *":$HOME/.zsh/completions:"* ]]; then
+  export FPATH="$HOME/.zsh/completions:$FPATH"
+fi
+{{ if eq .profile "pro" }}
+# REDACTED
+if [[ "$REDACTED_PROJECT_PATH" ]]; then
+  alias doppler-api-prod="doppler run -p api -c REDACTED --"
+  alias doppler-api-dev="doppler run -p api -c REDACTED --"
+  alias doppler-api-local="doppler run -p api -c REDACTED --preserve-env --"
+  alias doppler-api-feat-01="doppler run -p api -c REDACTED --"
+  alias doppler-api-feat-02="doppler run -p api -c REDACTED --"
+  alias doppler-api-feat-03="doppler run -p api -c REDACTED --"
+  alias cdb="cd ~/Projects/REDACTED"
+  alias cds="cd ~/Projects/REDACTED"
+  echo "🚀 REDACTED aliases added"
+fi
+
+alias claude-REDACTED="CLAUDE_CONFIG_DIR=~/.claude_REDACTED claude"
+{{ end }}
+# TheFuck
+if command -v thefuck &> /dev/null; then
+  eval $(thefuck --alias)
+  echo "🤬  TheFuck alias added"
+fi
+
+# Bun
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# Java
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+{{ if eq .chezmoi.os "darwin" }}
+# Chrome
+export CHROME_EXECUTABLE=/Applications/Arc.app/Contents/MacOS/Arc
+
+export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
+
+# LM Studio CLI (lms)
+export PATH="$PATH:$HOME/.lmstudio/bin"
+
+alias promote="sudo dseditgroup -o edit -a REDACTED -t user admin"
+{{ end }}
+# Aliases
+if command -v duf &> /dev/null; then
+  alias df=duf
+  echo "📦  Duf alias added"
+fi
+
+if command -v nvim &> /dev/null; then
+  alias vim=nvim
+  echo "🚀  Neovim alias added"
+fi
+
+if command -v gpg-connect-agent &> /dev/null; then
+  alias switch-card=gpg-connect-agent "scd serialno" "learn --force" /bye
+  echo "🔑  GPG card switch alias added"
+fi
+
+# Utils
+function ssh_tmux() { ssh -A -t "$1" "tmux a || tmux"; }
+
+function giga-blame() {
+  git log --author="$1" --pretty=tformat: --numstat -- $2 | awk 'NF==3 {plus+=$1; minus+=$2} END {printf "+%d, -%d\n", plus, minus}'
+}
+
+# Prompt
+eval "$(starship init zsh)"
+
+# Secrets (déchiffrés par chezmoi depuis encrypted_private_dot_secrets.age)
+[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"

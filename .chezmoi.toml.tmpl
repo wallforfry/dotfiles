@@ -1,0 +1,10 @@
+{{- $choices := list "perso" "pro" -}}
+{{- $profile := promptChoiceOnce . "profile" "Profil de cette machine" $choices -}}
+
+encryption = "age"
+
+[age]
+    passphrase = true
+
+[data]
+    profile = {{ $profile | quote }}
