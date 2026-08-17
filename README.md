@@ -1,40 +1,83 @@
 # Dotfiles
 
-Mes dotfiles NixOS et macOS, gérés avec [chezmoi](https://www.chezmoi.io).
+Mes dotfiles macOS, Linux et NAS Synology, gérés avec
+[chezmoi](https://www.chezmoi.io).
 
 ## Installation
 
 Ce repo est **privé** : il faut s'authentifier auprès de GitHub avant de
-pouvoir le cloner.
+pouvoir le cloner. L'authentification se fait en deux temps — un PAT tiré de
+Bitwarden pour le clone initial, puis `gh` pour tous les `chezmoi update`
+suivants.
+
+### 1. Récupérer le token
+
+Le PAT (portée `repo` en lecture seule) est dans Bitwarden, entrée
+**« GitHub — PAT dotfiles »**. Si le CLI Bitwarden est disponible :
 
 ```bash
-# 1. authentification (macOS ; sur Linux, installer gh via le gestionnaire local)
-brew install gh && gh auth login
-
-# 2. installation
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply wallforfry
+export GH_PAT=$(bw get password "GitHub — PAT dotfiles")
 ```
 
-`gh auth login` configure le helper d'identifiants git globalement, ce qui
-suffit à chezmoi pour cloner en HTTPS.
+Sinon, copie-le depuis le coffre web et `export GH_PAT=...` à la main.
 
-chezmoi s'installe, clone ce repo, demande le profil de la machine
-(`perso` ou `pro`) et la passphrase de déchiffrement des secrets, puis
-applique la configuration.
+### 2. Installer
+
+```bash
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply "https://${GH_PAT}@github.com/wallforfry/dotfiles.git"
+```
+
+chezmoi s'installe, clone ce repo, demande le profil de la machine (`perso`
+ou `pro`) et la passphrase de déchiffrement des secrets, puis applique la
+configuration. Au passage, un script `run_onchange` installe les outils
+manquants (`age`, `gh`, `starship`) — voir [Outillage](#outillage).
+
+### 3. Basculer sur gh
+
+Le token est pour l'instant inscrit en clair dans la remote du clone. On le
+remplace par `gh`, qui gère ensuite les identifiants pour les mises à jour :
+
+```bash
+echo "$GH_PAT" | gh auth login --with-token
+chezmoi git -- remote set-url origin https://github.com/wallforfry/dotfiles.git
+unset GH_PAT
+```
+
+`gh auth login` installe un helper d'identifiants git global ; `.gitconfig`
+le déclare avec le chemin de `gh` résolu à l'apply, et omet le bloc là où
+`gh` n'est pas installé. `chezmoi update` fonctionne dès lors sans rien
+saisir.
 
 ### Pourquoi pas en SSH ?
 
 `chezmoi init git@github.com:wallforfry/dotfiles.git` fonctionne aussi, mais
 suppose une clé SSH déjà utilisable sur la machine neuve. Avec une clé sur
 YubiKey, l'agent GPG qui l'expose est configuré par `.zprofile` — que chezmoi
-n'a pas encore appliqué à ce stade. Le chemin `gh` évite cette dépendance
-circulaire.
+n'a pas encore appliqué à ce stade. Le chemin par token évite cette
+dépendance circulaire.
+
+## Outillage
+
+`run_onchange_before_install-tools.sh.tmpl` installe ce qui manque, à chaque
+apply où le script a changé :
+
+| Outil | Rôle | Si absent |
+|---|---|---|
+| `age` | déchiffre `~/.secrets` | secrets inaccessibles (voir dépannage) |
+| `gh` | helper d'identifiants git | mot de passe demandé à chaque pull |
+| `starship` | prompt | `.zshrc` retombe sur le prompt zsh par défaut |
+
+Sur macOS il passe par Homebrew. Ailleurs il pose des binaires statiques dans
+`~/bin`, que `.zshenv` met en tête du `PATH` — `.zshenv` et pas `.zprofile`,
+pour que les shells non interactifs (`ssh nas '...'`, planificateur DSM) les
+trouvent aussi. Les versions d'`age` et de `gh` sont épinglées en tête du
+script ; les modifier suffit à déclencher une réinstallation.
 
 ### Pourquoi le repo reste privé
 
 Le rendre public exposerait `encrypted_private_dot_secrets.age` au
 téléchargement, donc à une attaque hors ligne sans limite de temps contre la
-seule passphrase. `dot_gitconfig` et le bloc pro de `dot_zshrc.tmpl`
+seule passphrase. `dot_gitconfig.tmpl` et le bloc pro de `dot_zshrc.tmpl`
 contiennent par ailleurs des informations d'employeur (noms de projets et de
 configurations Doppler) qui n'ont pas à être publiées.
 
@@ -89,6 +132,19 @@ Les blocs macOS (Arc, Homebrew, pnpm, Coursier) ne sont rendus que sur darwin.
 L'identité git n'est pas templatée : `~/.gitconfig` bascule déjà entre les deux
 identités par répertoire via `includeIf "gitdir:~/Projects/REDACTED/"`.
 
+## Prompt
+
+[starship](https://starship.rs), configuré par `dot_config/starship.toml`. Le
+fichier ne redéfinit aucun réglage de module : il réécrit seulement `format`
+pour ne garder que les modules utiles (git, langages présents dans
+`~/Projects`, `cmd_duration`, `docker_context`, `terraform`…). Le reste du
+prompt par défaut est écarté, et l'apparence des modules gardés continue de
+suivre les évolutions amont. Ajouter un module = l'ajouter à la chaîne
+`format`.
+
+`username`/`hostname` ne s'affichent qu'en SSH ou sous un autre utilisateur,
+ce qui donne le nom de la machine distante dans le prompt.
+
 ## oh-my-zsh
 
 Fourni par `.chezmoiexternal.toml` sous forme d'archive, rafraîchi tous les
@@ -107,3 +163,55 @@ Les machines encore sur l'ancien montage (bare repo `~/.dotfiles` + alias
 
 Le bare repo n'est supprimé qu'après validation du démarrage du shell, et un
 backup horodaté est conservé dans `~/.dotfiles-backup-<stamp>`.
+
+## Dépannage
+
+### `chezmoi: .secrets: no identities specified`
+
+`age` n'est pas dans le `PATH`. chezmoi bascule alors sur son implémentation
+intégrée, qui ne déchiffre que par identité et jamais par passphrase — d'où
+un message qui parle d'identités alors que le problème est l'absence du
+binaire. `command -v age` pour confirmer, puis relancer un `chezmoi apply`
+une fois `~/bin` dans le `PATH`.
+
+### `fork/exec /tmp/....sh: permission denied`
+
+`/tmp` est monté `noexec` (cas de DSM), donc chezmoi ne peut pas exécuter les
+scripts `run_*` qu'il y extrait. La config générée définit `scriptTempDir`
+pour les sortir de `/tmp`. Sur une machine installée avant ce réglage, la
+config n'est pas régénérée par `chezmoi update` — `chezmoi init` s'en charge,
+ou ajouter la clé à la main **avant toute section** du fichier TOML :
+
+```bash
+mkdir -p ~/.cache/chezmoi
+cd ~/.config/chezmoi && { printf 'scriptTempDir = "%s/.cache/chezmoi"\n' "$HOME"; grep -v '^scriptTempDir' chezmoi.toml; } > chezmoi.toml.new && mv chezmoi.toml.new chezmoi.toml
+```
+
+Une clé ajoutée en fin de fichier atterrit dans la table `[data]` et est
+ignorée sans avertissement.
+
+### `/usr/local/bin/gh ... : No such file or directory`
+
+Reliquat d'une version du `.gitconfig` où le chemin de `gh` était codé en
+dur. Récupérer la version courante du repo, ou neutraliser le helper le temps
+de le faire :
+
+```bash
+git config --global --unset-all credential."https://github.com".helper
+git config --global --unset-all credential."https://gist.github.com".helper
+```
+
+### Le PATH ne contient pas `~/bin`
+
+`.zshenv` s'en charge, mais n'est lu qu'au démarrage d'un shell : ouvrir un
+nouveau shell après le premier `chezmoi apply`. Si l'apply s'est interrompu
+sur une erreur de script, aucun fichier n'a été écrit — les scripts
+`run_*_before` s'exécutent avant l'écriture des dotfiles.
+
+### Synology (DSM)
+
+Pas de gestionnaire de paquets : `age`, `gh` et `starship` viennent des
+binaires statiques posés dans `~/bin`. Vérifier aussi que le service des
+répertoires personnels est activé, sans quoi `$HOME` n'est pas
+`/var/services/homes/<user>` et la config chezmoi atterrit ailleurs que là où
+elle est relue.
