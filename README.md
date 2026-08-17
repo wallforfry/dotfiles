@@ -213,6 +213,19 @@ nouveau shell après le premier `chezmoi apply`. Si l'apply s'est interrompu
 sur une erreur de script, aucun fichier n'a été écrit — les scripts
 `run_*_before` s'exécutent avant l'écriture des dotfiles.
 
+### zsh n'est pas le shell de login
+
+DSM ne permet pas `chsh`, et remet de toute façon le shell de `/etc/passwd` à
+sa valeur d'origine aux mises à jour système. `dot_profile` contourne le
+problème : `/bin/sh` lit `~/.profile` au login et y trouve un `exec zsh -l`.
+La bascule ne se fait qu'en shell interactif, et seulement si `zsh` existe —
+`scp`, `rsync`, les tâches planifiées et les `ssh nas '...'` ne sont pas
+touchés.
+
+Avant de fermer ta session, vérifie depuis une **seconde** connexion que le
+login aboutit : un `~/.profile` cassé se paie par une perte d'accès au shell.
+En secours, DSM permet toujours `ssh -t nas /bin/sh --noprofile`.
+
 ### Synology (DSM)
 
 Pas de gestionnaire de paquets : `age`, `gh` et `starship` viennent des

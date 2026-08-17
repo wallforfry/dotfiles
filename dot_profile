@@ -1,0 +1,22 @@
+# Bascule vers zsh au login.
+#
+# Nécessaire sur DSM (Synology), où chsh n'est pas utilisable et où le shell
+# déclaré dans /etc/passwd est de toute façon réinitialisé aux mises à jour du
+# système. Sur les machines dont le shell de login est déjà zsh, ce fichier
+# n'est même pas lu — zsh lit .zprofile, pas .profile.
+
+# Rien à faire hors d'un shell interactif : ne pas casser scp, rsync, les
+# tâches planifiées ni les « ssh nas '...' ».
+case $- in
+  *i*) ;;
+  *) return ;;
+esac
+
+# Garde-fou contre une boucle si zsh venait à sourcer ce fichier.
+[ -n "${ZSH_VERSION:-}" ] && return
+
+# exec seulement si zsh existe réellement : sinon la session reste sur sh
+# plutôt que d'échouer au login.
+if command -v zsh >/dev/null 2>&1; then
+  exec zsh -l
+fi
