@@ -9,6 +9,7 @@ subdirectories. Skill content is written in English (see the root `AGENTS.md` la
 
 | Skill | Description |
 | --- | --- |
+| `adr` | Write, amend or supersede an architecture decision record. |
 | `do-nothing-script` | Turn a repeated manual procedure into a do-nothing script: one function per step, printed then awaiting the operator, automated one step at a time. |
 | `handoff` | Hand the current work to a fresh session instead of letting the context compact. |
 | `merge-verdict` | Deliver a merge verdict on an open pull request, yours or another author's. |
@@ -19,5 +20,5 @@ subdirectories. Skill content is written in English (see the root `AGENTS.md` la
 
 `handoff`, `do-nothing-script`, `merge-verdict` and the `agent-handoff` Stop hook are adapted from
 <https://github.com/SebastienElet/dotfiles> (BSD 2-Clause, Copyright (c) 2014 Sébastien ELET), whose
-`LICENSE` requires that this notice be retained. `scripts` and `neovim` are rewritten for this
-repository's layout and keep only the shape of their originals.
+`LICENSE` requires that this notice be retained. `scripts`, `neovim` and `adr` are written for this
+repository and keep only the shape of their originals.

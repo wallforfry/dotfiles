@@ -48,6 +48,15 @@ be conditioned on `.profile` or on the OS.
 - **Never add the `exact_` attribute to `dot_claude/`.** `~/.claude` holds live state — sessions,
   projects, plugins — that chezmoi would delete.
 
+## Architecture Decisions
+
+- `docs/adr/` records the structural decisions of this repository, indexed in `docs/adr/README.md`.
+  Only decisions still in force are recorded.
+- Never contradict an ADR silently. Either follow it, or state the conflict, then deliver what was
+  asked along with the ADR that would need superseding.
+- Routine changes — adding a tool to the install script, moving a pinned version, editing a skill —
+  need no ADR. `docs/adr/README.md` carries the test, and the `adr` skill the procedure.
+
 ## Language
 
 - Documentation and prose (`README.md`, `docs/`) are written in French: they record reasoning for a

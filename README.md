@@ -137,6 +137,17 @@ Les blocs macOS (Arc, Homebrew, pnpm, Coursier) ne sont rendus que sur darwin.
 L'identité git n'est pas templatée : `~/.gitconfig` bascule déjà entre les deux
 identités par répertoire via `includeIf "gitdir:~/Projects/REDACTED/"`.
 
+## Décisions d'architecture
+
+`docs/adr/` consigne pourquoi ce dépôt est ainsi et pas autrement : chezmoi plutôt
+qu'un bare repo, `age` en passphrase, DSM comme cible de premier rang, les
+fragments ssh, `harness/` comme source unique. Seules les décisions **en vigueur**
+y figurent.
+
+[`docs/adr/README.md`](docs/adr/README.md) porte l'index, le format, et surtout le
+test qui dit **quand** une ADR se justifie et quand elle ne se justifie pas. La
+skill `adr` en applique la procédure.
+
 ## Agents IA
 
 Les instructions données aux agents de code sont versionnées ici, plus dans un
