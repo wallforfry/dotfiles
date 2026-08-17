@@ -1,0 +1,13 @@
+# Lu par toute invocation de zsh, y compris non interactive (ssh nas '...',
+# planificateur DSM, cron) — contrairement à .zprofile, réservé aux shells de
+# login. C'est ici que doivent vivre les binaires posés à la main (chezmoi,
+# starship, age…) sur les machines sans gestionnaire de paquets.
+case ":$PATH:" in
+  *":$HOME/bin:"*) ;;
+  *) export PATH="$HOME/bin:$PATH" ;;
+esac
+
+# Rover (Apollo GraphQL)
+if [[ -s "$HOME/.rover/env" ]]; then
+  source "$HOME/.rover/env"
+fi
