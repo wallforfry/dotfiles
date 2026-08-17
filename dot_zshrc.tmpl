@@ -79,7 +79,7 @@ function giga-blame() {
 }
 
 # Prompt
-eval "$(starship init zsh)"
+command -v starship >/dev/null && eval "$(starship init zsh)"
 
 # Secrets (déchiffrés par chezmoi depuis encrypted_private_dot_secrets.age)
 [ -f "$HOME/.secrets" ] && source "$HOME/.secrets"
