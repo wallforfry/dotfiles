@@ -194,10 +194,10 @@ sont pilotés par des scripts de `~/.local/bin`, tous bâtis sur le même princi
 |---|---|---|
 | `firecrawl-mcp` | palier 2, pile de `~/.config/firecrawl/compose.yml` | oui |
 | `scrapling-mcp` | paliers 3 et 4 | oui |
-| `cloakbrowser` | palier 4, navigateur exposé en CDP | non — consommé par Scrapling |
+| `cloak` | palier 4, navigateur exposé en CDP | non — consommé par Scrapling |
 | `postgres-mcp` | hors escalade, même discipline de conteneur | oui |
 
-Chacun accepte `--stop` et `--status` ; `cloakbrowser` ajoute `--start` et `--url`,
+Chacun accepte `--stop` et `--status` ; `cloak` ajoute `--start` et `--url`,
 `firecrawl-mcp` ajoute `--start`. Sans argument, les trois serveurs MCP parlent
 stdio : c'est cette forme qu'on enregistre.
 
