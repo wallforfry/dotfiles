@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+# Serveur MCP Scrapling, paliers 3 et 4 de l'escalade de récupération web décrite
+# dans harness/AGENTS.md. bash et non sh POSIX : ne tourne jamais au bootstrap.
+#
+#   scrapling-mcp           serveur MCP sur stdio (ce que Claude Code lance)
+#   scrapling-mcp --stop    arrête le conteneur
+#   scrapling-mcp --status  état du conteneur
+#
+# Adapté de github.com/SebastienElet/dotfiles, tooling/scrapling-mcp (BSD 2-Clause,
+# Copyright (c) 2014 Sébastien ELET), dont le LICENSE impose de conserver cette
+# mention.
+#
+# Un seul conteneur nommé, réutilisé par toutes les sessions. Enregistrer
+# « docker run … scrapling mcp » directement fuit un conteneur par session d'agent,
+# qui ne s'arrête jamais quand la session meurt — c'est la panne observée sur ce
+# poste avec postgres-mcp, six conteneurs dont le plus ancien depuis trois jours.
+#
+# L'image suit :latest, comme l'amont le fait pour la sous-commande mcp, encore
+# jeune. SCRAPLING_IMAGE permet d'épingler si une régression apparaît.
+
+set -euo pipefail
+
+CONTAINER="${SCRAPLING_CONTAINER:-scrapling-mcp}"
+IMAGE="${SCRAPLING_IMAGE:-pyd4vinci/scrapling:latest}"
+
+require_docker() {
+  if ! docker info >/dev/null 2>&1; then
+    echo "scrapling-mcp: daemon docker indisponible" >&2
+    exit 69
+  fi
+}
+
+case "${1:-}" in
+--stop)
+  require_docker
+  docker stop "$CONTAINER" >/dev/null 2>&1 && echo "🕷  Scrapling arrêté" ||
+    echo "🕷  Scrapling n'était pas démarré"
+  ;;
+--status)
+  require_docker
+  docker ps --all --filter "name=^${CONTAINER}$" \
+    --format '{{.Names}}\t{{.Image}}\t{{.Status}}'
+  ;;
+'')
+  require_docker
+  # « docker start » réussit aussi sur un conteneur déjà démarré : la même
+  # commande réutilise et relance. Le start final couvre la course où une session
+  # concurrente a créé le conteneur entre nos deux commandes.
+  if ! docker start "$CONTAINER" >/dev/null 2>&1; then
+    docker run --detach --name "$CONTAINER" \
+      --add-host=host.docker.internal:host-gateway \
+      --volume scrapling-profiles:/profiles \
+      --entrypoint sleep \
+      "$IMAGE" infinity >/dev/null 2>&1 ||
+      docker start "$CONTAINER" >/dev/null
+  fi
+  exec docker exec --interactive "$CONTAINER" uv run scrapling mcp
+  ;;
+*)
+  echo "scrapling-mcp: option inconnue « $1 » (--stop, --status)" >&2
+  exit 64
+  ;;
+esac

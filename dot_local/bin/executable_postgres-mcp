@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+
+# Serveur MCP Postgres adossé à un conteneur nommé réutilisé par toutes les
+# sessions. bash et non sh POSIX : ne tourne jamais au bootstrap.
+#
+#   postgres-mcp            serveur MCP sur stdio (ce que le client lance)
+#   postgres-mcp --stop     arrête le conteneur de ce DATABASE_URI
+#   postgres-mcp --status   état de tous les conteneurs postgres-mcp
+#
+# DATABASE_URI est obligatoire et vient de l'environnement, jamais d'un argument :
+# elle contient un mot de passe, et une ligne de commande est lisible par tout
+# processus de la machine.
+#
+# Pourquoi ce script existe : enregistrer « docker run -i --rm crystaldba/postgres-mcp »
+# fuit un conteneur par session. Mesuré sur ce poste avant correction — six
+# conteneurs simultanés, le plus ancien depuis trois jours, tous en --rm sans
+# jamais avoir été retirés puisque leur processus ne s'était pas terminé.
+#
+# Un conteneur par DATABASE_URI, nommé d'après son empreinte : deux projets sur
+# deux bases ne se marchent pas dessus, et deux sessions sur la même base
+# partagent un conteneur.
+
+set -euo pipefail
+
+IMAGE="${POSTGRES_MCP_IMAGE:-crystaldba/postgres-mcp}"
+ACCESS_MODE="${POSTGRES_MCP_ACCESS_MODE:---access-mode=restricted}"
+
+require_docker() {
+  if ! docker info >/dev/null 2>&1; then
+    echo "postgres-mcp: daemon docker indisponible" >&2
+    exit 69
+  fi
+}
+
+require_uri() {
+  if [ -z "${DATABASE_URI:-}" ]; then
+    echo "postgres-mcp: DATABASE_URI absente de l'environnement" >&2
+    exit 64
+  fi
+  # localhost dans un conteneur désigne le conteneur, jamais l'hôte : une telle URI
+  # ne peut pas fonctionner ici. On avertit sans réécrire — une chaîne de connexion
+  # modifiée en silence est pire que le défaut qu'elle corrige.
+  case "$DATABASE_URI" in
+  *@localhost:* | *@127.0.0.1:*)
+    echo "postgres-mcp: DATABASE_URI pointe sur localhost, injoignable depuis un conteneur — utiliser host.docker.internal" >&2
+    ;;
+  esac
+}
+
+container_name() {
+  printf 'postgres-mcp-%s' "$(printf '%s' "$DATABASE_URI" | shasum | cut -c1-8)"
+}
+
+case "${1:-}" in
+--stop)
+  require_docker
+  require_uri
+  c=$(container_name)
+  docker stop "$c" >/dev/null 2>&1 && echo "🐘  $c arrêté" ||
+    echo "🐘  $c n'était pas démarré"
+  ;;
+--status)
+  require_docker
+  docker ps --all --filter 'name=^postgres-mcp-' \
+    --format '{{.Names}}\t{{.Image}}\t{{.Status}}'
+  ;;
+'')
+  require_docker
+  require_uri
+  c=$(container_name)
+  if ! docker start "$c" >/dev/null 2>&1; then
+    docker run --detach --name "$c" \
+      --add-host=host.docker.internal:host-gateway \
+      --env DATABASE_URI \
+      --entrypoint sleep \
+      "$IMAGE" infinity >/dev/null 2>&1 ||
+      docker start "$c" >/dev/null
+  fi
+  exec docker exec --interactive "$c" postgres-mcp "$ACCESS_MODE"
+  ;;
+*)
+  echo "postgres-mcp: option inconnue « $1 » (--stop, --status)" >&2
+  exit 64
+  ;;
+esac
