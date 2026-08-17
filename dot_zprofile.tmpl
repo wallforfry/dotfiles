@@ -6,6 +6,9 @@ source $HOME/.orbstack/shell/init.zsh 2>/dev/null || :
 export PATH="$PATH:$HOME/Library/Application Support/Coursier/bin"
 {{- end }}
 
+# binaires posés à la main (age, starship… sur les machines sans gestionnaire de paquets)
+export PATH="$HOME/bin:$PATH"
+
 # pipx
 export PATH="$PATH:$HOME/.local/bin"
 

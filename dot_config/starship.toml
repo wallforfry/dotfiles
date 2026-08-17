@@ -1,0 +1,13 @@
+"$schema" = "https://starship.rs/config-schema.json"
+
+# Seuls les modules listés ici sont évalués : tout le reste du prompt par
+# défaut ($all) est écarté. L'apparence de chaque module gardé reste celle
+# des défauts starship, pour continuer à suivre les mises à jour amont.
+format = """
+$username$hostname$directory\
+$git_branch$git_commit$git_state$git_status\
+$docker_context$package\
+$bun$deno$nodejs$golang$python$dart$rust$java$scala$gradle$ruby\
+$terraform\
+$cmd_duration\
+$line_break$jobs$battery$status$character"""
