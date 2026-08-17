@@ -160,11 +160,28 @@ les importe. **Éditer `harness/`, jamais les projections.**
 vérification, secrets) ; `CLAUDE.md` s'y réduit à un `@AGENTS.md`. Aucun des
 deux n'est déployé.
 
+### Skills
+
+`dot_claude/skills/<slug>/SKILL.md`, une skill par répertoire, déployées dans
+`~/.claude/skills` — voir `dot_claude/skills/README.md` pour l'index et
+l'origine des skills reprises d'un dépôt tiers.
+
 ### Profil pro
 
 `dot_claude_septeo/` ne contient que des liens relatifs vers `~/.claude`, pour
 que la session `claude-septeo` partage la même source au lieu d'une seconde
 copie à synchroniser. Le répertoire est ignoré hors profil `pro`.
+
+### Ce qui n'est pas versionné
+
+`~/.claude/settings.json` reste local : il mêle des chemins absolus écrits par
+des installeurs (OpenIsland) et l'état des plugins. Le hook `Stop`
+`~/.claude/hooks/agent-handoff` est donc déployé mais **pas enregistré** —
+l'ajouter à la main dans `settings.json` :
+
+```bash
+jq --arg c "$HOME/.claude/hooks/agent-handoff" '.hooks.Stop += [{hooks: [{type: "command", command: $c}]}]' ~/.claude/settings.json > ~/.cache/settings.json && mv ~/.cache/settings.json ~/.claude/settings.json
+```
 
 Ne jamais ajouter l'attribut `exact_` à `dot_claude/` : `~/.claude` contient
 l'état vivant des sessions, que chezmoi supprimerait.
