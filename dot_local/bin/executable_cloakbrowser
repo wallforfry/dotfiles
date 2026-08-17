@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+# CloakBrowser, palier 4 de l'escalade de récupération web décrite dans
+# harness/AGENTS.md. bash et non sh POSIX : ne tourne jamais au bootstrap.
+#
+#   cloakbrowser --start    démarre le conteneur (idempotent)
+#   cloakbrowser --stop     l'arrête
+#   cloakbrowser --status   son état
+#   cloakbrowser --url      le cdp_url à passer à scrapling
+#
+# Ce n'est pas un serveur MCP : c'est un navigateur exposé en CDP, que scrapling
+# consomme via son paramètre cdp_url. Rien à enregistrer auprès d'un agent.
+#
+# Adapté de github.com/SebastienElet/dotfiles, harness/AGENTS.md (BSD 2-Clause,
+# Copyright (c) 2014 Sébastien ELET), dont le LICENSE impose de conserver cette
+# mention. La version reste celle de la source, 0.5.3 : c'est la seule qui ait une
+# trace de fonctionnement, et rien ici ne l'a exercée. 0.5.7 existe ;
+# CLOAK_IMAGE permet d'en changer sans toucher au script.
+#
+# --idle-timeout arrête le conteneur seul après cinq minutes sans requête, donc un
+# « --stop » oublié ne coûte rien. Un conteneur nommé plutôt qu'un par appel : un
+# oubli coûte au plus un conteneur.
+#
+# Le cdp_url est host.docker.internal et non localhost : scrapling tourne lui-même
+# dans un conteneur, où localhost désignerait le conteneur scrapling. Cela suppose
+# que host.docker.internal atteigne un port publié sur la boucle locale de l'hôte —
+# vrai avec OrbStack et Docker Desktop sur macOS, faux sur Linux, où il faudrait
+# mettre les deux conteneurs sur un réseau docker commun et viser « http://cloak:9222 ».
+
+set -euo pipefail
+
+CONTAINER="${CLOAK_CONTAINER:-cloak}"
+IMAGE="${CLOAK_IMAGE:-cloakhq/cloakbrowser:0.5.3}"
+PORT="${CLOAK_PORT:-9222}"
+IDLE="${CLOAK_IDLE_TIMEOUT:-300}"
+
+require_docker() {
+  if ! docker info >/dev/null 2>&1; then
+    echo "cloakbrowser: daemon docker indisponible" >&2
+    exit 69
+  fi
+}
+
+case "${1:-}" in
+--start)
+  require_docker
+  # « docker start » réussit aussi sur un conteneur déjà démarré : la même commande
+  # réutilise et relance après un arrêt sur idle-timeout.
+  if ! docker start "$CONTAINER" >/dev/null 2>&1; then
+    docker run --detach --name "$CONTAINER" \
+      --publish "127.0.0.1:${PORT}:${PORT}" \
+      "$IMAGE" cloakserve "--idle-timeout=${IDLE}" >/dev/null
+  fi
+  echo "🥷  CloakBrowser en écoute, cdp_url http://host.docker.internal:${PORT}"
+  ;;
+--stop)
+  require_docker
+  docker stop "$CONTAINER" >/dev/null 2>&1 && echo "🥷  CloakBrowser arrêté" ||
+    echo "🥷  CloakBrowser n'était pas démarré"
+  ;;
+--status)
+  require_docker
+  docker ps --all --filter "name=^${CONTAINER}$" \
+    --format '{{.Names}}\t{{.Image}}\t{{.Status}}'
+  ;;
+--url)
+  echo "http://host.docker.internal:${PORT}"
+  ;;
+*)
+  echo "cloakbrowser: usage — --start, --stop, --status, --url" >&2
+  exit 64
+  ;;
+esac

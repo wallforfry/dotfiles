@@ -185,28 +185,42 @@ copie à synchroniser. Le répertoire est ignoré hors profil `pro`.
 
 ### Récupération web
 
-`harness/AGENTS.md` décrit une escalade à trois paliers : fetch intégré, puis
-Firecrawl auto-hébergé, puis un vrai navigateur. Seul le palier 2 demande quelque
-chose de local.
+`harness/AGENTS.md` décrit une escalade à quatre paliers : fetch intégré, Firecrawl
+auto-hébergé, `stealthy_fetch` de Scrapling, puis CloakBrowser. Les trois derniers
+sont pilotés par des scripts de `~/.local/bin`, tous bâtis sur le même principe —
+**un conteneur nommé, réutilisé par toutes les sessions**.
 
-`~/.config/firecrawl/compose.yml` porte la pile — cinq conteneurs, plus de 6 Gio à
-l'usage — et `~/.local/bin/firecrawl-mcp` la pilote :
+| Script | Rôle | Enregistrement MCP |
+|---|---|---|
+| `firecrawl-mcp` | palier 2, pile de `~/.config/firecrawl/compose.yml` | oui |
+| `scrapling-mcp` | paliers 3 et 4 | oui |
+| `cloakbrowser` | palier 4, navigateur exposé en CDP | non — consommé par Scrapling |
+| `postgres-mcp` | hors escalade, même discipline de conteneur | oui |
+
+Chacun accepte `--stop` et `--status` ; `cloakbrowser` ajoute `--start` et `--url`,
+`firecrawl-mcp` ajoute `--start`. Sans argument, les trois serveurs MCP parlent
+stdio : c'est cette forme qu'on enregistre.
 
 ```bash
-firecrawl-mcp --start    # premier lancement : environ 2 Gio d'images à télécharger
+firecrawl-mcp --start    # une fois : environ 2 Gio d'images à télécharger
 ```
-
-`--stop` l'arrête, `--status` montre les conteneurs. Sans argument, le script est le
-serveur MCP sur stdio : c'est cette forme qu'on enregistre auprès de Claude Code,
-une fois.
 
 ```bash
 claude mcp add --scope user firecrawl -- "$HOME/.local/bin/firecrawl-mcp"
 ```
 
-La pile ne redémarre pas avec le daemon docker, volontairement — elle ne sert qu'à
-la demande. L'API écoute sur `127.0.0.1` uniquement : elle tourne sans
+```bash
+claude mcp add --scope user scrapling -- "$HOME/.local/bin/scrapling-mcp"
+```
+
+Aucune pile ne redémarre avec le daemon docker, volontairement — elles ne servent
+qu'à la demande, et CloakBrowser s'arrête seul après cinq minutes d'inactivité.
+L'API Firecrawl écoute sur `127.0.0.1` uniquement : elle tourne sans
 authentification.
+
+`~/.cursor/mcp.json` n'est **pas** versionné — il contient des mots de passe et des
+jetons en clair. C'est pourtant lui qui enregistre `postgres-mcp` ; la bascule vers
+le script à conteneur nommé y est faite à la main.
 
 ### Ce qui n'est pas versionné
 
