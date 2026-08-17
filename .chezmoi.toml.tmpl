@@ -3,6 +3,10 @@
 
 encryption = "age"
 
+# /tmp est monté noexec sur certaines machines (NAS Synology), ce qui empêche
+# chezmoi d'exécuter les scripts run_*. Le répertoire doit exister.
+scriptTempDir = "{{ .chezmoi.homeDir }}/.cache/chezmoi"
+
 [age]
     passphrase = true
 
