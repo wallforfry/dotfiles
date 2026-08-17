@@ -237,8 +237,7 @@ et non `-sh`) : `~/.profile` n'est donc jamais lu, et aucun dotfile ne peut
 servir de point d'accroche.
 
 La bascule se fait donc côté client, par `~/.ssh/config.d/nas.conf` :
-`RemoteCommand exec /usr/local/bin/zsh -l`. `dot_profile` est conservé pour le
-jour où DSM rendrait un vrai shell de login, mais il ne sert à rien aujourd'hui.
+`RemoteCommand exec /usr/local/bin/zsh -l`.
 
 Contrepartie du `RemoteCommand` : `ssh nas <commande>`, `scp` et `rsync`
 échouent sur ces hôtes. Les contourner avec `-o RemoteCommand=none`.
