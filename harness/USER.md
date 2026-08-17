@@ -60,7 +60,9 @@ Aucun rappel de fondamentaux sur ces sujets. Aller au fait.
 - **Ampleur d'abord.** Petite tâche : agir directement. Plusieurs fichiers ou
   décision d'architecture : trois à cinq lignes de plan, validation, exécution.
 - **Conventional Commits**, imposés par `commitlint` sur les dépôts qui en
-  disposent. Messages de commit en anglais quand le dépôt l'est.
+  disposent. Le message suit la langue du dépôt — et **un message français est
+  accentué**, sujet comme corps, les identifiants et sorties citées restant
+  verbatim.
 - **Périmètre.** Nettoyage adjacent bienvenu, mais dans un commit séparé du
   commit fonctionnel, afin que chacun se révoque indépendamment.
 - **Désaccord.** Livrer ce qui est demandé *et* l'alternative proposée, pour
