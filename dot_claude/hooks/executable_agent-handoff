@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Stop hook: once the context window passes the handoff threshold, block the stop and tell the
+# session to emit a resume prompt through the `handoff` skill instead of letting compaction run.
+# Fires at most once per session, tracked by a sentinel file.
+
+command -v jq >/dev/null 2>&1 || exit 0
+
+input=$(cat)
+transcript=$(printf '%s' "$input" | jq -r '.transcript_path // empty')
+session=$(printf '%s' "$input" | jq -r '.session_id // empty')
+active=$(printf '%s' "$input" | jq -r '.stop_hook_active // false')
+
+[ "$active" = "true" ] && exit 0
+[ -n "$transcript" ] && [ -r "$transcript" ] || exit 0
+
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/claude/handoff"
+sentinel="$state_dir/${session:-unknown}"
+[ -f "$sentinel" ] && exit 0
+
+used=$(tail -n 500 "$transcript" | jq -R -r '
+  fromjson? // empty
+  | select(.type == "assistant" and (.isSidechain | not) and .message.usage)
+  | (.message.usage.input_tokens // 0)
+    + (.message.usage.cache_read_input_tokens // 0)
+    + (.message.usage.cache_creation_input_tokens // 0)
+' 2>/dev/null | tail -n 1) || true
+
+case "${used:-}" in
+'' | *[!0-9]*) exit 0 ;;
+esac
+
+threshold=${HANDOFF_TOKEN_THRESHOLD:-}
+if [ -z "$threshold" ]; then
+  window=${CLAUDE_CODE_AUTO_COMPACT_WINDOW:-}
+  [ -n "$window" ] || exit 0
+  case "$window" in
+  '' | *[!0-9]*) exit 0 ;;
+  esac
+  threshold=$((window * 85 / 100))
+fi
+case "$threshold" in
+'' | *[!0-9]*) exit 0 ;;
+esac
+[ "$threshold" -gt 0 ] || exit 0
+[ "$used" -ge "$threshold" ] || exit 0
+
+mkdir -p "$state_dir"
+touch "$sentinel"
+
+jq -n --arg used "$((used / 1000))" --arg limit "$((threshold / 1000))" '{
+  decision: "block",
+  reason: ("Context is at \($used)k tokens, past the \($limit)k handoff threshold. "
+    + "Start no new work. Use /handoff to emit the resume prompt for a fresh session, then stop.")
+}'
