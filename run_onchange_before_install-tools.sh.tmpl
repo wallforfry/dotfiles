@@ -1,0 +1,72 @@
+#!/bin/sh
+# Installe les outils dont dépendent les dotfiles s'ils manquent.
+# Rejoué quand ce fichier change, donc quand une version ci-dessous bouge.
+#
+# AGE_VERSION: 1.2.1
+# GH_VERSION: 2.63.2
+#
+# age      : déchiffre ~/.secrets. Indispensable — l'implémentation intégrée à
+#            chezmoi ne gère pas les passphrases et échoue sur
+#            « no identities specified ».
+# gh       : helper d'identifiants git pour ce repo privé (cf. .gitconfig).
+# starship : prompt. Facultatif, .zshrc retombe sur le prompt zsh par défaut.
+
+set -eu
+
+AGE_VERSION=1.2.1
+GH_VERSION=2.63.2
+BIN="$HOME/bin"
+
+{{ if eq .chezmoi.os "darwin" -}}
+if command -v brew >/dev/null; then
+  for f in age gh starship; do
+    command -v "$f" >/dev/null || brew install "$f"
+  done
+  exit 0
+fi
+{{ end -}}
+
+# Machines sans gestionnaire de paquets (NAS Synology, conteneurs) : binaires
+# statiques dans ~/bin, mis dans le PATH par .zshenv.
+case "$(uname -m)" in
+  x86_64)          arch=amd64 ;;
+  aarch64|arm64)   arch=arm64 ;;
+  *) echo "⚠️   architecture $(uname -m) non gérée, installation manuelle requise" >&2
+     exit 0 ;;
+esac
+
+mkdir -p "$BIN" "$HOME/.cache"
+# Pas /tmp : monté noexec sur DSM, et tar y écrirait des binaires inutilisables.
+tmp=$(mktemp -d "$HOME/.cache/install-tools.XXXXXX")
+trap 'rm -rf "$tmp"' EXIT
+
+fetch() { curl -fsSL --retry 3 -o "$2" "$1"; }
+
+if ! command -v age >/dev/null; then
+  if fetch "https://github.com/FiloSottile/age/releases/download/v${AGE_VERSION}/age-v${AGE_VERSION}-linux-${arch}.tar.gz" "$tmp/age.tgz" &&
+     tar xzf "$tmp/age.tgz" -C "$tmp"; then
+    mv "$tmp/age/age" "$tmp/age/age-keygen" "$BIN/" && chmod +x "$BIN/age" "$BIN/age-keygen"
+    echo "🔑  age $AGE_VERSION installé dans ~/bin"
+  else
+    echo "⚠️   age non installé : ~/.secrets restera chiffré" >&2
+  fi
+fi
+
+if ! command -v gh >/dev/null; then
+  if fetch "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${arch}.tar.gz" "$tmp/gh.tgz" &&
+     tar xzf "$tmp/gh.tgz" -C "$tmp"; then
+    mv "$tmp/gh_${GH_VERSION}_linux_${arch}/bin/gh" "$BIN/" && chmod +x "$BIN/gh"
+    echo "🐙  gh $GH_VERSION installé dans ~/bin — pense à « gh auth login »"
+  else
+    echo "⚠️   gh non installé : les pulls demanderont un mot de passe" >&2
+  fi
+fi
+
+if ! command -v starship >/dev/null; then
+  # L'installeur amont déverse les instructions de configuration de dix shells.
+  if curl -fsSL https://starship.rs/install.sh | sh -s -- -b "$BIN" -y >/dev/null; then
+    echo "🚀  starship installé dans ~/bin"
+  else
+    echo "⚠️   starship non installé, prompt zsh par défaut" >&2
+  fi
+fi
