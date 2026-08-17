@@ -4,23 +4,30 @@
 #
 # AGE_VERSION: 1.2.1
 # GH_VERSION: 2.63.2
+# JQ_VERSION: 1.8.2
+# RG_VERSION: 15.2.0
 #
 # age      : déchiffre ~/.secrets. Indispensable — l'implémentation intégrée à
 #            chezmoi ne gère pas les passphrases et échoue sur
 #            « no identities specified ».
 # gh       : helper d'identifiants git pour ce repo privé (cf. .gitconfig).
+# jq       : filtrage JSON, attendu par les scripts et les agents.
+# ripgrep  : recherche de code, attendue par les agents et par Neovim (telescope).
 # starship : prompt. Facultatif, .zshrc retombe sur le prompt zsh par défaut.
 
 set -eu
 
 AGE_VERSION=1.2.1
 GH_VERSION=2.63.2
+JQ_VERSION=1.8.2
+RG_VERSION=15.2.0
 BIN="$HOME/bin"
 
 {{ if eq .chezmoi.os "darwin" -}}
 if command -v brew >/dev/null; then
-  for f in age gh starship; do
-    command -v "$f" >/dev/null || brew install "$f"
+  # « formule:commande », car ripgrep s'installe sous ce nom et s'appelle rg.
+  for f in age:age gh:gh jq:jq ripgrep:rg starship:starship; do
+    command -v "${f#*:}" >/dev/null || brew install "${f%:*}"
   done
   exit 0
 fi
@@ -57,8 +64,8 @@ fi
 # Machines sans gestionnaire de paquets (NAS Synology, conteneurs) : binaires
 # statiques dans ~/bin, mis dans le PATH par .zshenv.
 case "$(uname -m)" in
-  x86_64)          arch=amd64 ;;
-  aarch64|arm64)   arch=arm64 ;;
+  x86_64)          arch=amd64; rg_target=x86_64-unknown-linux-musl ;;
+  aarch64|arm64)   arch=arm64; rg_target=aarch64-unknown-linux-musl ;;
   *) echo "⚠️   architecture $(uname -m) non gérée, installation manuelle requise" >&2
      exit 0 ;;
 esac
@@ -87,6 +94,25 @@ if ! command -v gh >/dev/null; then
     echo "🐙  gh $GH_VERSION installé dans ~/bin — pense à « gh auth login »"
   else
     echo "⚠️   gh non installé : les pulls demanderont un mot de passe" >&2
+  fi
+fi
+
+if ! command -v jq >/dev/null; then
+  if fetch "https://github.com/jqlang/jq/releases/download/jq-${JQ_VERSION}/jq-linux-${arch}" "$tmp/jq"; then
+    mv "$tmp/jq" "$BIN/" && chmod +x "$BIN/jq"
+    echo "🧮  jq $JQ_VERSION installé dans ~/bin"
+  else
+    echo "⚠️   jq non installé" >&2
+  fi
+fi
+
+if ! command -v rg >/dev/null; then
+  if fetch "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VERSION}/ripgrep-${RG_VERSION}-${rg_target}.tar.gz" "$tmp/rg.tgz" &&
+     tar xzf "$tmp/rg.tgz" -C "$tmp"; then
+    mv "$tmp/ripgrep-${RG_VERSION}-${rg_target}/rg" "$BIN/" && chmod +x "$BIN/rg"
+    echo "🔎  ripgrep $RG_VERSION installé dans ~/bin"
+  else
+    echo "⚠️   ripgrep non installé" >&2
   fi
 fi
 
