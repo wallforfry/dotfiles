@@ -1,0 +1,46 @@
+[user]
+	name = Wallerand Delevacq
+	email = wallforfry@gmail.com
+	username = Wallerand
+	signingkey = 4063F8307A08E912
+[core]
+	excludesfile = /Users/delevacw/.gitignore_global
+[alias]
+  big-files    = !"git rev-list --objects --all \
+                 | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)' \
+                 | sed -n 's/^blob //p' \
+                 | sort -nk2 \
+                 | cut -c 1-12,41- \
+                 | $(command -v gnumfmt || echo numfmt) --field=2 --to=iec-i --suffix=B --padding=7 --round=nearest"
+  big-objects = !"git rev-list --all \
+                | parallel git ls-tree -r --long "{}" \
+                | sort -uk3 \
+                | sort -nk4"
+[safe]
+	directory = /Library/Ruby/Gems/2.6.0/bundler/gems/fastlane-plugin-flutter-version-1b39fe95c032
+[commit]
+	gpgsign = true
+[push]
+	autoSetupRemote = true
+[gpg]
+	program = /usr/local/MacGPG2/bin/gpg
+[gitbutler]
+	aiOpenAIKeyOption = bringYourOwn
+	aiOpenAIModelName = gpt-4.1-mini
+	signCommits = true
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[init]
+  defaultBranch = main
+
+[includeIf "gitdir:~/Projects/Septeo/"]
+    path = ~/Projects/Septeo/.gitconfig
+[credential "https://github.com"]
+	helper = 
+	helper = !/usr/local/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/usr/local/bin/gh auth git-credential
