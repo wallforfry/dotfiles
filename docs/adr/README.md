@@ -114,3 +114,5 @@ cas la citation est explicite.
 | [011](011-identite-git-par-repertoire.md) | Identité git par répertoire via `includeIf` | 2026-08 |
 | [012](012-instructions-ia-versionnees.md) | Instructions IA versionnées, `harness/` source unique | 2026-08 |
 | [013](013-conventional-commits.md) | Conventional Commits | 2026-08 |
+| [014](014-recuperation-web-par-paliers.md) | Récupération web par paliers, Firecrawl auto-hébergé | 2026-08 |
+| [015](015-mcp-en-conteneurs-nommes.md) | Serveurs MCP lourds en conteneurs nommés | 2026-08 |
