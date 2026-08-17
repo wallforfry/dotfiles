@@ -1,0 +1,120 @@
+name: firecrawl
+
+# Firecrawl auto-hébergé, palier 2 de l'escalade de récupération web décrite dans
+# harness/AGENTS.md. Piloté par ~/.local/bin/firecrawl-mcp.
+#
+# Adapté de github.com/SebastienElet/dotfiles, harness/firecrawl/compose.yml
+# (BSD 2-Clause, Copyright (c) 2014 Sébastien ELET), dont le LICENSE impose de
+# conserver cette mention. Deux écarts, tous deux volontaires :
+#
+#   - restart: on-failure au lieu de unless-stopped. Avec unless-stopped, la pile
+#     redémarre au lancement du daemon, donc à chaque démarrage du poste : cinq
+#     conteneurs et plus de 6 Gio réservés en permanence pour un outil qui ne sert
+#     qu'à la demande. On-failure couvre le crash sans ressusciter la pile.
+#   - publication sur 127.0.0.1:3002 et non 0.0.0.0:3002 (voir le service api).
+#
+# `name: firecrawl` est conservé, et c'est ce qui évite la fuite de conteneurs : le
+# projet compose donne des conteneurs nommés, donc un seul jeu quel que soit le
+# nombre de sessions d'agent.
+#
+# La composition amont construit depuis un checkout ; celle-ci utilise les images
+# publiées. Sans SEARXNG_ENDPOINT, /search retombe sur DuckDuckGo.
+#
+# Les images suivent :latest, comme le recommande la documentation d'auto-hébergement
+# amont. Aucun lockfile ne protège donc d'une régression : `firecrawl-mcp --stop`
+# puis un retour à une image antérieure est le seul recours.
+
+x-common: &common
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  networks:
+    - backend
+  restart: on-failure
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+      compress: "true"
+
+services:
+  api:
+    <<: *common
+    image: ghcr.io/firecrawl/firecrawl:latest
+    command: node dist/src/harness.js --start-docker
+    environment:
+      HOST: "0.0.0.0"
+      PORT: 3002
+      ENV: local
+      USE_DB_AUTHENTICATION: "false"
+      REDIS_URL: redis://redis:6379
+      REDIS_RATE_LIMIT_URL: redis://redis:6379
+      PLAYWRIGHT_MICROSERVICE_URL: http://playwright-service:3000/scrape
+      NUQ_RABBITMQ_URL: amqp://rabbitmq:5672
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_HOST: nuq-postgres
+      POSTGRES_PORT: 5432
+      MAX_CONCURRENT_JOBS: 3
+      BROWSER_POOL_SIZE: 3
+    # 127.0.0.1 et non 0.0.0.0 : l'API n'a pas d'authentification
+    # (USE_DB_AUTHENTICATION false), elle ne doit pas être joignable depuis le
+    # réseau local.
+    ports:
+      - "127.0.0.1:3002:3002"
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    mem_limit: 4G
+    depends_on:
+      redis:
+        condition: service_started
+      playwright-service:
+        condition: service_started
+      nuq-postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  playwright-service:
+    <<: *common
+    image: ghcr.io/firecrawl/playwright-service:latest
+    environment:
+      PORT: 3000
+      MAX_CONCURRENT_PAGES: 5
+    mem_limit: 2G
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp/.cache:noexec,nosuid,size=1g
+
+  redis:
+    <<: *common
+    image: redis:alpine
+    command: redis-server --bind 0.0.0.0
+
+  rabbitmq:
+    <<: *common
+    image: rabbitmq:3-management
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  nuq-postgres:
+    <<: *common
+    image: ghcr.io/firecrawl/nuq-postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+
+networks:
+  backend:
+    driver: bridge

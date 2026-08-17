@@ -183,6 +183,31 @@ l'origine des skills reprises d'un dépôt tiers.
 que la session `claude-septeo` partage la même source au lieu d'une seconde
 copie à synchroniser. Le répertoire est ignoré hors profil `pro`.
 
+### Récupération web
+
+`harness/AGENTS.md` décrit une escalade à trois paliers : fetch intégré, puis
+Firecrawl auto-hébergé, puis un vrai navigateur. Seul le palier 2 demande quelque
+chose de local.
+
+`~/.config/firecrawl/compose.yml` porte la pile — cinq conteneurs, plus de 6 Gio à
+l'usage — et `~/.local/bin/firecrawl-mcp` la pilote :
+
+```bash
+firecrawl-mcp --start    # premier lancement : environ 2 Gio d'images à télécharger
+```
+
+`--stop` l'arrête, `--status` montre les conteneurs. Sans argument, le script est le
+serveur MCP sur stdio : c'est cette forme qu'on enregistre auprès de Claude Code,
+une fois.
+
+```bash
+claude mcp add --scope user firecrawl -- "$HOME/.local/bin/firecrawl-mcp"
+```
+
+La pile ne redémarre pas avec le daemon docker, volontairement — elle ne sert qu'à
+la demande. L'API écoute sur `127.0.0.1` uniquement : elle tourne sans
+authentification.
+
 ### Ce qui n'est pas versionné
 
 `~/.claude/settings.json` reste local : il mêle des chemins absolus écrits par

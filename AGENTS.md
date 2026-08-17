@@ -22,6 +22,7 @@ where a new file goes from where it must land.
 | --- | --- |
 | `dot_<name>` | deployed to `~/.<name>` |
 | `dot_config/` | deployed to `~/.config/` |
+| `dot_local/bin/` | executables deployed to `~/.local/bin`, `executable_` and extensionless |
 | `private_dot_ssh/` | deployed to `~/.ssh` with restricted permissions |
 | `harness/` | agent instructions, agnostic of any single agent — not deployed as such |
 | `scripts/` | one-shot maintenance scripts, not deployed |

@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+# Serveur MCP Firecrawl adossé à la pile auto-hébergée de ~/.config/firecrawl.
+# bash et non sh POSIX : ce script ne tourne jamais au bootstrap, il suppose déjà
+# docker et npx installés.
+#
+#   firecrawl-mcp           serveur MCP sur stdio (ce que Claude Code lance)
+#   firecrawl-mcp --start   démarre la pile et attend qu'elle réponde
+#   firecrawl-mcp --stop    arrête la pile
+#   firecrawl-mcp --status  état des conteneurs
+#
+# Le premier --start télécharge environ 2 Gio d'images : à faire à la main, pas
+# depuis la poignée de main MCP, qui expirerait avant la fin.
+
+set -euo pipefail
+
+COMPOSE="${FIRECRAWL_COMPOSE:-$HOME/.config/firecrawl/compose.yml}"
+API_URL="${FIRECRAWL_API_URL:-http://localhost:3002}"
+WAIT_TIMEOUT="${FIRECRAWL_WAIT_TIMEOUT:-90}"
+
+compose() { docker compose --file "$COMPOSE" "$@"; }
+
+require_docker() {
+  if ! docker info >/dev/null 2>&1; then
+    echo "firecrawl-mcp: daemon docker indisponible" >&2
+    exit 69
+  fi
+  if [ ! -r "$COMPOSE" ]; then
+    echo "firecrawl-mcp: composition absente ($COMPOSE) — lancer chezmoi apply" >&2
+    exit 69
+  fi
+}
+
+api_responds() { curl -fsS --max-time 2 "$API_URL/test" >/dev/null 2>&1; }
+
+case "${1:-}" in
+--start)
+  require_docker
+  compose up --detach --wait --wait-timeout "$WAIT_TIMEOUT"
+  echo "🔥  Firecrawl écoute sur $API_URL"
+  ;;
+--stop)
+  require_docker
+  compose down
+  echo "🔥  Firecrawl arrêté"
+  ;;
+--status)
+  require_docker
+  compose ps
+  ;;
+'')
+  require_docker
+  # La pile est peut-être déjà debout d'une session précédente : on ne paie
+  # l'attente que si l'API ne répond pas.
+  if ! api_responds; then
+    compose up --detach --wait --wait-timeout "$WAIT_TIMEOUT" >&2 || {
+      echo "firecrawl-mcp: pile non démarrée — lancer « firecrawl-mcp --start » une fois" >&2
+      exit 69
+    }
+  fi
+  exec env FIRECRAWL_API_URL="$API_URL" npx --yes firecrawl-mcp
+  ;;
+*)
+  echo "firecrawl-mcp: option inconnue « $1 » (--start, --stop, --status)" >&2
+  exit 64
+  ;;
+esac
