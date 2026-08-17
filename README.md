@@ -35,7 +35,7 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply "https://${GH_PAT}@github.c
 chezmoi s'installe, clone ce repo, demande le profil de la machine (`perso`
 ou `pro`) et la passphrase de déchiffrement des secrets, puis applique la
 configuration. Au passage, un script `run_onchange` installe les outils
-manquants (`age`, `gh`, `starship`) — voir [Outillage](#outillage).
+manquants (`age`, `gh`, `jq`, `ripgrep`, `starship`) — voir [Outillage](#outillage).
 
 ### 3. Basculer sur gh
 
@@ -70,13 +70,15 @@ apply où le script a changé :
 |---|---|---|
 | `age` | déchiffre `~/.secrets` | secrets inaccessibles (voir dépannage) |
 | `gh` | helper d'identifiants git | mot de passe demandé à chaque pull |
+| `jq` | filtrage JSON | scripts et agents qui lisent du JSON échouent |
+| `ripgrep` (`rg`) | recherche de code | agents et telescope retombent sur `grep` |
 | `starship` | prompt | `.zshrc` retombe sur le prompt zsh par défaut |
 
 Sur macOS il passe par Homebrew. Ailleurs il pose des binaires statiques dans
 `~/bin`, que `.zshenv` met en tête du `PATH` — `.zshenv` et pas `.zprofile`,
 pour que les shells non interactifs (`ssh nas '...'`, planificateur DSM) les
-trouvent aussi. Les versions d'`age` et de `gh` sont épinglées en tête du
-script ; les modifier suffit à déclencher une réinstallation.
+trouvent aussi. Les versions d'`age`, `gh`, `jq` et `ripgrep` sont épinglées en
+tête du script ; les modifier suffit à déclencher une réinstallation.
 
 ### Pourquoi le repo reste privé
 
@@ -343,7 +345,7 @@ Contrepartie du `RemoteCommand` : `ssh nas <commande>`, `scp` et `rsync`
 
 ### Synology (DSM)
 
-Pas de gestionnaire de paquets : `age`, `gh` et `starship` viennent des
+Pas de gestionnaire de paquets : `age`, `gh`, `jq`, `ripgrep` et `starship` viennent des
 binaires statiques posés dans `~/bin`. Vérifier aussi que le service des
 répertoires personnels est activé, sans quoi `$HOME` n'est pas
 `/var/services/homes/<user>` et la config chezmoi atterrit ailleurs que là où
