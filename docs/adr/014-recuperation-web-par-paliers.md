@@ -19,6 +19,32 @@ Le choix de l'auto-hébergement porte une seconde question : une API hébergée 
 passer toutes les URL lues, donc le contenu des recherches et des lectures d'un
 poste de travail professionnel.
 
+### Pourquoi `stealthy_fetch` n'est pas le palier anti-bot
+
+L'outil évident pour le troisième mur était `stealthy_fetch` de Scrapling, et c'est la
+place qu'il occupait dans la première version de cette ADR. Il est inutilisable, et le
+diagnostic mérite d'être consigné parce qu'il passe par **deux signaux trompeurs** :
+
+1. **L'erreur ment sur la cause.** L'appel échoue sur
+   `Executable doesn't exist at /root/.cache/ms-playwright/chromium-1228/…`, ce qui
+   envoie chercher du côté des navigateurs Playwright. Or l'image *contient*
+   `chromium-1234`, et le Playwright de son venv (1.62.0) attend précisément 1234 : les
+   deux sont cohérents. Le 1228 vient d'un second Playwright, celui que Camoufox tire
+   avec lui. La piste « installer le bon chromium » est sans issue.
+2. **`scrapling install` affirme le contraire.** La commande dédiée — « Install all
+   Scrapling's Fetchers dependencies » — répond `The dependencies are already installed`
+   et sort en 0. Sa vérification ne couvre pas Camoufox, dont le module n'est même pas
+   importable dans l'image (`ModuleNotFoundError: No module named 'camoufox'`).
+
+La cause réelle est en amont de Scrapling. `uv run --with 'camoufox[geoip]'` installe bien
+le paquet (46 paquets résolus), mais son téléchargeur de navigateur synchronise **zéro
+version depuis ses trois dépôts**. Ce n'est pas un problème de réseau ni de quota : depuis
+le conteneur, l'API GitHub répond 200 avec 50 requêtes restantes sur 60. Le dépôt
+`daijro/camoufox` existe, n'est pas archivé, et publie des **tags** (`v152.0.4-beta.28`)
+mais **aucune release** — or c'est l'API des releases que le résolveur interroge.
+
+Rien de tout cela n'est réparable depuis ce dépôt.
+
 ## Décision
 
 Trois paliers, décrits dans `harness/AGENTS.md`, avec une règle d'usage : **ne
@@ -34,12 +60,10 @@ pas sur une intuition.
 CloakBrowser n'est pas un serveur MCP : c'est un navigateur exposé en CDP, et Scrapling
 en est le client, par son paramètre `cdp_url`.
 
-`stealthy_fetch` de Scrapling **n'est pas un palier**, alors qu'il occupait cette place
-à la rédaction initiale. Il exige Camoufox, absent de l'image `pyd4vinci/scrapling` et
-impossible à y installer : le dépôt amont de Camoufox publie des tags mais aucune
-release, si bien que son propre téléchargeur résout zéro version. Ses outils `get`,
-`fetch`, `screenshot` et de session fonctionnent, et c'est à ce titre que Scrapling
-reste enregistré — comme client CDP de CloakBrowser.
+**`stealthy_fetch` ne s'utilise pas**, pour les raisons établies plus haut ; l'interdiction
+est portée par `harness/AGENTS.md` afin qu'aucune session ne recommence le diagnostic. Les
+outils `get`, `fetch`, `screenshot` et de session de Scrapling fonctionnent, et c'est à ce
+titre qu'il reste enregistré — comme client CDP de CloakBrowser.
 
 Firecrawl est auto-hébergé, jamais l'API publique. Son API tourne sans
 authentification et n'écoute donc que sur `127.0.0.1`.
