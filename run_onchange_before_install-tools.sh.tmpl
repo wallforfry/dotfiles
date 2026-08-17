@@ -26,6 +26,34 @@ if command -v brew >/dev/null; then
 fi
 {{ end -}}
 
+# zsh ne s'installe pas en binaire statique : il lui faut son arborescence de
+# fonctions (/usr/share/zsh) à côté. Il passe donc par le gestionnaire de
+# paquets quand il y en a un — cas des conteneurs, pas du NAS.
+if ! command -v zsh >/dev/null; then
+  if [ "$(id -u)" = 0 ]; then sudo=""; elif command -v sudo >/dev/null; then sudo="sudo"; else sudo="none"; fi
+
+  if [ "$sudo" = none ]; then
+    echo "⚠️   zsh absent et pas de droits root pour l'installer" >&2
+  elif command -v apt-get >/dev/null; then
+    # env, et pas un préfixe VAR=... : sudo purge l'environnement par défaut.
+    $sudo apt-get update -qq && $sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq zsh
+  elif command -v apk >/dev/null; then
+    $sudo apk add --quiet zsh
+  elif command -v dnf >/dev/null; then
+    $sudo dnf install -y -q zsh
+  elif command -v pacman >/dev/null; then
+    $sudo pacman -Sy --noconfirm --quiet zsh
+  else
+    # DSM notamment : ni apt ni apk. zsh vient d'Entware (opkg install zsh).
+    echo "⚠️   zsh absent et aucun gestionnaire de paquets connu" >&2
+  fi
+
+  # if, pas &&, sinon set -e ferait échouer le script quand zsh manque encore.
+  if command -v zsh >/dev/null; then
+    echo "🐚  zsh installé"
+  fi
+fi
+
 # Machines sans gestionnaire de paquets (NAS Synology, conteneurs) : binaires
 # statiques dans ~/bin, mis dans le PATH par .zshenv.
 case "$(uname -m)" in
