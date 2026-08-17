@@ -38,9 +38,14 @@
 
 [includeIf "gitdir:~/Projects/REDACTED/"]
     path = ~/Projects/REDACTED/.gitconfig
+{{ if lookPath "gh" -}}
+{{/* Chemin résolu à l'apply : gh vit dans /usr/local/bin sur macOS, ailleurs
+     sur les autres machines. Bloc omis là où gh n'est pas installé, sinon
+     git échoue sur chaque opération réseau. */ -}}
 [credential "https://github.com"]
-	helper = 
-	helper = !/usr/local/bin/gh auth git-credential
+	helper =
+	helper = !{{ lookPath "gh" }} auth git-credential
 [credential "https://gist.github.com"]
-	helper = 
-	helper = !/usr/local/bin/gh auth git-credential
+	helper =
+	helper = !{{ lookPath "gh" }} auth git-credential
+{{ end -}}
