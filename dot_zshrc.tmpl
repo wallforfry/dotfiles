@@ -67,7 +67,7 @@ if command -v nvim &> /dev/null; then
 fi
 
 if command -v gpg-connect-agent &> /dev/null; then
-  alias switch-card=gpg-connect-agent "scd serialno" "learn --force" /bye
+  alias switch-card="gpg-connect-agent 'scd serialno' 'learn --force' /bye"
   echo "🔑  GPG card switch alias added"
 fi
 
