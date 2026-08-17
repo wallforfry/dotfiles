@@ -37,13 +37,17 @@ costs more than the one before, in containers, memory and latency.
 2. **Self-hosted Firecrawl** — the `firecrawl` MCP, driven by `firecrawl-mcp`. For pages where tier 1
    returns a shell instead of content, and for batches, crawls, or a search that must return page
    bodies rather than links. Self-hosted, so no third party learns which URLs were read.
-3. **Scrapling `stealthy_fetch`** — the `scrapling` MCP, driven by `scrapling-mcp`. For anti-bot
-   protections; add `solve_cloudflare` for Turnstile.
-4. **CloakBrowser**, when `stealthy_fetch` is still blocked. Not an MCP server: a browser exposed over
-   CDP, consumed *through* Scrapling. Start it with `cloak --start`, then call Scrapling's
-   `fetch` with `cdp_url=http://host.docker.internal:9222` — `cloak --url` prints it.
+3. **CloakBrowser through Scrapling** — for anti-bot protections. `cloak --start`, then the
+   `scrapling` MCP's `fetch` with `cdp_url=http://host.docker.internal:9222`; `cloak --url` prints it.
    `host.docker.internal` and not `localhost`, because Scrapling itself runs in a container where
-   `localhost` would be Scrapling.
+   `localhost` would be Scrapling. CloakBrowser is not an MCP server — it is a browser exposed over
+   CDP, and Scrapling is its client.
+
+**Do not use Scrapling's `stealthy_fetch`.** It needs Camoufox, which is absent from the
+`pyd4vinci/scrapling` image and cannot be installed: its upstream repository publishes tags but no
+releases, so Camoufox's own downloader resolves zero versions. Scrapling's `get`, `fetch`,
+`screenshot` and session tools do work. Tier 3 is CloakBrowser precisely because this one is
+unavailable.
 
 **Stop what you started.** Firecrawl holds five containers and over 6 GiB; `firecrawl-mcp --stop`.
 Scrapling holds one; `scrapling-mcp --stop`. CloakBrowser stops itself after five idle minutes, or

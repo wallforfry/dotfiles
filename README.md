@@ -187,17 +187,21 @@ copie à synchroniser. Le répertoire est ignoré hors profil `pro`.
 
 ### Récupération web
 
-`harness/AGENTS.md` décrit une escalade à quatre paliers : fetch intégré, Firecrawl
-auto-hébergé, `stealthy_fetch` de Scrapling, puis CloakBrowser. Les trois derniers
-sont pilotés par des scripts de `~/.local/bin`, tous bâtis sur le même principe —
-**un conteneur nommé, réutilisé par toutes les sessions**.
+`harness/AGENTS.md` décrit une escalade à trois paliers : fetch intégré, Firecrawl
+auto-hébergé, puis CloakBrowser pour l'anti-bot. Les deux derniers sont pilotés par des
+scripts de `~/.local/bin`, tous bâtis sur le même principe — **un conteneur nommé,
+réutilisé par toutes les sessions**.
 
 | Script | Rôle | Enregistrement MCP |
 |---|---|---|
 | `firecrawl-mcp` | palier 2, pile de `~/.config/firecrawl/compose.yml` | oui |
-| `scrapling-mcp` | paliers 3 et 4 | oui |
-| `cloak` | palier 4, navigateur exposé en CDP | non — consommé par Scrapling |
+| `cloak` | palier 3, navigateur exposé en CDP | non — consommé par Scrapling |
+| `scrapling-mcp` | client CDP de `cloak` ; aussi `get`, `fetch`, `screenshot` | oui |
 | `postgres-mcp` | hors escalade, même discipline de conteneur | oui |
+
+`stealthy_fetch` de Scrapling est inutilisable : Camoufox est absent de l'image et son
+dépôt amont ne publie aucune release, donc son téléchargeur ne résout aucune version.
+Voir [ADR-014](docs/adr/014-recuperation-web-par-paliers.md).
 
 Chacun accepte `--stop` et `--status` ; `cloak` ajoute `--start` et `--url`,
 `firecrawl-mcp` ajoute `--start`. Sans argument, les trois serveurs MCP parlent
