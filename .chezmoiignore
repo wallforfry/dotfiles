@@ -3,3 +3,9 @@ docs
 scripts
 LICENSE
 .github
+AGENTS.md
+CLAUDE.md
+harness
+{{ if ne .profile "pro" }}
+.claude_REDACTED
+{{ end }}

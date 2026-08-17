@@ -130,12 +130,44 @@ passphrase n'est stockée nulle part dans ce repo : elle est saisie à
 | Profil | Contenu |
 |---|---|
 | `perso` | base commune uniquement |
-| `pro` | aliases Doppler/REDACTED, `cdb`/`cds`, `claude-REDACTED`, `REDACTED_PROJECT_PATH` |
+| `pro` | aliases Doppler/REDACTED, `cdb`/`cds`, `claude-REDACTED`, `REDACTED_PROJECT_PATH`, `~/.claude_REDACTED` |
 
 Les blocs macOS (Arc, Homebrew, pnpm, Coursier) ne sont rendus que sur darwin.
 
 L'identité git n'est pas templatée : `~/.gitconfig` bascule déjà entre les deux
 identités par répertoire via `includeIf "gitdir:~/Projects/REDACTED/"`.
+
+## Agents IA
+
+Les instructions données aux agents de code sont versionnées ici, plus dans un
+`~/.claude` recopié à la main sur chaque machine.
+
+### Source unique
+
+`harness/` contient les trois fichiers d'instructions, agnostiques de l'agent :
+
+| Fichier | Rôle |
+|---|---|
+| `harness/AGENTS.md` | règles techniques : analyse critique, délégation aux subagents, exigences de vérification, style |
+| `harness/SOUL.md` | voix de l'agent : langue, registre, priorités |
+| `harness/USER.md` | contexte et attentes de l'utilisateur : acquis, biais techniques, mode de travail |
+
+`dot_claude/{AGENTS,SOUL,USER}.md.tmpl` ne sont que des projections d'une ligne
+(`{{ include "harness/…" }}`) et `dot_claude/CLAUDE.md` l'adaptateur Claude qui
+les importe. **Éditer `harness/`, jamais les projections.**
+
+`AGENTS.md` à la racine porte les règles propres à ce dépôt (chezmoi, langues,
+vérification, secrets) ; `CLAUDE.md` s'y réduit à un `@AGENTS.md`. Aucun des
+deux n'est déployé.
+
+### Profil pro
+
+`dot_claude_REDACTED/` ne contient que des liens relatifs vers `~/.claude`, pour
+que la session `claude-REDACTED` partage la même source au lieu d'une seconde
+copie à synchroniser. Le répertoire est ignoré hors profil `pro`.
+
+Ne jamais ajouter l'attribut `exact_` à `dot_claude/` : `~/.claude` contient
+l'état vivant des sessions, que chezmoi supprimerait.
 
 ## ssh
 
