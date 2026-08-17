@@ -137,6 +137,21 @@ Les blocs macOS (Arc, Homebrew, pnpm, Coursier) ne sont rendus que sur darwin.
 L'identité git n'est pas templatée : `~/.gitconfig` bascule déjà entre les deux
 identités par répertoire via `includeIf "gitdir:~/Projects/Septeo/"`.
 
+## ssh
+
+`~/.ssh/config` n'est **pas** versionné : `coder config-ssh` et les extensions
+VS Code/Cursor y réécrivent quatre blocs automatiquement, ce qui produirait un
+conflit à chaque `chezmoi diff`. Seuls des fragments le sont, sous
+`private_dot_ssh/private_config.d/`.
+
+Ils supposent une ligne présente en tête de `~/.ssh/config`, à ajouter une
+fois par machine — en tête, parce que ssh retient la première valeur vue pour
+chaque option :
+
+```bash
+Include ~/.ssh/config.d/*.conf
+```
+
 ## Prompt
 
 [starship](https://starship.rs), configuré par `dot_config/starship.toml`. Le
@@ -215,16 +230,18 @@ sur une erreur de script, aucun fichier n'a été écrit — les scripts
 
 ### zsh n'est pas le shell de login
 
-DSM ne permet pas `chsh`, et remet de toute façon le shell de `/etc/passwd` à
-sa valeur d'origine aux mises à jour système. `dot_profile` contourne le
-problème : `/bin/sh` lit `~/.profile` au login et y trouve un `exec zsh -l`.
-La bascule ne se fait qu'en shell interactif, et seulement si `zsh` existe —
-`scp`, `rsync`, les tâches planifiées et les `ssh nas '...'` ne sont pas
-touchés.
+Sur DSM, `chsh` n'est pas utilisable et le shell de `/etc/passwd` est de toute
+façon réinitialisé aux mises à jour système. Pire, le shell qu'ouvre ssh n'est
+**pas** un shell de login (`shopt -q login_shell` renvoie 1, `$0` vaut `/bin/sh`
+et non `-sh`) : `~/.profile` n'est donc jamais lu, et aucun dotfile ne peut
+servir de point d'accroche.
 
-Avant de fermer ta session, vérifie depuis une **seconde** connexion que le
-login aboutit : un `~/.profile` cassé se paie par une perte d'accès au shell.
-En secours, DSM permet toujours `ssh -t nas /bin/sh --noprofile`.
+La bascule se fait donc côté client, par `~/.ssh/config.d/nas.conf` :
+`RemoteCommand exec /usr/local/bin/zsh -l`. `dot_profile` est conservé pour le
+jour où DSM rendrait un vrai shell de login, mais il ne sert à rien aujourd'hui.
+
+Contrepartie du `RemoteCommand` : `ssh nas <commande>`, `scp` et `rsync`
+échouent sur ces hôtes. Les contourner avec `-o RemoteCommand=none`.
 
 ### Synology (DSM)
 
