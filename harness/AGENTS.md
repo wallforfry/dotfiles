@@ -40,14 +40,14 @@ costs more than the one before, in containers, memory and latency.
 3. **Scrapling `stealthy_fetch`** — the `scrapling` MCP, driven by `scrapling-mcp`. For anti-bot
    protections; add `solve_cloudflare` for Turnstile.
 4. **CloakBrowser**, when `stealthy_fetch` is still blocked. Not an MCP server: a browser exposed over
-   CDP, consumed *through* Scrapling. Start it with `cloakbrowser --start`, then call Scrapling's
-   `fetch` with `cdp_url=http://host.docker.internal:9222` — `cloakbrowser --url` prints it.
+   CDP, consumed *through* Scrapling. Start it with `cloak --start`, then call Scrapling's
+   `fetch` with `cdp_url=http://host.docker.internal:9222` — `cloak --url` prints it.
    `host.docker.internal` and not `localhost`, because Scrapling itself runs in a container where
    `localhost` would be Scrapling.
 
 **Stop what you started.** Firecrawl holds five containers and over 6 GiB; `firecrawl-mcp --stop`.
-Scrapling holds one; `scrapling-mcp --stop`. CloakBrowser stops itself after five idle minutes.
-None of them restart with the docker daemon, by design.
+Scrapling holds one; `scrapling-mcp --stop`. CloakBrowser stops itself after five idle minutes, or
+`cloak --stop` to be sure. None of them restart with the docker daemon, by design.
 
 A real browser is **not a tier** — it answers a different need. Use the Browser pane
 (`mcp__Claude_Browser__*`) when the task requires interaction: clicking, filling a form, waiting on a
