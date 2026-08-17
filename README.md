@@ -12,14 +12,19 @@ suivants.
 
 ### 1. Récupérer le token
 
-Le PAT (portée `repo` en lecture seule) est dans Bitwarden, entrée
-**« GitHub — PAT dotfiles »**. Si le CLI Bitwarden est disponible :
+Le PAT est dans Bitwarden, entrée **`github.com`**, champ personnalisé
+**`Dotfiles token`**. Si le CLI Bitwarden est disponible :
 
 ```bash
-export GH_PAT=$(bw get password "GitHub — PAT dotfiles")
+export GH_PAT=$(bw get item github.com | jq -r '.fields[] | select(.name == "Dotfiles token").value')
 ```
 
-Sinon, copie-le depuis le coffre web et `export GH_PAT=...` à la main.
+`bw get password` ne renverrait que le mot de passe du compte : les champs
+personnalisés ne sont accessibles que via `bw get item`, d'où le passage par
+`jq`. Déverrouiller le coffre au préalable (`bw unlock`) si nécessaire.
+
+Sinon, copie le champ depuis le coffre web et `export GH_PAT=...` à la main —
+c'est la seule option sur une machine sans `bw` ni `jq`, typiquement un NAS.
 
 ### 2. Installer
 
