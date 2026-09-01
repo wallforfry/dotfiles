@@ -44,6 +44,10 @@ effective_patterns() {
 
 step_preconditions() {
   local missing=0 tool
+  # Le script supprime et recrée $WORK/rewrite : un shell qui s'y trouve perd son
+  # répertoire courant, et git échoue sur « Unable to read current working
+  # directory ». Toutes les autres chemins sont absolus, ce cd ne coûte rien.
+  cd "$HOME"
   for tool in chezmoi git age age-keygen gh git-filter-repo; do
     command -v "$tool" >/dev/null 2>&1 || { echo "ERREUR: $tool absent." >&2; missing=1; }
   done
