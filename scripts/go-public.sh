@@ -87,6 +87,15 @@ step_encrypt_fragments() {
   find "$SOURCE_DIR" -name '*.age' -not -path '*/.git/*' | sed "s|^$SOURCE_DIR/|  |"
 }
 
+step_verify_source_tree() {
+  echo "Recherche des motifs dans l'arbre de travail de $SOURCE_DIR..."
+  if git -C "$SOURCE_DIR" grep -n -I -F -f "$EFFECTIVE" -- . ':!.oh-my-zsh'; then
+    echo "ERREUR: motifs sensibles encore présents en clair. Corrige avant de continuer." >&2
+    exit 1
+  fi
+  echo "Arbre de travail propre."
+}
+
 step_verify_decryption() {
   local f rc=0
   echo "Relecture de chaque fragment chiffré : la passphrase est redemandée."
@@ -203,21 +212,36 @@ step_cleanup() {
   wait_for_enter
 }
 
+# Un « command not found » sur une étape a déjà interrompu une bascule en cours :
+# main vérifie que chacune existe avant d'exécuter la première.
+check_steps_defined() {
+  local step missing=0
+  for step in "$@"; do
+    declare -F "$step" >/dev/null || { echo "ERREUR: étape $step non définie." >&2; missing=1; }
+  done
+  [ "$missing" = 0 ] || exit 1
+}
+
 main() {
-  step_preconditions
-  step_write_patterns_file
-  step_encrypt_fragments
-  step_verify_source_tree
-  step_verify_decryption
-  step_commit_fragments
-  step_check_both_profiles
-  step_rewrite_history
-  step_verify_history
-  step_refresh_adr_commits
-  step_force_push
-  step_switch_visibility
-  step_rotate_passphrase
-  step_cleanup
+  local steps=(
+    step_preconditions
+    step_write_patterns_file
+    step_encrypt_fragments
+    step_verify_source_tree
+    step_verify_decryption
+    step_commit_fragments
+    step_check_both_profiles
+    step_rewrite_history
+    step_verify_history
+    step_refresh_adr_commits
+    step_force_push
+    step_switch_visibility
+    step_rotate_passphrase
+    step_cleanup
+  )
+  check_steps_defined "${steps[@]}"
+  local step
+  for step in "${steps[@]}"; do "$step"; done
   echo "Bascule terminée."
 }
 
