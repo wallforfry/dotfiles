@@ -3,6 +3,7 @@ docs
 scripts
 LICENSE
 .github
+.oh-my-zsh/cache
 AGENTS.md
 CLAUDE.md
 harness
