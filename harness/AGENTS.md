@@ -95,6 +95,30 @@ its source, never acted on.
 - Match the surrounding code's naming and idiom. The neighbourhood sets the idiom, never the quality
   bar: do not reproduce a nearby defect.
 
+## Compatibility and Obsolescence
+
+Every path kept alive is paid for by every later change. Remove rather than layer, unless something
+outside the repository depends on the old shape.
+
+- **Ask what the project owes the outside world first.** A repository with production users trades
+  removal for migration; one that has not shipped owes nothing. Where the answer is recorded -
+  `USER.md`, an ADR, the README - follow it; where it is not, establish it once and record it. The
+  rules below apply with that answer in hand, never by default.
+- **Aim for the smallest coherent design that represents the product today.** Obsolete code, schemas,
+  endpoints, configuration, aliases and transitional paths are deleted, not deprecated.
+- **Add no compatibility shim, legacy alias, dual-read or dual-write path, or data-preserving
+  backfill** unless the user asks for it or a published contract requires it. Speculative
+  compatibility is dead code with a plausible name.
+- **Internal interfaces are not public contracts.** Change one and update its callers and tests in
+  the same commit, rather than keeping the old signature beside the new.
+- **Development and test data are disposable.** Recreate the database instead of complicating the
+  product to preserve a local state.
+- **Correctness properties are not compatibility concessions.** Database invariants, transactional
+  safety, migration idempotence and deterministic setup survive every cleanup.
+- **Treat migration history as a replaceable baseline, and keep the chain coherent.** Never rewrite
+  an applied migration without resetting the development and test databases it touched, and
+  consolidate a baseline as its own coordinated change, never as incidental work in a feature branch.
+
 ## Instruction and Skill Maintenance
 
 - Keep always-loaded files limited to stable guidance that applies to every task; put conditional
