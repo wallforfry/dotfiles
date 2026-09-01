@@ -50,18 +50,38 @@ step_inventorier_intel() {
     "$(grep -c '^cask ' "$BREWFILE" || true)"
 }
 
-step_signaler_les_formules_hors_core() {
-  echo "Trois formules du brew Intel ne sont plus dans homebrew/core et ne se"
-  echo "réinstalleront pas telles quelles. Décide de chacune avant de continuer :"
+# Trois formules du brew Intel ne peuvent pas être réinstallées telles quelles.
+# Vérifié sur cette machine, pas déduit :
+#   terraform 1.5.7  retirée de homebrew/core au changement de licence.
+#   python@3.8       en fin de vie, retirée de homebrew/core.
+#   qt@5             « Cannot install qt@5 because conflicting formulae are
+#                    installed » - dix-neuf modules de qt 6, tirés par qt, lient
+#                    les mêmes binaires. Côté Intel elle est installée mais non
+#                    liée, et « brew uses --installed qt@5 » ne renvoie rien :
+#                    c'est une orpheline, pas une dépendance.
+# Les écarter ici plutôt que de laisser « brew bundle » échouer trois fois.
+step_ecarter_les_formules_impossibles() {
+  for f in terraform python@3.8 qt@5; do
+    if grep -q "^brew \"$f\"" "$FORMULES"; then
+      grep -v "^brew \"$f\"" "$FORMULES" > "$FORMULES.tmp"
+      mv "$FORMULES.tmp" "$FORMULES"
+      echo "✂️   $f écartée de $FORMULES"
+    fi
+  done
+}
+
+step_decider_du_remplacement_de_terraform() {
+  echo "terraform n'a plus de formule dans homebrew/core. Trois issues, à"
+  echo "trancher maintenant - le reste de la migration n'y touchera pas :"
   echo
-  echo "  terraform 1.5.7  retirée de core au changement de licence. Soit"
-  echo "                   « hashicorp/tap/terraform » et sa BSL, soit tenv."
-  echo "  python@3.8       en fin de vie, retirée de core. À abandonner."
-  echo "  linear           vient de schpet/tap, retapé à l'étape précédente."
+  echo "  hashicorp/tap/terraform  la version amont, sous licence BSL :"
+  echo "    $ARM/bin/brew tap hashicorp/tap"
+  echo "    $ARM/bin/brew install hashicorp/tap/terraform"
   echo
-  echo "Retire de $FORMULES ce que tu ne veux pas voir échouer :"
+  echo "  tenv                     gestionnaire de versions, encore dans core :"
+  echo "    $ARM/bin/brew install tenv"
   echo
-  echo "  \$EDITOR $FORMULES"
+  echo "  rien                     si terraform 1.5.7 ne te sert plus."
   wait_for_enter
 }
 
@@ -103,9 +123,9 @@ step_retaper_les_taps() {
 }
 
 step_installer_les_formules() {
-  printf 'Installation de %s formules dans %s. Hors les trois signalées, toutes\n' \
+  printf 'Installation de %s formules dans %s : toutes ont une bouteille\n' \
     "$(grep -c '^brew ' "$FORMULES" || true)" "$ARM"
-  echo "ont une bouteille arm64_tahoe ou « all » : aucune compilation."
+  echo "arm64_tahoe ou « all », donc aucune compilation."
   "$ARM/bin/brew" bundle install --no-upgrade --file="$FORMULES" ||
     echo "⚠️   certaines formules ont échoué, voir au-dessus" >&2
   printf '🍺  %s formules explicites dans %s\n' \
@@ -120,6 +140,8 @@ step_comparer_les_inventaires() {
   if [ -z "$manquantes" ]; then
     echo "✅  Toutes les formules explicites du brew Intel existent en arm64."
   else
+    # Les trois écartées à l'étape 3 sont attendues ici : la comparaison porte
+    # sur l'inventaire Intel, qui les contient encore.
     echo "⚠️   Absentes de $ARM :" >&2
     echo "$manquantes" | sed 's/^/     /' >&2
   fi
@@ -203,7 +225,8 @@ step_relancer_les_services() {
 main() {
   step_verifier_prerequis
   step_inventorier_intel
-  step_signaler_les_formules_hors_core
+  step_ecarter_les_formules_impossibles
+  step_decider_du_remplacement_de_terraform
   step_arreter_les_services
   step_sauvegarder_postgres
   step_retaper_les_taps
