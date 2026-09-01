@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-08
-- **Commits** : `d6dd620` (Firecrawl et escalade), `3f9c683` (Scrapling et CloakBrowser), `71ba985`
+- **Commits** : `e50783c` (Firecrawl et escalade), `c3a6825` (Scrapling et CloakBrowser), `25b5456`
 
 ## Contexte
 

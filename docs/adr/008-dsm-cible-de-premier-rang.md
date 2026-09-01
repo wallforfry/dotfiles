@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-08
-- **Commits** : `4a7d1e8` (`scriptTempDir`), `41a9fb9` puis `410b4c6` (`.profile`, posé puis retiré), `cdf79e1` (fragment ssh), `f29360b` (zsh)
+- **Commits** : `173e14b` (`scriptTempDir`), `945d8c5` puis `cf0cef3` (`.profile`, posé puis retiré), `b11059c` (fragment ssh), `3d4abc0` (zsh)
 
 ## Contexte
 
@@ -11,12 +11,12 @@ travaille par ssh. Or DSM enfreint à peu près toutes les hypothèses usuelles 
 poste Unix, et chacune s'est manifestée par une panne :
 
 - `/tmp` est monté `noexec`, d'où un « permission denied » sur le script
-  d'installation de starship (`4a7d1e8`).
-- Ni `apt` ni `apk` : zsh vient d'Entware, `opkg install zsh` (`f29360b`).
+  d'installation de starship (`173e14b`).
+- Ni `apt` ni `apk` : zsh vient d'Entware, `opkg install zsh` (`3d4abc0`).
 - `chsh` est indisponible, et DSM réinitialise le shell de `/etc/passwd` à chaque
-  mise à jour (`41a9fb9`).
+  mise à jour (`945d8c5`).
 - Le shell ouvert par ssh **n'est pas un shell de login** : `~/.profile` n'est
-  jamais lu (`410b4c6`).
+  jamais lu (`cf0cef3`).
 
 Ce dernier point a coûté un aller-retour : `.profile` a été posé pour y `exec zsh`,
 puis retiré une fois constaté qu'il n'était jamais lu.
@@ -51,7 +51,7 @@ DSM est traité comme une cible de premier rang. Quatre règles en découlent :
 
 ## Alternatives écartées
 
-- **`~/.profile` avec `exec zsh`** : posé (`41a9fb9`) puis retiré (`410b4c6`), le
+- **`~/.profile` avec `exec zsh`** : posé (`945d8c5`) puis retiré (`cf0cef3`), le
   fichier n'étant jamais lu par un shell ssh non-login sur DSM. C'est l'alternative
   la plus tentante, et elle est réfutée par la mesure.
 - **`chsh`** : indisponible, et écrasé par les mises à jour de DSM.

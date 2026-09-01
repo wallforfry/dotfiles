@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-09
-- **Commits** : à renseigner après la réécriture d'historique, qui change tous les SHA
+- **Commits** : `dd56ae7` (documentation du clone anonyme)
 
 ## Contexte
 

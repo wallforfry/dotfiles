@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-09
-- **Commits** : à renseigner après la réécriture d'historique, qui change tous les SHA
+- **Commits** : `a44c652` (sortie du sensible), `dd56ae7` (documentation), `e7772a3` (fragments chiffrés)
 
 ## Contexte
 

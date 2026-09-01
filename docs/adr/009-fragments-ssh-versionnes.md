@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-08
-- **Commits** : `cdf79e1` (fragment `nas.conf`)
+- **Commits** : `b11059c` (fragment `nas.conf`)
 
 ## Contexte
 

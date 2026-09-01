@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-08
-- **Commits** : tout l'historique depuis `b286cad`
+- **Commits** : tout l'historique depuis `97a18fc`
 
 ## Contexte
 
@@ -15,7 +15,7 @@ L'historique suit Conventional Commits depuis le premier commit, sans qu'aucun
 outil ne l'impose : `feat`, `fix`, `docs` et `revert` sont utilisés, sans portée.
 
 L'accentuation, elle, a dérivé sans décision. Un seul sujet de tout l'historique
-porte ses accents - `fix: exécuter les scripts chezmoi hors de /tmp` (`4a7d1e8`) -
+porte ses accents - `fix: exécuter les scripts chezmoi hors de /tmp` (`173e14b`) -
 alors que trois autres les perdent sur des mots qui en attendent : `ne pas ecraser`,
 `un fragment ssh versionne`, `les biais deduits`. Les corps sont majoritairement
 accentués (12 sur 17). La dérive va donc vers l'ASCII dans les sujets, sans qu'aucune

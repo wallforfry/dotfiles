@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-08
-- **Commits** : `d6dd620`, `3f9c683` (les quatre pilotes)
+- **Commits** : `e50783c`, `c3a6825` (les quatre pilotes)
 
 ## Contexte
 

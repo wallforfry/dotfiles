@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-08
-- **Commits** : `b286cad` (initial commit)
+- **Commits** : `97a18fc` (initial commit)
 
 ## Contexte
 

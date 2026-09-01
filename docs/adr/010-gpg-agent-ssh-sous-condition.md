@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-08
-- **Commits** : `b59ac4e` (garde sur `SSH_AUTH_SOCK`), `9247893` (alias `switch-card`)
+- **Commits** : `c41e104` (garde sur `SSH_AUTH_SOCK`), `a8d3579` (alias `switch-card`)
 
 ## Contexte
 
@@ -13,7 +13,7 @@ pointer `SSH_AUTH_SOCK` sur le socket ssh de `gpg-agent` - et les commits signé
 Sur le NAS, il n'y a pas d'agent GPG utilisable. La version initiale exportait
 malgré tout le socket : `gpgconf` échouait, mais l'export avait lieu, ce qui
 **coupait l'agent ssh transmis par `ForwardAgent`** - le seul qui fonctionnait là -
-en plus d'afficher deux erreurs `gpgconf` à chaque login (`b59ac4e`).
+en plus d'afficher deux erreurs `gpgconf` à chaque login (`c41e104`).
 
 ## Décision
 
@@ -31,7 +31,7 @@ d'abord prouver que son remplaçant marche.
 L'alias `switch-card` (`gpg-connect-agent 'scd serialno' 'learn --force' /bye`)
 gère le changement de YubiKey. Ses arguments doivent être entourés de guillemets
 englobants, sans quoi zsh ne retient que le premier mot et traite le reste comme
-des demandes d'affichage d'alias (`9247893`).
+des demandes d'affichage d'alias (`a8d3579`).
 
 ## Conséquences
 

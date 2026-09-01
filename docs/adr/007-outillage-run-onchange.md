@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-08
-- **Commits** : `ec5bd58` (installation), `473405f` (PATH via `.zshenv`), `f29360b` (zsh)
+- **Commits** : `4811bad` (installation), `0c75fa8` (PATH via `.zshenv`), `3d4abc0` (zsh)
 
 ## Contexte
 
@@ -13,7 +13,7 @@ prompt ([ADR-006](006-starship-comme-prompt.md)). Aucun n'est présent sur une
 machine neuve, et le NAS n'a ni Homebrew ni gestionnaire de paquets - l'absence de
 starship y produisait une erreur au login.
 
-`.zprofile` avait d'abord porté l'ajout de `~/bin` au `PATH`. Le commit `473405f`
+`.zprofile` avait d'abord porté l'ajout de `~/bin` au `PATH`. Le commit `0c75fa8`
 en donne la limite : « `.zprofile` n'est lu que par les shells de login : ni ssh
 non interactif ni le planificateur DSM n'y trouvaient chezmoi, starship ou age ».
 
@@ -60,4 +60,4 @@ réexécution.
 - **Rendre l'absence d'un outil fatale** : abandonner l'apply au milieu laisse un
   `$HOME` à moitié configuré, pire que l'absence de starship.
 - **`~/bin` dans `.zprofile`** : essayé, insuffisant - les shells non interactifs
-  et le planificateur DSM n'y voient rien (`473405f`).
+  et le planificateur DSM n'y voient rien (`0c75fa8`).

@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-08
-- **Commits** : `ec5bd58` (installation et config versionnée)
+- **Commits** : `4811bad` (installation et config versionnée)
 
 ## Contexte
 
@@ -11,7 +11,7 @@ suit le shell ; un prompt fourni par un thème oh-my-zsh suit oh-my-zsh, dont le
 mises à jour ne sont pas maîtrisées ([ADR-005](005-oh-my-zsh-en-external.md)).
 
 Le NAS n'avait pas starship, ce qui produisait une erreur au login - le commit
-`ec5bd58` traite les deux sujets ensemble : l'installation et la forme de la
+`4811bad` traite les deux sujets ensemble : l'installation et la forme de la
 configuration.
 
 ## Décision
