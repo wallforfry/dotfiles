@@ -43,6 +43,10 @@ step_inventorier_intel() {
   # l'installation ne contient que les formules.
   grep '^brew ' "$BREWFILE" > "$FORMULES"
 
+  # Filet contre l'angle mort ci-dessus : la liste brute des kegs, que
+  # step_comparer_les_inventaires exploite, et qui survit à la suppression.
+  "$INTEL/bin/brew" list --formula > "$BREWFILE.kegs"
+
   printf '📋  %s : %s taps, %s formules, %s casks\n' \
     "$BREWFILE" \
     "$(grep -c '^tap ' "$BREWFILE" || true)" \
@@ -137,11 +141,15 @@ step_installer_les_formules() {
     "$("$ARM/bin/brew" leaves | wc -l | tr -d ' ')" "$ARM"
 }
 
+# « brew list --formula » et non « brew leaves » : un tap non approuvé est
+# ignoré par leaves et par bundle dump, mais son keg reste visible dans list.
+# C'est ainsi que bitbucket-cli (bkt), du tap avivsinai, a échappé à
+# l'inventaire et disparu avec le préfixe Intel sans que rien ne le signale.
 step_comparer_les_inventaires() {
   local manquantes
   manquantes=$(comm -23 \
-    <("$INTEL/bin/brew" leaves | sort) \
-    <("$ARM/bin/brew" leaves | sort))
+    <("$INTEL/bin/brew" list --formula | sort) \
+    <("$ARM/bin/brew" list --formula | sort))
   if [ -z "$manquantes" ]; then
     echo "✅  Toutes les formules explicites du brew Intel existent en arm64."
   else
@@ -149,6 +157,9 @@ step_comparer_les_inventaires() {
     # sur l'inventaire Intel, qui les contient encore.
     echo "⚠️   Absentes de $ARM :" >&2
     echo "$manquantes" | sed 's/^/     /' >&2
+    echo "     Les dépendances résolues autrement par le brew arm sont" >&2
+    echo "     attendues ici. Ce qui compte : les outils venant d'un tap," >&2
+    echo "     invisibles de « brew leaves », donc jamais installés." >&2
   fi
 }
 
