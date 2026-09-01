@@ -4,7 +4,7 @@
 	username = Wallerand
 	signingkey = 4063F8307A08E912
 [core]
-	excludesfile = /Users/REDACTED/.gitignore_global
+	excludesfile = {{ .chezmoi.homeDir }}/.gitignore_global
 [alias]
   big-files    = !"git rev-list --objects --all \
                  | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)' \
@@ -36,8 +36,10 @@
 [init]
   defaultBranch = main
 
-[includeIf "gitdir:~/Projects/REDACTED/"]
-    path = ~/Projects/REDACTED/.gitconfig
+# Identités par répertoire du profil pro : fragment chiffré, hors de ce dépôt
+# public. git ignore silencieusement un chemin inclus absent.
+[include]
+	path = ~/.config/git/pro.gitconfig
 {{ if lookPath "gh" -}}
 {{/* Chemin résolu à l'apply : gh vit dans /usr/local/bin sur macOS, ailleurs
      sur les autres machines. Bloc omis là où gh n'est pas installé, sinon

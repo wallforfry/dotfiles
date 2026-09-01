@@ -14,15 +14,12 @@ Aucun rappel de fondamentaux sur ces sujets. Aller au fait.
 
 ## Contextes
 
-- **REDACTED** (profil `pro`) - `REDACTED`, `REDACTED`, `REDACTED` :
-  monorepos TypeScript. Session isolée via `claude-REDACTED`
-  (`CLAUDE_CONFIG_DIR=~/.claude_REDACTED`).
+- **Contexte professionnel** - décrit dans `~/.claude/CONTEXT.md`, fragment
+  chiffré déployé sur le seul profil `pro` : ce dépôt est public et ne porte
+  aucun nom d'employeur, de client ou de projet interne.
 - **Forges** - GitHub en pro comme en perso ; Bitbucket uniquement en pro.
   Déduire la forge de `git remote get-url origin`, jamais du profil de la
   machine : les deux coexistent côté pro.
-- **REDACTED** - React, Node, PostgreSQL, Prisma, TypeScript strict.
-  Environnements via `doppler` (`doppler-api-prod`, `-dev`, `-local`, `-feat-0x`).
-- **REDACTED** - `REDACTED`, `REDACTED`.
 - **Perso** - `REDACTED`, `REDACTED`, ces dotfiles.
 - **Postes** - macOS au quotidien, Linux, NAS Synology DSM (`/tmp` monté
   `noexec`, shell forcé par un fragment SSH versionné).

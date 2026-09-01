@@ -1,7 +1,7 @@
 # Skills
 
 Source of truth: `dot_claude/skills/` in the dotfiles repository, deployed by chezmoi to
-`~/.claude/skills` and shared with `~/.claude_REDACTED/skills` through a symlink. Edit the source, never
+`~/.claude/skills` and shared with `~/.claude_pro/skills` through a symlink. Edit the source, never
 the deployed copy.
 
 One skill per directory, each with a `SKILL.md`. Optional `references/`, `assets/` and `scripts/`

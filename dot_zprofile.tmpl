@@ -45,15 +45,8 @@ if command -v gpg-agent &> /dev/null && gpgconf --launch gpg-agent &> /dev/null;
   fi
   unset gpg_sock
 fi
-{{ if eq .profile "pro" }}
-# REDACTED
-if [[ -s "$HOME/Projects/REDACTED/.env" ]]; then
-  export REDACTED_PROJECT_PATH="$HOME/Projects/REDACTED/"
-  export DOPPLER_LOCAL_CONFIG=REDACTED
-  export $(cat "$HOME/Projects/REDACTED/.env" | xargs)
-  echo "🔔  REDACTED environment variables loaded"
-fi
-{{ end }}
+# Fragment propre au profil pro, chiffré et hors de ce dépôt public.
+[ -f "$HOME/.config/zsh/pro.zprofile" ] && source "$HOME/.config/zsh/pro.zprofile"
 # Deno
 if [[ -s "$HOME/.deno/env" ]]; then
   export DENO_INSTALL="$HOME/.deno"

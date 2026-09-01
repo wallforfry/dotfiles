@@ -8,5 +8,9 @@ AGENTS.md
 CLAUDE.md
 harness
 {{ if ne .profile "pro" }}
-.claude_REDACTED
+.claude_pro
+.claude/CONTEXT.md
+.config/git/pro.gitconfig
+.config/zsh/pro.zsh
+.config/zsh/pro.zprofile
 {{ end }}

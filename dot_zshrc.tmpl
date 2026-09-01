@@ -17,22 +17,8 @@ source $ZSH/oh-my-zsh.sh
 if [[ ":$FPATH:" != *":$HOME/.zsh/completions:"* ]]; then
   export FPATH="$HOME/.zsh/completions:$FPATH"
 fi
-{{ if eq .profile "pro" }}
-# REDACTED
-if [[ "$REDACTED_PROJECT_PATH" ]]; then
-  alias doppler-api-prod="doppler run -p api -c REDACTED --"
-  alias doppler-api-dev="doppler run -p api -c REDACTED --"
-  alias doppler-api-local="doppler run -p api -c REDACTED --preserve-env --"
-  alias doppler-api-feat-01="doppler run -p api -c REDACTED --"
-  alias doppler-api-feat-02="doppler run -p api -c REDACTED --"
-  alias doppler-api-feat-03="doppler run -p api -c REDACTED --"
-  alias cdb="cd ~/Projects/REDACTED"
-  alias cds="cd ~/Projects/REDACTED"
-  echo "🚀 REDACTED aliases added"
-fi
-
-alias claude-REDACTED="CLAUDE_CONFIG_DIR=~/.claude_REDACTED claude"
-{{ end }}
+# Fragment propre au profil pro, chiffré et hors de ce dépôt public.
+[ -f "$HOME/.config/zsh/pro.zsh" ] && source "$HOME/.config/zsh/pro.zsh"
 # TheFuck
 if command -v thefuck &> /dev/null; then
   eval $(thefuck --alias)
@@ -53,7 +39,7 @@ export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
 # LM Studio CLI (lms)
 export PATH="$PATH:$HOME/.lmstudio/bin"
 
-alias promote="sudo dseditgroup -o edit -a REDACTED -t user admin"
+alias promote="sudo dseditgroup -o edit -a $(id -un) -t user admin"
 {{ end }}
 # Aliases
 if command -v duf &> /dev/null; then
