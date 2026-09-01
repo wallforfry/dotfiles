@@ -34,13 +34,10 @@ déclare avec le chemin de `gh` résolu à l'apply, et omet le bloc là où `gh`
 n'est pas installé. Une machine qui n'a jamais authentifié `gh` peut appliquer
 et mettre à jour, pas pousser.
 
-### Pourquoi pas en SSH ?
-
-`chezmoi init git@github.com:wallforfry/dotfiles.git` fonctionne aussi, mais
-suppose une clé SSH déjà utilisable sur la machine neuve. Avec une clé sur
-YubiKey, l'agent GPG qui l'expose est configuré par `.zprofile` - que chezmoi
-n'a pas encore appliqué à ce stade. Le clone anonyme en HTTPS évite cette
-dépendance circulaire.
+Cloner en SSH plutôt qu'en HTTPS fonctionne, mais suppose une clé déjà
+utilisable - ce que la YubiKey ne permet pas avant le premier apply, l'agent qui
+l'expose étant configuré par `.zprofile`. ADR-017 détaille cette dépendance
+circulaire.
 
 ## Outillage
 
