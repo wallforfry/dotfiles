@@ -14,6 +14,7 @@ set -euo pipefail
 INTEL=/usr/local
 ARM=/opt/homebrew
 BREWFILE="$HOME/.cache/Brewfile.intel"
+FORMULES="$HOME/.cache/Brewfile.intel.formules"
 
 wait_for_enter() { read -rp "⏎  Entrée pour continuer... "; }
 
@@ -33,12 +34,35 @@ step_verifier_prerequis() {
 
 step_inventorier_intel() {
   mkdir -p "$(dirname "$BREWFILE")"
+  # L'avertissement « circular dependency: libtiff, webp » vient de tabs de
+  # kegs périmés côté Intel. Il n'affecte pas le dump.
   "$INTEL/bin/brew" bundle dump --force --file="$BREWFILE"
-  printf '📋  %s : %s taps, %s formules explicites, %s casks\n' \
+
+  # « brew bundle install » n'a pas de commutateur --formula : les casks se
+  # traitent à part (step_reenregistrer_les_casks), donc le fichier servant à
+  # l'installation ne contient que les formules.
+  grep '^brew ' "$BREWFILE" > "$FORMULES"
+
+  printf '📋  %s : %s taps, %s formules, %s casks\n' \
     "$BREWFILE" \
     "$(grep -c '^tap ' "$BREWFILE" || true)" \
     "$(grep -c '^brew ' "$BREWFILE" || true)" \
     "$(grep -c '^cask ' "$BREWFILE" || true)"
+}
+
+step_signaler_les_formules_hors_core() {
+  echo "Trois formules du brew Intel ne sont plus dans homebrew/core et ne se"
+  echo "réinstalleront pas telles quelles. Décide de chacune avant de continuer :"
+  echo
+  echo "  terraform 1.5.7  retirée de core au changement de licence. Soit"
+  echo "                   « hashicorp/tap/terraform » et sa BSL, soit tenv."
+  echo "  python@3.8       en fin de vie, retirée de core. À abandonner."
+  echo "  linear           vient de schpet/tap, retapé à l'étape précédente."
+  echo
+  echo "Retire de $FORMULES ce que tu ne veux pas voir échouer :"
+  echo
+  echo "  \$EDITOR $FORMULES"
+  wait_for_enter
 }
 
 step_arreter_les_services() {
@@ -70,16 +94,19 @@ step_sauvegarder_postgres() {
 }
 
 step_retaper_les_taps() {
-  grep '^tap ' "$BREWFILE" | sed -E 's/^tap "([^"]+)".*/\1/' | while read -r t; do
-    "$ARM/bin/brew" tap "$t" 2>/dev/null || echo "⚠️   tap $t non ajouté" >&2
-  done
+  # homebrew/services est intégré à brew depuis 4.1 et n'est plus tapable.
+  grep '^tap ' "$BREWFILE" | sed -E 's/^tap "([^"]+)".*/\1/' |
+    grep -v '^homebrew/services$' | while read -r t; do
+      "$ARM/bin/brew" tap "$t" 2>/dev/null || echo "⚠️   tap $t non ajouté" >&2
+    done
   printf '🚰  %s taps dans %s\n' "$("$ARM/bin/brew" tap | wc -l | tr -d ' ')" "$ARM"
 }
 
 step_installer_les_formules() {
-  echo "Installation des formules dans $ARM. Les 106 formules explicites de"
-  echo "cette machine ont toutes une bouteille arm64 : aucune compilation."
-  "$ARM/bin/brew" bundle install --no-upgrade --file="$BREWFILE" --formula ||
+  printf 'Installation de %s formules dans %s. Hors les trois signalées, toutes\n' \
+    "$(grep -c '^brew ' "$FORMULES" || true)" "$ARM"
+  echo "ont une bouteille arm64_tahoe ou « all » : aucune compilation."
+  "$ARM/bin/brew" bundle install --no-upgrade --file="$FORMULES" ||
     echo "⚠️   certaines formules ont échoué, voir au-dessus" >&2
   printf '🍺  %s formules explicites dans %s\n' \
     "$("$ARM/bin/brew" leaves | wc -l | tr -d ' ')" "$ARM"
@@ -132,7 +159,8 @@ step_reinstaller_les_venvs_pipx() {
 }
 
 step_reenregistrer_les_casks() {
-  echo "Les 16 casks sont enregistrés auprès du brew Intel. Les applications"
+  printf 'Les %s casks sont enregistrés auprès du brew Intel. Les applications\n' \
+    "$(grep -c '^cask ' "$BREWFILE" || true)"
   echo "elles-mêmes ne bougent pas - elles vivent dans ~/Applications - mais"
   echo "leur suivi de version disparaîtra avec lui. Réenregistre-les :"
   echo
@@ -146,7 +174,10 @@ step_reenregistrer_les_casks() {
 }
 
 step_supprimer_le_brew_intel() {
-  echo "⚠️   ÉTAPE IRRÉVERSIBLE - environ 14 Gio, 371 formules, 16 casks."
+  printf '⚠️   ÉTAPE IRRÉVERSIBLE - %s, %s formules installées, %s casks.\n' \
+    "$(du -sh "$INTEL" 2>/dev/null | cut -f1 | tr -d ' ')" \
+    "$("$INTEL/bin/brew" list --formula | wc -l | tr -d ' ')" \
+    "$(grep -c '^cask ' "$BREWFILE" || true)"
   echo
   echo "Ne la fais qu'une fois les étapes précédentes vérifiées, et de"
   echo "préférence après quelques jours d'usage du brew arm64."
@@ -172,6 +203,7 @@ step_relancer_les_services() {
 main() {
   step_verifier_prerequis
   step_inventorier_intel
+  step_signaler_les_formules_hors_core
   step_arreter_les_services
   step_sauvegarder_postgres
   step_retaper_les_taps
