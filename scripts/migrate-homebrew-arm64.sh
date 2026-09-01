@@ -199,9 +199,30 @@ step_reenregistrer_les_casks() {
   echo "  grep '^cask ' $BREWFILE | sed -E 's/^cask \"([^\"]+)\".*/\\1/' |"
   echo "    xargs -n1 $ARM/bin/brew install --cask --appdir=\"\$HOME/Applications\" --force"
   echo
-  echo "Deux cas à surveiller : macfuse installe une extension noyau et exige"
-  echo "une autorisation dans Réglages Système puis un redémarrage ;"
-  echo "wireshark-app et gqrx demandent aussi des droits."
+  echo "Quatre obstacles, relevés en le faisant :"
+  echo
+  echo "  Confiance de tap. Homebrew refuse désormais un cask venant d'un tap"
+  echo "  tiers : « Refusing to load cask <tap>/<cask> from untrusted tap ». Le"
+  echo "  débloquer cask par cask plutôt que tap entier :"
+  echo "    $ARM/bin/brew trust --cask <user>/<tap>/<cask>"
+  echo
+  echo "  Applications en cours d'exécution. Remplacer un bundle vivant le"
+  echo "  corrompt. Les fermer d'abord - une application de barre de menus"
+  echo "  ignore souvent « tell application … to quit », et demande un pkill."
+  echo
+  echo "  Régression de version. --force pose la version du cask, pas la plus"
+  echo "  récente. Une application qui se met à jour toute seule peut être en"
+  echo "  avance sur son cask : comparer les CFBundleShortVersionString avant"
+  echo "  de supprimer l'ancienne copie."
+  echo
+  echo "  Doublons et éléments d'ouverture. Une application qui vivait dans"
+  echo "  /Applications se retrouve en deux exemplaires, et un login item"
+  echo "  pointant sur l'ancien chemin devient fantôme. Vérifier :"
+  echo "    osascript -e 'tell application \"System Events\" to get the path of every login item'"
+  echo
+  echo "  Enfin, macfuse installe une extension noyau et exige une autorisation"
+  echo "  dans Réglages Système puis un redémarrage ; mist et wireshark-app"
+  echo "  passent par un installeur .pkg et demandent le mot de passe admin."
   wait_for_enter
 }
 
