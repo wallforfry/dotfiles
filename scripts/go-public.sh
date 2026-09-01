@@ -318,7 +318,9 @@ step_backup_key() {
 step_cleanup() {
   echo "Nettoyage :"
   echo
-  echo "  rm -rf ~/.claude_<ancien suffixe>   # remplacé par ~/.claude_pro, plus géré par chezmoi"
+  echo "  # ~/.claude_<ancien suffixe> ne contient pas que des liens : sessions,"
+  echo "  # projets et plugins y vivent. Migrer avant de supprimer :"
+  echo "  #   cd ~/.claude_<ancien suffixe> && for e in *; do [ -L \"\$e\" ] || mv \"\$e\" ~/.claude_pro/; done"
   echo "  rm -rf $WORK                   # motifs et clone de réécriture"
   echo
   echo "Ne supprime pas $KEY : c'est la clé de déchiffrement de cette machine."

@@ -9,15 +9,21 @@ Mes dotfiles macOS, Linux et NAS Synology, gérés avec
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://github.com/wallforfry/dotfiles.git
 ```
 
-chezmoi s'installe, clone ce repo, demande le profil de la machine (`perso`
-ou `pro`) et la passphrase de déchiffrement des fichiers `age`, puis applique
-la configuration. Au passage, un script `run_onchange` installe les outils
-manquants (`age`, `gh`, `jq`, `ripgrep`, `starship`) - voir
-[Outillage](#outillage).
+chezmoi s'installe, clone ce repo, demande le profil de la machine (`perso` ou
+`pro`), puis applique la configuration. Une seule saisie de secret : la
+passphrase qui déverrouille la clé `age` de la machine, réclamée une fois par
+`run_before_unlock-age-key.sh.tmpl` et plus jamais ensuite
+([ADR-018](docs/adr/018-chiffrement-par-paire-de-cles.md)). Au passage, un
+script `run_onchange` installe les outils manquants (`age`, `gh`, `jq`,
+`ripgrep`, `starship`) - voir [Outillage](#outillage).
 
-Le repo est public : le clone ne demande aucune authentification
-([ADR-017](docs/adr/017-clone-anonyme-gh-en-ecriture.md)). Seule l'écriture en
-exige une, par `gh` :
+Sur une machine neuve, `age` n'est pas encore là au moment où la clé devrait
+être déverrouillée : le script le signale sans échouer, et un second
+`chezmoi apply` suffit, l'outillage étant installé entre-temps.
+
+Le repo est public : le clone ne demande aucune authentification, ni jeton, ni
+clé, ni compte GitHub ([ADR-017](docs/adr/017-clone-anonyme-gh-en-ecriture.md)).
+Seule l'écriture en exige une, par `gh` :
 
 ```bash
 gh auth login
@@ -101,15 +107,23 @@ chezmoi status
 
 ## Secrets
 
-`~/.secrets` est chiffré avec [age](https://age-encryption.org) (passphrase
-symétrique) et versionné sous `encrypted_private_dot_secrets.age`. La
-passphrase n'est stockée nulle part dans ce repo : elle est saisie à
-`chezmoi apply`. **Perdue, les secrets sont irrécupérables.**
+Sept fichiers sont chiffrés par [age](https://age-encryption.org) et versionnés
+ici : `~/.secrets`, le fragment ssh du NAS, les trois fragments du profil `pro`,
+les contextes nommés de `~/.claude/CONTEXT.md`, et la clé privée elle-même.
 
-Les autres fichiers chiffrés suivent le même mécanisme : `nas.conf` et les
-fragments du profil `pro`. Le repo étant public, chacun d'eux est
-téléchargeable, donc attaquable hors ligne : la passphrase doit être longue et
-propre à cet usage ([ADR-016](docs/adr/016-depot-public-sensible-chiffre.md)).
+Le chiffrement se fait vers une **paire de clés**, pas par passphrase : la clé
+privée vit en `~/.config/chezmoi/key.txt`, et le dépôt en porte une copie
+chiffrée par passphrase sous `age-key.txt.age`. Un `apply` ne demande donc rien
+sur une machine déjà déverrouillée, quel que soit le nombre de fichiers chiffrés
+([ADR-018](docs/adr/018-chiffrement-par-paire-de-cles.md)).
+
+**Deux secrets à ne pas perdre** : la passphrase d'`age-key.txt.age` et la clé
+`key.txt`. L'un des deux suffit à reconstituer l'accès ; les deux perdus, les
+fichiers chiffrés sont définitivement illisibles.
+
+Le repo étant public, `age-key.txt.age` est téléchargeable par quiconque : la
+passphrase est la seule barrière, et elle est attaquable hors ligne. Elle doit
+être longue et propre à cet usage.
 
 ## Profils
 
@@ -129,7 +143,7 @@ identités par répertoire via un `includeIf` porté par le fragment chiffré
 ## Décisions d'architecture
 
 `docs/adr/` consigne pourquoi ce dépôt est ainsi et pas autrement : chezmoi plutôt
-qu'un bare repo, `age` en passphrase, DSM comme cible de premier rang, les
+qu'un bare repo, le dépôt public au sensible chiffré, DSM comme cible de premier rang, les
 fragments ssh, `harness/` comme source unique. Seules les décisions **en vigueur**
 y figurent.
 
@@ -278,13 +292,22 @@ backup horodaté est conservé dans `~/.dotfiles-backup-<stamp>`.
 
 ## Dépannage
 
-### `chezmoi: .secrets: no identities specified`
+### Un fichier chiffré reste illisible
 
-`age` n'est pas dans le `PATH`. chezmoi bascule alors sur son implémentation
-intégrée, qui ne déchiffre que par identité et jamais par passphrase - d'où
-un message qui parle d'identités alors que le problème est l'absence du
-binaire. `command -v age` pour confirmer, puis relancer un `chezmoi apply`
-une fois `~/bin` dans le `PATH`.
+`~/.config/chezmoi/key.txt` est absent : sans la clé privée, rien ne se
+déchiffre. Sur une machine neuve, c'est le cas normal du premier `apply`, où
+`age` n'était pas encore installé quand `run_before_unlock-age-key.sh.tmpl` a
+voulu déverrouiller la clé - le script le signale sans échouer. Vérifier
+`command -v age`, puis relancer `chezmoi apply` : la passphrase est demandée,
+la clé posée, et l'apply reprend.
+
+Si la passphrase est refusée, c'est celle d'`age-key.txt.age` qui est attendue,
+pas celle d'un autre coffre. Le déchiffrement manuel donne le même diagnostic
+sans passer par chezmoi :
+
+```bash
+age --decrypt -o ~/.config/chezmoi/key.txt "$(chezmoi source-path)/age-key.txt.age"
+```
 
 ### `fork/exec /tmp/....sh: permission denied`
 
