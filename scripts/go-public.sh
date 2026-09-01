@@ -18,6 +18,14 @@ EFFECTIVE="$WORK/patterns.effective.txt"
 REPLACEMENTS="$WORK/replacements.txt"
 REMOTE="$(git -C "$SOURCE_DIR" remote get-url origin 2>/dev/null || echo '<remote>')"
 
+FRAGMENTS=(
+  "$HOME/.ssh/config.d/nas.conf"
+  "$HOME/.config/zsh/pro.zsh"
+  "$HOME/.config/zsh/pro.zprofile"
+  "$HOME/.config/git/pro.gitconfig"
+  "$HOME/.claude/CONTEXT.md"
+)
+
 wait_for_enter() { read -rp "→ Entrée pour continuer... "; }
 
 # Les motifs sont saisis avec des commentaires et des lignes vides ; grep et
@@ -65,17 +73,27 @@ TEMPLATE
 }
 
 step_encrypt_fragments() {
-  echo "Chiffre les fragments. Chaque commande demande la passphrase age :"
+  local f
+  for f in "${FRAGMENTS[@]}"; do
+    if [ ! -f "$f" ]; then
+      echo "⚠️  $f absent, fragment ignoré." >&2
+      continue
+    fi
+    chmod 600 "$f"
+    echo "Chiffrement de $f - chezmoi demande la passphrase :"
+    chezmoi add --encrypt "$f"
+  done
+  echo "Fragments chiffrés dans $SOURCE_DIR :"
+  find "$SOURCE_DIR" -name '*.age' -not -path '*/.git/*' | sed "s|^$SOURCE_DIR/|  |"
+}
+
+step_commit_fragments() {
+  echo "Commite et pousse les fichiers chiffrés - la réécriture clone $REMOTE,"
+  echo "donc ce qui n'est pas poussé n'y sera pas :"
   echo
-  echo "  chmod 600 ~/.ssh/config.d/nas.conf ~/.config/zsh/pro.zsh \\"
-  echo "            ~/.config/zsh/pro.zprofile ~/.config/git/pro.gitconfig ~/.claude/CONTEXT.md"
-  echo "  chezmoi add --encrypt ~/.ssh/config.d/nas.conf"
-  echo "  chezmoi add --encrypt ~/.config/zsh/pro.zsh"
-  echo "  chezmoi add --encrypt ~/.config/zsh/pro.zprofile"
-  echo "  chezmoi add --encrypt ~/.config/git/pro.gitconfig"
-  echo "  chezmoi add --encrypt ~/.claude/CONTEXT.md"
-  echo
-  echo "Le chmod 600 d'abord : c'est lui qui fait poser l'attribut private_ par chezmoi."
+  echo "  chezmoi cd"
+  echo "  git add -A && git commit -m 'feat: chiffrer les fragments sensibles'"
+  echo "  git push origin main"
   wait_for_enter
 }
 
@@ -102,25 +120,24 @@ step_check_both_profiles() {
 step_rewrite_history() {
   awk '{ print $0 "==>REDACTED" }' "$EFFECTIVE" > "$REPLACEMENTS"
   chmod 600 "$REPLACEMENTS"
-  echo "Réécriture d'historique. À faire sur un clone frais, jamais sur $SOURCE_DIR :"
-  echo
-  echo "  git clone $REMOTE $WORK/rewrite && cd $WORK/rewrite"
-  echo "  git filter-repo --invert-paths --path private_dot_ssh/private_config.d/nas.conf"
-  echo "  git filter-repo --replace-text $REPLACEMENTS"
-  echo
-  echo "Ordre imposé : la suppression de chemin d'abord, le remplacement de texte ensuite."
-  echo "Tous les SHA changent - c'est le but, et c'est ce qui périme les champs Commits des ADR."
-  wait_for_enter
+  rm -rf "$WORK/rewrite"
+  git clone "$REMOTE" "$WORK/rewrite"
+  # Ordre imposé : suppression de chemin d'abord, remplacement de texte ensuite.
+  git -C "$WORK/rewrite" filter-repo \
+    --invert-paths --path private_dot_ssh/private_config.d/nas.conf
+  git -C "$WORK/rewrite" filter-repo --replace-text "$REPLACEMENTS"
+  echo "Historique réécrit dans $WORK/rewrite. Tous les SHA ont changé."
 }
 
 step_verify_history() {
-  echo "Vérifie l'historique réécrit :"
-  echo
-  echo "  cd $WORK/rewrite"
-  echo "  git grep -I -F -f $EFFECTIVE \$(git rev-list --all) -- . ':!.oh-my-zsh' ; echo \"code \$?\""
-  echo
-  echo "Attendu : aucune ligne, code 1. Une seule correspondance annule la publication."
-  wait_for_enter
+  local revs
+  revs="$(git -C "$WORK/rewrite" rev-list --all)"
+  if git -C "$WORK/rewrite" grep -I -F -f "$EFFECTIVE" $revs -- . ':!.oh-my-zsh'; then
+    echo "ERREUR: motifs sensibles encore dans l'historique réécrit." >&2
+    echo "Ne publie pas. Complète $PATTERNS et relance." >&2
+    exit 1
+  fi
+  echo "Historique réécrit propre sur $(echo "$revs" | wc -l | tr -d ' ') commits."
 }
 
 step_refresh_adr_commits() {
@@ -179,6 +196,7 @@ main() {
   step_write_patterns_file
   step_encrypt_fragments
   step_verify_source_tree
+  step_commit_fragments
   step_check_both_profiles
   step_rewrite_history
   step_verify_history
