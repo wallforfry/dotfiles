@@ -101,18 +101,27 @@ step_generate_age_key() {
 }
 
 step_refresh_local_config() {
-  echo "La configuration locale porte encore « passphrase = true » : elle est"
-  echo "générée depuis .chezmoi.toml.tmpl à l'init, pas à l'apply. Régénère-la :"
-  echo
-  echo "  chezmoi init"
-  echo
-  echo "Le profil est mémorisé, il ne sera pas redemandé. Vérifie ensuite que"
-  echo "~/.config/chezmoi/chezmoi.toml porte identity et recipientsFile."
-  wait_for_enter
+  # La configuration locale est produite depuis .chezmoi.toml.tmpl à l'init, pas à
+  # l'apply : sans ce passage, chezmoi continue de chiffrer par passphrase.
+  chezmoi init
+  local identity
+  identity="$(chezmoi execute-template '{{ .chezmoi.config.age.identity }}')"
+  if [ -z "$identity" ]; then
+    echo "ERREUR: la configuration ne déclare pas d'identity age." >&2
+    echo "Vérifie $(chezmoi execute-template '{{ .chezmoi.configFile }}')." >&2
+    exit 1
+  fi
+  [ "$identity" = "$KEY" ] || echo "⚠️  identity = $identity, attendu $KEY" >&2
+  echo "Configuration régénérée : chiffrement vers $identity."
 }
 
 step_encrypt_fragments() {
   local f
+  if [ -n "$(chezmoi execute-template '{{ .chezmoi.config.age.passphrase }}' | grep -x true || true)" ]; then
+    echo "ERREUR: la configuration chiffre encore par passphrase." >&2
+    echo "Les fichiers partiraient chiffrés par un secret que la clé ne lira pas." >&2
+    exit 1
+  fi
   echo "Rechiffrement des ${#FRAGMENTS[@]} fichiers vers la clé publique."
   echo "Aucune saisie : c'est tout l'objet de la paire de clés."
   for f in "${FRAGMENTS[@]}"; do
@@ -165,14 +174,17 @@ step_commit_fragments() {
 }
 
 step_check_both_profiles() {
-  echo "Vérifie le rendu sur les deux profils, sur cette machine :"
-  echo
-  echo "  chezmoi -S $SOURCE_DIR diff"
-  echo "  chezmoi -S $SOURCE_DIR execute-template < $SOURCE_DIR/.chezmoiignore"
-  echo "  chezmoi -S $SOURCE_DIR --config <(sed 's/\"pro\"/\"perso\"/' ~/.config/chezmoi/chezmoi.toml) diff"
-  echo
-  echo "Attendu en perso : aucun des fragments pro, donc aucune demande de passphrase pour eux."
-  wait_for_enter
+  local perso="$WORK/chezmoi-perso.toml" rendered missing=0 path
+  sed 's/profile = "pro"/profile = "perso"/' "$(chezmoi execute-template '{{ .chezmoi.configFile }}')" > "$perso"
+  rendered="$(chezmoi --config "$perso" -S "$SOURCE_DIR" execute-template < "$SOURCE_DIR/.chezmoiignore")"
+  for path in .claude/CONTEXT.md .config/git/pro.gitconfig .config/zsh/pro.zsh .config/zsh/pro.zprofile; do
+    printf '%s\n' "$rendered" | grep -qx -- "$path" || { echo "⚠️  $path non ignoré en perso" >&2; missing=1; }
+  done
+  [ "$missing" = 0 ] || {
+    echo "ERREUR: une machine perso déploierait un fragment du profil pro." >&2
+    exit 1
+  }
+  echo "Profil perso : les quatre fragments pro sont ignorés."
 }
 
 step_rewrite_history() {
@@ -198,11 +210,59 @@ step_verify_history() {
   echo "Historique réécrit propre sur $(echo "$revs" | wc -l | tr -d ' ') commits."
 }
 
+# Renseigne le champ Commits d'une ADR écrite avant la réécriture, qui ne pouvait
+# pas connaître ses propres SHA. Chaque argument est « libellé:début du sujet ».
+fill_commits_field() {
+  local dir="$1" num="$2" file entry label subject sha field=""
+  shift 2
+  file="$(ls "$dir"/docs/adr/"$num"-*.md 2>/dev/null | head -1)"
+  [ -n "$file" ] || return 0
+  for entry in "$@"; do
+    label="${entry%%:*}"
+    subject="${entry#*:}"
+    sha="$(git -C "$dir" log --all --format='%h%x09%s' | awk -F'\t' -v s="$subject" 'index($2, s) == 1 { print $1; exit }')"
+    [ -n "$sha" ] || { echo "⚠️  ADR-$num : aucun commit pour « $subject »" >&2; continue; }
+    [ -z "$field" ] || field="$field, "
+    field="$field\`$sha\` ($label)"
+  done
+  [ -n "$field" ] || return 0
+  perl -pi -e "s/^- \*\*Commits\*\* : à renseigner.*\$/- **Commits** : $field/" "$file"
+}
+
 step_refresh_adr_commits() {
-  echo "Les champs **Commits** de toutes les ADR pointent des SHA qui n'existent plus."
-  echo "Reprends-les depuis le nouvel historique (git log --oneline), ADR-016 et ADR-017 incluses,"
-  echo "puis commite : docs: reprendre les SHA des ADR après réécriture d'historique"
-  wait_for_enter
+  local dir="$WORK/rewrite" sha subj new remapped=0
+  # git-filter-repo ne conserve pas de table ancien->nouveau exploitable après deux
+  # passes : l'appariement se fait par sujet de commit, unique dans ce dépôt.
+  for sha in $(grep -rhoE '`[0-9a-f]{7,40}`' "$dir"/docs/adr/*.md | tr -d '`' | sort -u); do
+    subj="$(git -C "$SOURCE_DIR" log -1 --format=%s "$sha" 2>/dev/null)" || continue
+    [ -n "$subj" ] || continue
+    new="$(git -C "$dir" log --all --format='%h%x09%s' | awk -F'\t' -v s="$subj" '$2 == s { print $1; exit }')"
+    if [ -z "$new" ]; then
+      echo "⚠️  aucune correspondance pour $sha - $subj" >&2
+      continue
+    fi
+    perl -pi -e "s/\Q$sha\E/$new/g" "$dir"/docs/adr/*.md
+    remapped=$((remapped + 1))
+  done
+  fill_commits_field "$dir" 016 "sortie du sensible:refactor!: sortir le sensible" \
+    "documentation:docs: consigner le passage en public" \
+    "fragments chiffrés:feat: chiffrer les fragments"
+  fill_commits_field "$dir" 017 "documentation du clone anonyme:docs: consigner le passage en public"
+  fill_commits_field "$dir" 018 "paire de clés:feat: chiffrer par paire de clés"
+  if grep -rlq "à renseigner après la réécriture" "$dir"/docs/adr/*.md; then
+    echo "⚠️  des champs Commits restent à renseigner :" >&2
+    grep -rl "à renseigner après la réécriture" "$dir"/docs/adr/*.md >&2
+  fi
+  git -C "$dir" add -A
+  if git -C "$dir" diff --cached --quiet; then
+    echo "Aucune référence à remapper."
+  else
+    git -C "$dir" commit -q -m "docs: reprendre les SHA des ADR après réécriture d'historique"
+    echo "$remapped références remappées, commitées dans le clone réécrit."
+  fi
+  for sha in $(grep -rhoE '`[0-9a-f]{7,40}`' "$dir"/docs/adr/*.md | tr -d '`' | sort -u); do
+    git -C "$dir" cat-file -e "${sha}^{commit}" 2>/dev/null || echo "⚠️  référence orpheline : $sha" >&2
+  done
 }
 
 step_force_push() {
