@@ -31,8 +31,14 @@ fi
 # Java
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 {{ if eq .chezmoi.os "darwin" }}
-# Chrome
-export CHROME_EXECUTABLE=/Applications/Arc.app/Contents/MacOS/Arc
+# Chrome. Les applications sont installées dans ~/Applications (ADR-019), mais
+# une machine antérieure les a dans /Applications : les deux sont tentés.
+for d in "$HOME/Applications" /Applications; do
+  if [ -x "$d/Arc.app/Contents/MacOS/Arc" ]; then
+    export CHROME_EXECUTABLE="$d/Arc.app/Contents/MacOS/Arc"
+    break
+  fi
+done
 
 export HOMEBREW_CASK_OPTS="--appdir=~/Applications"
 
