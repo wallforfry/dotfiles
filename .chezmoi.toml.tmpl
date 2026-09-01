@@ -7,8 +7,13 @@ encryption = "age"
 # chezmoi d'exécuter les scripts run_*. Le répertoire doit exister.
 scriptTempDir = "{{ .chezmoi.homeDir }}/.cache/chezmoi"
 
+# Paire de clés et non passphrase : sur un dépôt public, une clé de 32 octets
+# n'est pas attaquable par force brute là où une passphrase l'est, et chezmoi
+# cesse de réclamer un secret par fichier chiffré. La clé privée est déverrouillée
+# une fois par machine par run_before_unlock-age-key.sh.tmpl (ADR-018).
 [age]
-    passphrase = true
+    identity = "{{ .chezmoi.homeDir }}/.config/chezmoi/key.txt"
+    recipientsFile = "{{ .chezmoi.sourceDir }}/age-recipients.txt"
 
 [data]
     profile = {{ $profile | quote }}

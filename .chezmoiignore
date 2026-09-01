@@ -4,6 +4,8 @@ scripts
 LICENSE
 .github
 .oh-my-zsh/cache
+age-key.txt.age
+age-recipients.txt
 AGENTS.md
 CLAUDE.md
 harness

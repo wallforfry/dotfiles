@@ -116,3 +116,4 @@ cas la citation est explicite.
 | [015](015-mcp-en-conteneurs-nommes.md) | Serveurs MCP lourds en conteneurs nommés | 2026-08 |
 | [016](016-depot-public-sensible-chiffre.md) | Dépôt public, sensible chiffré et hors prose | 2026-09 |
 | [017](017-clone-anonyme-gh-en-ecriture.md) | Clone anonyme, `gh` comme helper d'écriture | 2026-09 |
+| [018](018-chiffrement-par-paire-de-cles.md) | Chiffrement par paire de clés `age`, clé déverrouillée une fois | 2026-09 |

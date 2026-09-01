@@ -18,7 +18,9 @@ EFFECTIVE="$WORK/patterns.effective.txt"
 REPLACEMENTS="$WORK/replacements.txt"
 REMOTE="$(git -C "$SOURCE_DIR" remote get-url origin 2>/dev/null || echo '<remote>')"
 
+KEY="$HOME/.config/chezmoi/key.txt"
 FRAGMENTS=(
+  "$HOME/.secrets"
   "$HOME/.ssh/config.d/nas.conf"
   "$HOME/.config/zsh/pro.zsh"
   "$HOME/.config/zsh/pro.zprofile"
@@ -38,7 +40,7 @@ effective_patterns() {
 
 step_preconditions() {
   local missing=0 tool
-  for tool in chezmoi git age gh git-filter-repo; do
+  for tool in chezmoi git age age-keygen gh git-filter-repo; do
     command -v "$tool" >/dev/null 2>&1 || { echo "ERREUR: $tool absent." >&2; missing=1; }
   done
   [ "$missing" = 0 ] || exit 1
@@ -49,6 +51,10 @@ step_preconditions() {
     echo "Fusionne la branche de préparation dans main, pousse, puis relance." >&2
     exit 1
   fi
+  local f
+  for f in "${FRAGMENTS[@]}"; do
+    [ -f "$f" ] || { echo "ERREUR: $f absent - le rechiffrement part du clair." >&2; exit 1; }
+  done
   echo "Préconditions OK. Source chezmoi : $SOURCE_DIR"
   echo "Répertoire de travail hors dépôt : $WORK"
 }
@@ -72,26 +78,49 @@ TEMPLATE
   echo "$(wc -l < "$EFFECTIVE" | tr -d ' ') motifs retenus."
 }
 
+step_generate_age_key() {
+  if [ -f "$SOURCE_DIR/age-key.txt.age" ] && [ -f "$KEY" ]; then
+    echo "Paire de clés déjà en place."
+    return
+  fi
+  mkdir -p "$(dirname "$KEY")"
+  if [ ! -f "$KEY" ]; then
+    age-keygen -o "$KEY" 2>/dev/null
+    chmod 600 "$KEY"
+    echo "Clé privée générée : $KEY"
+  fi
+  age-keygen -y "$KEY" > "$SOURCE_DIR/age-recipients.txt"
+  echo "Clé publique : $(cat "$SOURCE_DIR/age-recipients.txt")"
+  echo
+  echo "Chiffrement de la clé privée pour le dépôt. Une seule passphrase, et c'est"
+  echo "la dernière barrière publique : longue, propre à cet usage, hors de tout dépôt."
+  echo "Attends l'invite avant de taper."
+  wait_for_enter
+  age --passphrase -o "$SOURCE_DIR/age-key.txt.age" "$KEY"
+  echo "Clé chiffrée dans $SOURCE_DIR/age-key.txt.age"
+}
+
+step_refresh_local_config() {
+  echo "La configuration locale porte encore « passphrase = true » : elle est"
+  echo "générée depuis .chezmoi.toml.tmpl à l'init, pas à l'apply. Régénère-la :"
+  echo
+  echo "  chezmoi init"
+  echo
+  echo "Le profil est mémorisé, il ne sera pas redemandé. Vérifie ensuite que"
+  echo "~/.config/chezmoi/chezmoi.toml porte identity et recipientsFile."
+  wait_for_enter
+}
+
 step_encrypt_fragments() {
   local f
-  echo "Chiffrement de ${#FRAGMENTS[@]} fragments. chezmoi demande la passphrase une fois"
-  echo "par fichier : saisis la même à chaque fois, et jamais une saisie vide - age"
-  echo "générerait alors une passphrase différente par fichier."
-  echo "Attends l'invite avant de taper : une frappe anticipée s'affiche en clair."
-  wait_for_enter
+  echo "Rechiffrement des ${#FRAGMENTS[@]} fichiers vers la clé publique."
+  echo "Aucune saisie : c'est tout l'objet de la paire de clés."
   for f in "${FRAGMENTS[@]}"; do
-    if [ ! -f "$f" ]; then
-      echo "⚠️  $f absent, fragment ignoré." >&2
-      continue
-    fi
     chmod 600 "$f"
-    # Le message part sur stderr, comme l'invite d'age : deux flux distincts se
-    # réordonnent, et l'invite doit rester la dernière chose affichée.
-    printf '\n%s\n' "→ $f" >&2
     chezmoi add --encrypt "$f"
+    echo "  $f"
   done
-  echo
-  echo "Fragments chiffrés dans $SOURCE_DIR :"
+  echo "Fichiers chiffrés dans $SOURCE_DIR :"
   find "$SOURCE_DIR" -name '*.age' -not -path '*/.git/*' | sed "s|^$SOURCE_DIR/|  |"
 }
 
@@ -106,8 +135,8 @@ step_verify_source_tree() {
 
 step_verify_decryption() {
   local f rc=0
-  echo "Relecture de chaque fragment chiffré : la passphrase est redemandée."
-  echo "C'est le seul contrôle qui attrape une passphrase divergente entre deux fichiers."
+  echo "Relecture de chaque fichier chiffré, sans saisie : c'est ce qui atteste que"
+  echo "la clé déchiffre bien ce qu'elle vient de chiffrer."
   for f in "${FRAGMENTS[@]}"; do
     [ -f "$f" ] || continue
     if diff -q <(chezmoi cat "$f") "$f" >/dev/null; then
@@ -198,15 +227,14 @@ step_switch_visibility() {
   wait_for_enter
 }
 
-step_rotate_passphrase() {
-  echo "Change la passphrase age. L'ancienne a protégé des fichiers désormais téléchargeables :"
+step_backup_key() {
+  echo "Sauvegarde les deux secrets, hors de tout dépôt :"
   echo
-  echo "  chezmoi apply --exclude=encrypted   # rien ne dépend des fichiers chiffrés"
-  echo "  # pour chaque fichier chiffré, déchiffre avec l'ancienne, rechiffre avec la nouvelle :"
-  echo "  chezmoi re-add   # après avoir mis à jour la passphrase du dépôt"
+  echo "  - la passphrase de $SOURCE_DIR/age-key.txt.age"
+  echo "  - une copie de $KEY"
   echo
-  echo "Nouvelle passphrase : longue, propre à cet usage, hors de tout dépôt."
-  echo "C'est la seule barrière restante, et elle est attaquable hors ligne."
+  echo "Les deux perdus, les fichiers chiffrés sont définitivement illisibles."
+  echo "La clé seule perdue se rattrape par la passphrase, et inversement."
   wait_for_enter
 }
 
@@ -215,6 +243,8 @@ step_cleanup() {
   echo
   echo "  rm -rf ~/.claude_<ancien suffixe>   # remplacé par ~/.claude_pro, plus géré par chezmoi"
   echo "  rm -rf $WORK                   # motifs et clone de réécriture"
+  echo
+  echo "Ne supprime pas $KEY : c'est la clé de déchiffrement de cette machine."
   echo
   echo "Révoque enfin le PAT GitHub de bootstrap : le clone anonyme le rend inutile (ADR-017)."
   wait_for_enter
@@ -234,6 +264,8 @@ main() {
   local steps=(
     step_preconditions
     step_write_patterns_file
+    step_generate_age_key
+    step_refresh_local_config
     step_encrypt_fragments
     step_verify_source_tree
     step_verify_decryption
@@ -244,7 +276,7 @@ main() {
     step_refresh_adr_commits
     step_force_push
     step_switch_visibility
-    step_rotate_passphrase
+    step_backup_key
     step_cleanup
   )
   check_steps_defined "${steps[@]}"

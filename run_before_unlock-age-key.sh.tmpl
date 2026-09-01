@@ -1,0 +1,28 @@
+#!/bin/sh
+# Déverrouille la clé privée age avant que chezmoi n'ait à déchiffrer un fichier.
+# Une saisie par machine : la clé reste ensuite en place, et aucun apply ultérieur
+# ne demande quoi que ce soit. Voir docs/adr/018-chiffrement-par-paire-de-cles.md.
+#
+# sh et non bash : ce script tourne au premier apply d'une machine neuve, avant
+# tout outillage.
+set -eu
+
+KEY="$HOME/.config/chezmoi/key.txt"
+ENC="{{ .chezmoi.sourceDir }}/age-key.txt.age"
+
+[ -f "$KEY" ] && exit 0
+
+if [ ! -f "$ENC" ]; then
+  echo "⚠️  $ENC absent : les fichiers chiffrés resteront illisibles." >&2
+  exit 0
+fi
+
+if ! command -v age >/dev/null 2>&1; then
+  echo "⚠️  age absent : impossible de déverrouiller la clé. Relance après l'outillage." >&2
+  exit 0
+fi
+
+mkdir -p "$(dirname "$KEY")"
+echo "🔑  Déverrouillage de la clé age - passphrase demandée une seule fois."
+age --decrypt -o "$KEY" "$ENC"
+chmod 600 "$KEY"

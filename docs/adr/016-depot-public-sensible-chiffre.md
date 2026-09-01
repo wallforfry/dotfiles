@@ -35,8 +35,9 @@ publiée ailleurs.
 
 Le dépôt est public. Rien de sensible n'y figure, ni en clair ni en prose :
 
-1. **Ce qui est sensible et nécessaire au déploiement est chiffré** par `age` en
-   passphrase, comme `~/.secrets` : `nas.conf`, `~/.config/zsh/pro.zsh`,
+1. **Ce qui est sensible et nécessaire au déploiement est chiffré** par `age`,
+   selon le mécanisme d'[ADR-018](018-chiffrement-par-paire-de-cles.md) :
+   `~/.secrets`, `nas.conf`, `~/.config/zsh/pro.zsh`,
    `~/.config/zsh/pro.zprofile`, `~/.config/git/pro.gitconfig`,
    `~/.claude/CONTEXT.md`.
 2. **Les fichiers publics chargent ces fragments sans les nommer** : un
@@ -58,10 +59,9 @@ Le dépôt est public. Rien de sensible n'y figure, ni en clair ni en prose :
 - **La passphrase devient la seule barrière, et elle est attaquable hors ligne.**
   Elle doit être longue et propre à cet usage. C'est le coût central de la
   décision, et il ne se rattrape pas après publication : une passphrase faible
-  aujourd'hui reste cassable sur une copie faite aujourd'hui.
-- `chezmoi apply` réclame la passphrase pour chaque fichier chiffré concerné par
-  l'opération, contre un seul auparavant. `--exclude=encrypted` reste la sortie en
-  contexte non interactif ([ADR-008](008-dsm-cible-de-premier-rang.md)).
+  aujourd'hui reste cassable sur une copie faite aujourd'hui. Le nombre de
+  fichiers qu'elle protège et le nombre de saisies qu'elle coûte relèvent
+  d'[ADR-018](018-chiffrement-par-paire-de-cles.md).
 - La réécriture d'historique change tous les SHA. Les champs **Commits** de
   toutes les ADR deviennent faux et sont à reprendre après la bascule.
 - Le clone initial n'exige plus d'authentification, ce qui rend le bootstrap par
