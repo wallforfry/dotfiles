@@ -14,8 +14,8 @@ chezmoi s'installe, clone ce repo, demande le profil de la machine (`perso` ou
 passphrase qui déverrouille la clé `age` de la machine, réclamée une fois par
 `run_before_unlock-age-key.sh.tmpl` et plus jamais ensuite
 ([ADR-018](docs/adr/018-chiffrement-par-paire-de-cles.md)). Au passage, un
-script `run_onchange` installe les outils manquants (`age`, `gh`, `jq`,
-`ripgrep`, `starship`) - voir [Outillage](#outillage).
+script `run_onchange` installe les outils manquants - voir
+[Outillage](#outillage).
 
 Sur une machine neuve, `age` n'est pas encore là au moment où la clé devrait
 être déverrouillée : le script le signale sans échouer, et un second
@@ -51,12 +51,40 @@ apply où le script a changé :
 | `jq` | filtrage JSON | scripts et agents qui lisent du JSON échouent |
 | `ripgrep` (`rg`) | recherche de code | agents et telescope retombent sur `grep` |
 | `starship` | prompt | `.zshrc` retombe sur le prompt zsh par défaut |
+| `neovim` (`nvim`) | éditeur, `~/.config/nvim` est déployé partout | LazyVim reste inerte, alias `vim` absent |
+| `fd` | recherche de fichiers | telescope retombe sur `find` |
+| `duf` | affichage disque | `.zshrc` n'aliase pas `df` |
+| `uv` | lance `scrapling-mcp` | le MCP scrapling ne démarre pas |
 
-Sur macOS il passe par Homebrew. Ailleurs il pose des binaires statiques dans
-`~/bin`, que `.zshenv` met en tête du `PATH` - `.zshenv` et pas `.zprofile`,
-pour que les shells non interactifs (`ssh nas '...'`, planificateur DSM) les
-trouvent aussi. Les versions d'`age`, `gh`, `jq` et `ripgrep` sont épinglées en
-tête du script ; les modifier suffit à déclencher une réinstallation.
+Sur macOS il passe par Homebrew, et y ajoute `thefuck` (aliasé par `.zshrc`),
+`pinentry-mac` (saisie du PIN de la YubiKey,
+[ADR-010](docs/adr/010-gpg-agent-ssh-sous-condition.md)), `ykman` et
+`bitwarden-cli` (`bw`).
+
+Ailleurs il pose des binaires statiques dans `~/bin`, que `.zshenv` met en tête
+du `PATH` - `.zshenv` et pas `.zprofile`, pour que les shells non interactifs
+(`ssh nas '...'`, planificateur DSM) les trouvent aussi. Les versions sont
+épinglées en tête du script ; les modifier suffit à déclencher une
+réinstallation.
+
+`nvim` fait exception au « un binaire dans `~/bin` » : il lui faut son
+`VIMRUNTIME` à côté, donc l'archive amont va dans `~/.local/nvim` et `~/bin`
+n'en reçoit qu'un lien. Cette archive est liée à la glibc : sur une Alpine elle
+s'extrait et ne s'exécute pas.
+
+### Applications macOS
+
+Sur un poste graphique, le script installe aussi cinq applications par
+Homebrew Cask - Arc, Bitwarden, Claude, OrbStack, Warp - dans
+`~/Applications` et non `/Applications`. Chacune est sautée si son `.app`
+existe déjà dans l'un ou l'autre répertoire, ce qui laisse intacte une
+installation posée hors de Homebrew.
+
+« Poste graphique » est une donnée à part, `gui`, demandée à l'init sur macOS
+seulement ([ADR-019](docs/adr/019-poste-graphique-et-apps-macos.md)) : la
+question ne se pose ni sur le NAS ni dans un conteneur. Une machine installée
+avant cette décision n'a pas la clé et n'installe donc rien tant qu'un
+`chezmoi init` n'a pas régénéré sa configuration.
 
 ### Ce que ce repo public ne contient pas
 
@@ -130,6 +158,11 @@ passphrase est la seule barrière, et elle est attaquable hors ligne. Elle doit
 |---|---|
 | `perso` | base commune uniquement |
 | `pro` | fragments chiffrés `~/.config/zsh/pro.zsh`, `pro.zprofile`, `~/.config/git/pro.gitconfig`, et `~/.claude_pro` |
+
+Sur macOS, une seconde question indépendante - `gui` - décide de l'installation
+des applications ([Applications macOS](#applications-macos)). Les deux
+dimensions se croisent : un poste `pro` et un poste `perso` sont l'un comme
+l'autre graphiques, un conteneur ni l'un ni l'autre.
 
 Les blocs macOS (Arc, Homebrew, pnpm, Coursier) ne sont rendus que sur darwin.
 

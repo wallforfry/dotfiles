@@ -6,6 +6,10 @@
 # GH_VERSION: 2.63.2
 # JQ_VERSION: 1.8.2
 # RG_VERSION: 15.2.0
+# NVIM_VERSION: 0.12.5
+# FD_VERSION: 10.5.0
+# DUF_VERSION: 0.9.1
+# UV_VERSION: 0.12.8
 #
 # age      : déchiffre ~/.secrets. Indispensable - l'implémentation intégrée à
 #            chezmoi ne gère pas les passphrases et échoue sur
@@ -14,6 +18,15 @@
 # jq       : filtrage JSON, attendu par les scripts et les agents.
 # ripgrep  : recherche de code, attendue par les agents et par Neovim (telescope).
 # starship : prompt. Facultatif, .zshrc retombe sur le prompt zsh par défaut.
+# neovim   : ~/.config/nvim est déployé partout (LazyVim), qui exige nvim >= 0.11.
+# fd       : recherche de fichiers, attendue par telescope à côté de ripgrep.
+# duf      : .zshrc en fait l'alias de df quand il est présent.
+# uv       : lance scrapling-mcp, déployé dans ~/.local/bin.
+#
+# Le bloc darwin ajoute ce qui n'a de sens que sur macOS : thefuck (alias posé
+# par .zshrc), pinentry-mac (saisie du PIN de la YubiKey, ADR-010), ykman,
+# bitwarden-cli. Et, si la machine est un poste graphique, les apps
+# (ADR-019).
 
 set -eu
 
@@ -21,14 +34,42 @@ AGE_VERSION=1.2.1
 GH_VERSION=2.63.2
 JQ_VERSION=1.8.2
 RG_VERSION=15.2.0
+NVIM_VERSION=0.12.5
+FD_VERSION=10.5.0
+DUF_VERSION=0.9.1
+UV_VERSION=0.12.8
 BIN="$HOME/bin"
 
 {{ if eq .chezmoi.os "darwin" -}}
 if command -v brew >/dev/null; then
   # « formule:commande », car ripgrep s'installe sous ce nom et s'appelle rg.
-  for f in age:age gh:gh jq:jq ripgrep:rg starship:starship; do
+  for f in age:age gh:gh jq:jq ripgrep:rg starship:starship neovim:nvim fd:fd \
+           duf:duf uv:uv thefuck:thefuck pinentry-mac:pinentry-mac ykman:ykman \
+           bitwarden-cli:bw; do
     command -v "${f#*:}" >/dev/null || brew install "${f%:*}"
   done
+
+{{/* « get » et non « .gui » : une machine installée avant ADR-019 a un
+     chezmoi.toml sans cette clé, sur laquelle .gui ferait échouer l'apply. */}}
+{{ if get . "gui" }}
+  # --appdir explicite : ce script tourne sous sh depuis chezmoi et ne lit pas
+  # .zshrc, où HOMEBREW_CASK_OPTS porte la même valeur pour les shells.
+  # Les cinq casks interpolent #{appdir} partout, y compris OrbStack et ses
+  # binaires orb/orbctl : aucun n'impose /Applications.
+  APPDIR="$HOME/Applications"
+  mkdir -p "$APPDIR"
+
+  # « cask:App », le second servant à détecter une installation posée hors de
+  # Homebrew - cas d'un OrbStack venu de son propre installeur.
+  for c in arc:Arc bitwarden:Bitwarden claude:Claude orbstack:OrbStack warp:Warp; do
+    app="${c#*:}.app"
+    if [ -d "$APPDIR/$app" ] || [ -d "/Applications/$app" ]; then
+      continue
+    fi
+    brew install --cask --appdir="$APPDIR" "${c%:*}" || \
+      echo "⚠️   $app non installé" >&2
+  done
+{{ end }}
   exit 0
 fi
 {{ end -}}
@@ -64,8 +105,10 @@ fi
 # Machines sans gestionnaire de paquets (NAS Synology, conteneurs) : binaires
 # statiques dans ~/bin, mis dans le PATH par .zshenv.
 case "$(uname -m)" in
-  x86_64)          arch=amd64; rg_target=x86_64-unknown-linux-musl ;;
-  aarch64|arm64)   arch=arm64; rg_target=aarch64-unknown-linux-musl ;;
+  # Trois nomenclatures, une par amont : « amd64 » (age, gh, jq), le triplet
+  # Rust (ripgrep, fd, uv), « x86_64 » (duf, neovim).
+  x86_64)          arch=amd64; musl=x86_64-unknown-linux-musl;  uarch=x86_64 ;;
+  aarch64|arm64)   arch=arm64; musl=aarch64-unknown-linux-musl; uarch=arm64 ;;
   *) echo "⚠️   architecture $(uname -m) non gérée, installation manuelle requise" >&2
      exit 0 ;;
 esac
@@ -107,9 +150,9 @@ if ! command -v jq >/dev/null; then
 fi
 
 if ! command -v rg >/dev/null; then
-  if fetch "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VERSION}/ripgrep-${RG_VERSION}-${rg_target}.tar.gz" "$tmp/rg.tgz" &&
+  if fetch "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VERSION}/ripgrep-${RG_VERSION}-${musl}.tar.gz" "$tmp/rg.tgz" &&
      tar xzf "$tmp/rg.tgz" -C "$tmp"; then
-    mv "$tmp/ripgrep-${RG_VERSION}-${rg_target}/rg" "$BIN/" && chmod +x "$BIN/rg"
+    mv "$tmp/ripgrep-${RG_VERSION}-${musl}/rg" "$BIN/" && chmod +x "$BIN/rg"
     echo "🔎  ripgrep $RG_VERSION installé dans ~/bin"
   else
     echo "⚠️   ripgrep non installé" >&2
@@ -122,5 +165,52 @@ if ! command -v starship >/dev/null; then
     echo "🚀  starship installé dans ~/bin"
   else
     echo "⚠️   starship non installé, prompt zsh par défaut" >&2
+  fi
+fi
+
+if ! command -v fd >/dev/null; then
+  if fetch "https://github.com/sharkdp/fd/releases/download/v${FD_VERSION}/fd-v${FD_VERSION}-${musl}.tar.gz" "$tmp/fd.tgz" &&
+     tar xzf "$tmp/fd.tgz" -C "$tmp"; then
+    mv "$tmp/fd-v${FD_VERSION}-${musl}/fd" "$BIN/" && chmod +x "$BIN/fd"
+    echo "📁  fd $FD_VERSION installé dans ~/bin"
+  else
+    echo "⚠️   fd non installé : telescope retombe sur find" >&2
+  fi
+fi
+
+if ! command -v duf >/dev/null; then
+  if fetch "https://github.com/muesli/duf/releases/download/v${DUF_VERSION}/duf_${DUF_VERSION}_linux_${uarch}.tar.gz" "$tmp/duf.tgz" &&
+     tar xzf "$tmp/duf.tgz" -C "$tmp"; then
+    mv "$tmp/duf" "$BIN/" && chmod +x "$BIN/duf"
+    echo "💾  duf $DUF_VERSION installé dans ~/bin"
+  else
+    echo "⚠️   duf non installé : df reste df" >&2
+  fi
+fi
+
+if ! command -v uv >/dev/null; then
+  if fetch "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-${musl}.tar.gz" "$tmp/uv.tgz" &&
+     tar xzf "$tmp/uv.tgz" -C "$tmp"; then
+    mv "$tmp/uv-${musl}/uv" "$tmp/uv-${musl}/uvx" "$BIN/" && chmod +x "$BIN/uv" "$BIN/uvx"
+    echo "🐍  uv $UV_VERSION installé dans ~/bin"
+  else
+    echo "⚠️   uv non installé : scrapling-mcp ne démarrera pas" >&2
+  fi
+fi
+
+# nvim n'est pas un binaire seul : il lui faut son VIMRUNTIME (share/nvim) à
+# côté, comme zsh ses fonctions. L'archive amont porte les deux, d'où
+# l'arborescence dans ~/.local/nvim et un lien dans ~/bin. Elle est liée à la
+# glibc : sur une Alpine, l'extraction réussit et le binaire ne tourne pas.
+if ! command -v nvim >/dev/null; then
+  if fetch "https://github.com/neovim/neovim/releases/download/v${NVIM_VERSION}/nvim-linux-${uarch}.tar.gz" "$tmp/nvim.tgz" &&
+     tar xzf "$tmp/nvim.tgz" -C "$tmp"; then
+    rm -rf "$HOME/.local/nvim"
+    mkdir -p "$HOME/.local"
+    mv "$tmp/nvim-linux-${uarch}" "$HOME/.local/nvim"
+    ln -sf "$HOME/.local/nvim/bin/nvim" "$BIN/nvim"
+    echo "📝  neovim $NVIM_VERSION installé dans ~/.local/nvim"
+  else
+    echo "⚠️   neovim non installé : ~/.config/nvim reste inerte" >&2
   fi
 fi

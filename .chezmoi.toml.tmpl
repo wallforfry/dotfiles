@@ -1,5 +1,11 @@
 {{- $choices := list "perso" "pro" -}}
 {{- $profile := promptChoiceOnce . "profile" "Profil de cette machine" $choices -}}
+{{- /* Poste graphique : orthogonal à perso/pro, et sans objet hors de macOS,
+       seule plateforme où ce dépôt installe des applications (ADR-019). */ -}}
+{{- $gui := false -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{-   $gui = promptBoolOnce . "gui" "Poste graphique : installer les applications macOS" true -}}
+{{- end -}}
 
 encryption = "age"
 
@@ -17,3 +23,4 @@ scriptTempDir = "{{ .chezmoi.homeDir }}/.cache/chezmoi"
 
 [data]
     profile = {{ $profile | quote }}
+    gui = {{ $gui }}
