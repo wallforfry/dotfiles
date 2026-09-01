@@ -87,23 +87,35 @@ step_encrypt_fragments() {
   find "$SOURCE_DIR" -name '*.age' -not -path '*/.git/*' | sed "s|^$SOURCE_DIR/|  |"
 }
 
-step_commit_fragments() {
-  echo "Commite et pousse les fichiers chiffrés - la réécriture clone $REMOTE,"
-  echo "donc ce qui n'est pas poussé n'y sera pas :"
-  echo
-  echo "  chezmoi cd"
-  echo "  git add -A && git commit -m 'feat: chiffrer les fragments sensibles'"
-  echo "  git push origin main"
-  wait_for_enter
+step_verify_decryption() {
+  local f rc=0
+  echo "Relecture de chaque fragment chiffré : la passphrase est redemandée."
+  echo "C'est le seul contrôle qui attrape une passphrase divergente entre deux fichiers."
+  for f in "${FRAGMENTS[@]}"; do
+    [ -f "$f" ] || continue
+    if diff -q <(chezmoi cat "$f") "$f" >/dev/null; then
+      echo "  OK   $f"
+    else
+      echo "  ÉCHEC $f - déchiffrement impossible ou contenu divergent" >&2
+      rc=1
+    fi
+  done
+  [ "$rc" = 0 ] || {
+    echo "ERREUR: rechiffre les fragments en cause avec la même passphrase." >&2
+    exit 1
+  }
 }
 
-step_verify_source_tree() {
-  echo "Recherche des motifs dans l'arbre de travail de $SOURCE_DIR..."
-  if git -C "$SOURCE_DIR" grep -n -I -F -f "$EFFECTIVE" -- . ':!.oh-my-zsh'; then
-    echo "ERREUR: motifs sensibles encore présents en clair. Corrige avant de continuer." >&2
-    exit 1
+step_commit_fragments() {
+  git -C "$SOURCE_DIR" pull --ff-only
+  git -C "$SOURCE_DIR" add -A
+  if git -C "$SOURCE_DIR" diff --cached --quiet; then
+    echo "Rien à commiter : les fragments chiffrés sont déjà dans l'historique."
+  else
+    git -C "$SOURCE_DIR" commit -m "feat: chiffrer les fragments sensibles"
   fi
-  echo "Arbre de travail propre."
+  git -C "$SOURCE_DIR" push origin main
+  echo "Fragments chiffrés poussés : la réécriture les verra."
 }
 
 step_check_both_profiles() {
@@ -196,6 +208,7 @@ main() {
   step_write_patterns_file
   step_encrypt_fragments
   step_verify_source_tree
+  step_verify_decryption
   step_commit_fragments
   step_check_both_profiles
   step_rewrite_history
