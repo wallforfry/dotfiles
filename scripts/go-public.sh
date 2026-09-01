@@ -11,6 +11,10 @@
 # Voir docs/adr/016-depot-public-sensible-chiffre.md.
 set -euo pipefail
 
+# Une étape a déjà échoué sans un mot : errexit sort en silence, et un « awk exit »
+# qui ferme un tube suffit à tuer le script par SIGPIPE plus pipefail.
+trap 'echo "ERREUR: interruption ligne $LINENO (code $?)." >&2' ERR
+
 SOURCE_DIR="$(chezmoi source-path 2>/dev/null || echo "$HOME/.local/share/chezmoi")"
 WORK="$HOME/.cache/go-public"
 PATTERNS="$WORK/patterns.txt"
@@ -178,7 +182,12 @@ step_check_both_profiles() {
   sed 's/profile = "pro"/profile = "perso"/' "$(chezmoi execute-template '{{ .chezmoi.configFile }}')" > "$perso"
   rendered="$(chezmoi --config "$perso" -S "$SOURCE_DIR" execute-template < "$SOURCE_DIR/.chezmoiignore")"
   for path in .claude/CONTEXT.md .config/git/pro.gitconfig .config/zsh/pro.zsh .config/zsh/pro.zprofile; do
-    printf '%s\n' "$rendered" | grep -qx -- "$path" || { echo "⚠️  $path non ignoré en perso" >&2; missing=1; }
+    # Pas de « grep -q » derrière un tube : il sort dès la première ligne trouvée,
+    # ce qui tue le producteur par SIGPIPE et fait échouer le script via pipefail.
+    case $'\n'"$rendered"$'\n' in
+      *$'\n'"$path"$'\n'*) ;;
+      *) echo "⚠️  $path non ignoré en perso" >&2; missing=1 ;;
+    esac
   done
   [ "$missing" = 0 ] || {
     echo "ERREUR: une machine perso déploierait un fragment du profil pro." >&2
@@ -215,12 +224,14 @@ step_verify_history() {
 fill_commits_field() {
   local dir="$1" num="$2" file entry label subject sha field=""
   shift 2
-  file="$(ls "$dir"/docs/adr/"$num"-*.md 2>/dev/null | head -1)"
-  [ -n "$file" ] || return 0
+  for file in "$dir"/docs/adr/"$num"-*.md; do
+    [ -f "$file" ] && break
+    return 0
+  done
   for entry in "$@"; do
     label="${entry%%:*}"
     subject="${entry#*:}"
-    sha="$(git -C "$dir" log --all --format='%h%x09%s' | awk -F'\t' -v s="$subject" 'index($2, s) == 1 { print $1; exit }')"
+    sha="$(git -C "$dir" log --all --format='%h%x09%s' | awk -F'\t' -v s="$subject" 'index($2, s) == 1 && !seen { print $1; seen = 1 }')"
     [ -n "$sha" ] || { echo "⚠️  ADR-$num : aucun commit pour « $subject »" >&2; continue; }
     [ -z "$field" ] || field="$field, "
     field="$field\`$sha\` ($label)"
@@ -236,7 +247,7 @@ step_refresh_adr_commits() {
   for sha in $(grep -rhoE '`[0-9a-f]{7,40}`' "$dir"/docs/adr/*.md | tr -d '`' | sort -u); do
     subj="$(git -C "$SOURCE_DIR" log -1 --format=%s "$sha" 2>/dev/null)" || continue
     [ -n "$subj" ] || continue
-    new="$(git -C "$dir" log --all --format='%h%x09%s' | awk -F'\t' -v s="$subj" '$2 == s { print $1; exit }')"
+    new="$(git -C "$dir" log --all --format='%h%x09%s' | awk -F'\t' -v s="$subj" '$2 == s && !seen { print $1; seen = 1 }')"
     if [ -z "$new" ]; then
       echo "⚠️  aucune correspondance pour $sha - $subj" >&2
       continue
