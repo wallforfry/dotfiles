@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-09
-- **Commits** : à compléter au commit
+- **Commits** : `2e28608` (outillage, donnée `gui`, casks), `d0bcf9f` (chemin d'Arc)
 
 ## Contexte
 
