@@ -43,10 +43,18 @@ BIN="$HOME/bin"
 {{ if eq .chezmoi.os "darwin" -}}
 if command -v brew >/dev/null; then
   # « formule:commande », car ripgrep s'installe sous ce nom et s'appelle rg.
+  #
+  # Une formule qui échoue n'interrompt pas les suivantes, ni le bloc des
+  # applications : sans ce garde, set -e abandonnerait l'apply au milieu.
+  # Le cas s'est produit sur un mac arm64 dont le brew de tête est celui de
+  # /usr/local, sous Rosetta : bitwarden-cli n'y a pas de bouteille et sa
+  # compilation échoue sur « unsupported argument 'westmere' to -march= ».
   for f in age:age gh:gh jq:jq ripgrep:rg starship:starship neovim:nvim fd:fd \
            duf:duf uv:uv thefuck:thefuck pinentry-mac:pinentry-mac ykman:ykman \
            bitwarden-cli:bw; do
-    command -v "${f#*:}" >/dev/null || brew install "${f%:*}"
+    if ! command -v "${f#*:}" >/dev/null; then
+      brew install "${f%:*}" || echo "⚠️   ${f%:*} non installé" >&2
+    fi
   done
 
 {{/* « get » et non « .gui » : une machine installée avant ADR-019 a un
