@@ -74,15 +74,23 @@ TEMPLATE
 
 step_encrypt_fragments() {
   local f
+  echo "Chiffrement de ${#FRAGMENTS[@]} fragments. chezmoi demande la passphrase une fois"
+  echo "par fichier : saisis la même à chaque fois, et jamais une saisie vide - age"
+  echo "générerait alors une passphrase différente par fichier."
+  echo "Attends l'invite avant de taper : une frappe anticipée s'affiche en clair."
+  wait_for_enter
   for f in "${FRAGMENTS[@]}"; do
     if [ ! -f "$f" ]; then
       echo "⚠️  $f absent, fragment ignoré." >&2
       continue
     fi
     chmod 600 "$f"
-    echo "Chiffrement de $f - chezmoi demande la passphrase :"
+    # Le message part sur stderr, comme l'invite d'age : deux flux distincts se
+    # réordonnent, et l'invite doit rester la dernière chose affichée.
+    printf '\n%s\n' "→ $f" >&2
     chezmoi add --encrypt "$f"
   done
+  echo
   echo "Fragments chiffrés dans $SOURCE_DIR :"
   find "$SOURCE_DIR" -name '*.age' -not -path '*/.git/*' | sed "s|^$SOURCE_DIR/|  |"
 }
