@@ -14,13 +14,12 @@ Aucun rappel de fondamentaux sur ces sujets. Aller au fait.
 
 ## Contextes
 
-- **Contexte professionnel** - décrit dans `~/.claude/CONTEXT.md`, fragment
-  chiffré déployé sur le seul profil `pro` : ce dépôt est public et ne porte
-  aucun nom d'employeur, de client ou de projet interne.
+- **Contextes nommés** - employeur, clients, projets professionnels et
+  personnels sont décrits dans `~/.claude/CONTEXT.md`, fragment chiffré : ce
+  dépôt est public et ne porte aucun nom de projet, sauf le sien.
 - **Forges** - GitHub en pro comme en perso ; Bitbucket uniquement en pro.
   Déduire la forge de `git remote get-url origin`, jamais du profil de la
   machine : les deux coexistent côté pro.
-- **Perso** - `REDACTED`, `REDACTED`, ces dotfiles.
 - **Postes** - macOS au quotidien, Linux, NAS Synology DSM (`/tmp` monté
   `noexec`, shell forcé par un fragment SSH versionné).
 

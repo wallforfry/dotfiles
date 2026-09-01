@@ -181,7 +181,9 @@ step_check_both_profiles() {
   local perso="$WORK/chezmoi-perso.toml" rendered missing=0 path
   sed 's/profile = "pro"/profile = "perso"/' "$(chezmoi execute-template '{{ .chezmoi.configFile }}')" > "$perso"
   rendered="$(chezmoi --config "$perso" -S "$SOURCE_DIR" execute-template < "$SOURCE_DIR/.chezmoiignore")"
-  for path in .claude/CONTEXT.md .config/git/pro.gitconfig .config/zsh/pro.zsh .config/zsh/pro.zprofile; do
+  # CONTEXT.md n'y est pas : il se déploie sur les deux profils, portant aussi les
+  # projets personnels.
+  for path in .config/git/pro.gitconfig .config/zsh/pro.zsh .config/zsh/pro.zprofile; do
     # Pas de « grep -q » derrière un tube : il sort dès la première ligne trouvée,
     # ce qui tue le producteur par SIGPIPE et fait échouer le script via pipefail.
     case $'\n'"$rendered"$'\n' in
@@ -193,7 +195,7 @@ step_check_both_profiles() {
     echo "ERREUR: une machine perso déploierait un fragment du profil pro." >&2
     exit 1
   }
-  echo "Profil perso : les quatre fragments pro sont ignorés."
+  echo "Profil perso : les trois fragments pro sont ignorés."
 }
 
 step_rewrite_history() {

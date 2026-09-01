@@ -42,14 +42,16 @@ Le dépôt est public. Rien de sensible n'y figure, ni en clair ni en prose :
    `~/.claude/CONTEXT.md`.
 2. **Les fichiers publics chargent ces fragments sans les nommer** : un
    `[ -f … ] && source …` en zsh, un `[include]` en git - git ignore silencieusement
-   un chemin absent - et `@CONTEXT.md` dans `dot_claude/CLAUDE.md.tmpl` sous le
-   seul profil `pro`.
+   un chemin absent - et `@CONTEXT.md` dans `dot_claude/CLAUDE.md`.
 3. **Les fragments propres au profil `pro` sont ignorés hors de ce profil**
-   (`.chezmoiignore`), pour qu'une machine perso ou le NAS n'aient pas à saisir
-   une passphrase pour un fichier qui ne les concerne pas.
-4. **La prose ne porte aucun nom d'employeur, de client ou de projet interne.**
-   `harness/USER.md` renvoie à `~/.claude/CONTEXT.md`, déployé sur le seul profil
-   `pro`.
+   (`.chezmoiignore`). `~/.claude/CONTEXT.md` fait exception et se déploie
+   partout : il porte aussi les projets personnels, dont une machine perso a
+   besoin.
+4. **La prose ne porte aucun nom de projet, sauf le sien.** Employeur, clients,
+   projets professionnels et personnels sont décrits dans
+   `~/.claude/CONTEXT.md`, où `harness/USER.md` renvoie. Un dépôt public dit
+   déjà à qui il appartient : la liste de ce sur quoi son auteur travaille est
+   une information de plus, qu'il n'a pas à donner.
 5. **L'historique est réécrit avant publication** (`git-filter-repo`), le dépôt
    distant est basculé en public, et la passphrase `age` est changée : la
    précédente a protégé un fichier désormais téléchargeable par quiconque.

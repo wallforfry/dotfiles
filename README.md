@@ -60,10 +60,10 @@ tête du script ; les modifier suffit à déclencher une réinstallation.
 Le repo est public, et rien de sensible n'y figure - ni en clair, ni en prose.
 Ce qui l'est et reste nécessaire au déploiement est chiffré par `age` :
 `~/.ssh/config.d/nas.conf`, `~/.config/zsh/pro.zsh`, `~/.config/zsh/pro.zprofile`,
-`~/.config/git/pro.gitconfig`, `~/.claude/CONTEXT.md`. Les fichiers publics les
-chargent sans les nommer, et `.chezmoiignore` écarte les fragments du profil
-`pro` hors de ce profil, pour qu'une machine perso ou le NAS n'aient pas à
-saisir une passphrase pour un fichier qui ne les concerne pas.
+`~/.config/git/pro.gitconfig`, `~/.claude/CONTEXT.md` - ce dernier déployé sur
+les deux profils, puisqu'il porte aussi les projets personnels. Les fichiers
+publics les chargent sans les nommer, et `.chezmoiignore` écarte les fragments
+du profil `pro` hors de ce profil.
 
 La contrepartie est entière : `encrypted_*.age` est téléchargeable par
 quiconque, donc attaquable hors ligne sans limite de temps. La passphrase est la
@@ -118,7 +118,7 @@ propre à cet usage ([ADR-016](docs/adr/016-depot-public-sensible-chiffre.md)).
 | Profil | Contenu |
 |---|---|
 | `perso` | base commune uniquement |
-| `pro` | fragments chiffrés `~/.config/zsh/pro.zsh`, `pro.zprofile`, `~/.config/git/pro.gitconfig`, `~/.claude/CONTEXT.md`, `~/.claude_pro` |
+| `pro` | fragments chiffrés `~/.config/zsh/pro.zsh`, `pro.zprofile`, `~/.config/git/pro.gitconfig`, et `~/.claude_pro` |
 
 Les blocs macOS (Arc, Homebrew, pnpm, Coursier) ne sont rendus que sur darwin.
 
