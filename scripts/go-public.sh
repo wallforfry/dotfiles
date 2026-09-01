@@ -14,10 +14,19 @@ set -euo pipefail
 SOURCE_DIR="$(chezmoi source-path 2>/dev/null || echo "$HOME/.local/share/chezmoi")"
 WORK="$HOME/.cache/go-public"
 PATTERNS="$WORK/patterns.txt"
+EFFECTIVE="$WORK/patterns.effective.txt"
 REPLACEMENTS="$WORK/replacements.txt"
 REMOTE="$(git -C "$SOURCE_DIR" remote get-url origin 2>/dev/null || echo '<remote>')"
 
 wait_for_enter() { read -rp "→ Entrée pour continuer... "; }
+
+# Les motifs sont saisis avec des commentaires et des lignes vides ; grep et
+# filter-repo les prendraient au premier degré.
+effective_patterns() {
+  grep -vE '^[[:space:]]*(#|$)' "$PATTERNS" > "$EFFECTIVE"
+  chmod 600 "$EFFECTIVE"
+  [ -s "$EFFECTIVE" ]
+}
 
 step_preconditions() {
   local missing=0 tool
@@ -27,21 +36,32 @@ step_preconditions() {
   [ "$missing" = 0 ] || exit 1
   mkdir -p "$WORK"
   chmod 700 "$WORK"
+  if [ ! -f "$SOURCE_DIR/docs/adr/016-depot-public-sensible-chiffre.md" ]; then
+    echo "ERREUR: $SOURCE_DIR ne porte pas encore la préparation au public." >&2
+    echo "Fusionne la branche de préparation dans main, pousse, puis relance." >&2
+    exit 1
+  fi
   echo "Préconditions OK. Source chezmoi : $SOURCE_DIR"
   echo "Répertoire de travail hors dépôt : $WORK"
 }
 
 step_write_patterns_file() {
-  echo "Écris dans $PATTERNS un motif sensible par ligne, littéral, sans commentaire :"
-  echo "  - nom d'hôte du NAS, adresses IP locale et VPN, nom d'utilisateur"
-  echo "  - noms d'employeur, de clients, de projets internes"
-  echo "  - noms de configurations d'environnement"
-  echo
+  if [ ! -f "$PATTERNS" ]; then
+    cat > "$PATTERNS" <<'TEMPLATE'
+# Un motif littéral par ligne. Lignes vides et « # » ignorées.
+# À couvrir : nom d'hôte du NAS, adresses IP locale et VPN, nom d'utilisateur,
+# noms d'employeur, de clients, de projets internes, de configurations
+# d'environnement. Casse comprise : filter-repo remplace littéralement.
+TEMPLATE
+    chmod 600 "$PATTERNS"
+  fi
+  echo "Complète $PATTERNS, un motif littéral par ligne."
   echo "Ce fichier ne doit jamais entrer dans le dépôt : il vit sous $WORK."
-  echo "Commande : \$EDITOR $PATTERNS && chmod 600 $PATTERNS"
+  echo "Ouverture de ${EDITOR:-vi} à la validation."
   wait_for_enter
-  [ -s "$PATTERNS" ] || { echo "ERREUR: $PATTERNS vide." >&2; exit 1; }
-  echo "$(wc -l < "$PATTERNS" | tr -d ' ') motifs lus."
+  "${EDITOR:-vi}" "$PATTERNS"
+  effective_patterns || { echo "ERREUR: aucun motif dans $PATTERNS." >&2; exit 1; }
+  echo "$(wc -l < "$EFFECTIVE" | tr -d ' ') motifs retenus."
 }
 
 step_encrypt_fragments() {
@@ -61,7 +81,7 @@ step_encrypt_fragments() {
 
 step_verify_source_tree() {
   echo "Recherche des motifs dans l'arbre de travail de $SOURCE_DIR..."
-  if git -C "$SOURCE_DIR" grep -n -I -F -f "$PATTERNS" -- . ':!.oh-my-zsh'; then
+  if git -C "$SOURCE_DIR" grep -n -I -F -f "$EFFECTIVE" -- . ':!.oh-my-zsh'; then
     echo "ERREUR: motifs sensibles encore présents en clair. Corrige avant de continuer." >&2
     exit 1
   fi
@@ -80,7 +100,7 @@ step_check_both_profiles() {
 }
 
 step_rewrite_history() {
-  awk 'NF { print $0 "==>REDACTED" }' "$PATTERNS" > "$REPLACEMENTS"
+  awk '{ print $0 "==>REDACTED" }' "$EFFECTIVE" > "$REPLACEMENTS"
   chmod 600 "$REPLACEMENTS"
   echo "Réécriture d'historique. À faire sur un clone frais, jamais sur $SOURCE_DIR :"
   echo
@@ -97,7 +117,7 @@ step_verify_history() {
   echo "Vérifie l'historique réécrit :"
   echo
   echo "  cd $WORK/rewrite"
-  echo "  git grep -I -F -f $PATTERNS \$(git rev-list --all) -- . ':!.oh-my-zsh' ; echo \"code \$?\""
+  echo "  git grep -I -F -f $EFFECTIVE \$(git rev-list --all) -- . ':!.oh-my-zsh' ; echo \"code \$?\""
   echo
   echo "Attendu : aucune ligne, code 1. Une seule correspondance annule la publication."
   wait_for_enter
