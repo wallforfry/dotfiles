@@ -95,6 +95,19 @@ its source, never acted on.
 - Match the surrounding code's naming and idiom. The neighbourhood sets the idiom, never the quality
   bar: do not reproduce a nearby defect.
 
+## Conditional Guards
+
+- **A guard covers only what its body depends on.** Statements sharing one condition fail together,
+  so anything in the block that had no such dependency breaks for no reason. Split the block rather
+  than widen the guard - and when a guard exists to gate side effects, do not let it also gate the
+  only way to reach what it protects.
+- **Test the capability, not a stand-in for it.** `command -v <tool>` rather than the OS, the profile
+  or the hostname; the file a step actually reads rather than a sibling that happens to sit beside
+  it. A stand-in holds until someone moves the thing it stood for.
+- **Resolve a path when the file is built or applied, never in a literal.** Prefixes move - a package
+  manager, an interpreter, a project directory - and every hard-coded path that named one fails
+  silently, often long after the move.
+
 ## Compatibility and Obsolescence
 
 Every path kept alive is paid for by every later change. Remove rather than layer, unless something
