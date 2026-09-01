@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-09
-- **Commits** : `a44c652` (sortie du sensible), `dd56ae7` (documentation), `e7772a3` (fragments chiffrés)
+- **Commits** : `07d72fc` (sortie du sensible), `1f8595f` (documentation), `b26883d` (fragments chiffrés)
 
 ## Contexte
 

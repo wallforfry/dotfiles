@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-08
-- **Commits** : `1a9cfed` (harness et projections), `b8f3f85` (skills et hook)
+- **Commits** : `45f0998` (harness et projections), `64f0ccb` (skills et hook)
 
 ## Contexte
 

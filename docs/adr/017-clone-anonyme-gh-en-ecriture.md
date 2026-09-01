@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-09
-- **Commits** : `dd56ae7` (documentation du clone anonyme)
+- **Commits** : `1f8595f` (documentation du clone anonyme)
 
 ## Contexte
 

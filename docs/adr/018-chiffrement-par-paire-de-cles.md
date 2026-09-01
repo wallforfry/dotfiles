@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-09
-- **Commits** : `dd22a8b` (paire de clés)
+- **Commits** : `877fb58` (paire de clés)
 
 ## Contexte
 
