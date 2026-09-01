@@ -64,7 +64,7 @@ obscurément.
 - Un pilote de plus à maintenir par serveur, là où une ligne de configuration
   suffisait.
 - `~/.cursor/mcp.json` reste hors du dépôt - il contient des mots de passe et des
-  jetons en clair ([ADR-002](002-depot-prive-secrets-age.md)) - donc la bascule vers
+  jetons en clair ([ADR-016](016-depot-public-sensible-chiffre.md)) - donc la bascule vers
   les pilotes s'y fait à la main, sans être rejouable par `chezmoi apply`.
 
 Vérifié contre une base jetable : trois sessions simultanées obtiennent chacune une

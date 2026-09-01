@@ -5,60 +5,35 @@ Mes dotfiles macOS, Linux et NAS Synology, gérés avec
 
 ## Installation
 
-Ce repo est **privé** : il faut s'authentifier auprès de GitHub avant de
-pouvoir le cloner. L'authentification se fait en deux temps - un PAT tiré de
-Bitwarden pour le clone initial, puis `gh` pour tous les `chezmoi update`
-suivants.
-
-### 1. Récupérer le token
-
-Le PAT est dans Bitwarden, entrée **`github.com`**, champ personnalisé
-**`Dotfiles token`**. Si le CLI Bitwarden est disponible :
-
 ```bash
-export GH_PAT=$(bw get item github.com | jq -r '.fields[] | select(.name == "Dotfiles token").value')
-```
-
-`bw get password` ne renverrait que le mot de passe du compte : les champs
-personnalisés ne sont accessibles que via `bw get item`, d'où le passage par
-`jq`. Déverrouiller le coffre au préalable (`bw unlock`) si nécessaire.
-
-Sinon, copie le champ depuis le coffre web et `export GH_PAT=...` à la main -
-c'est la seule option sur une machine sans `bw` ni `jq`, typiquement un NAS.
-
-### 2. Installer
-
-```bash
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply "https://${GH_PAT}@github.com/wallforfry/dotfiles.git"
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://github.com/wallforfry/dotfiles.git
 ```
 
 chezmoi s'installe, clone ce repo, demande le profil de la machine (`perso`
-ou `pro`) et la passphrase de déchiffrement des secrets, puis applique la
-configuration. Au passage, un script `run_onchange` installe les outils
-manquants (`age`, `gh`, `jq`, `ripgrep`, `starship`) - voir [Outillage](#outillage).
+ou `pro`) et la passphrase de déchiffrement des fichiers `age`, puis applique
+la configuration. Au passage, un script `run_onchange` installe les outils
+manquants (`age`, `gh`, `jq`, `ripgrep`, `starship`) - voir
+[Outillage](#outillage).
 
-### 3. Basculer sur gh
-
-Le token est pour l'instant inscrit en clair dans la remote du clone. On le
-remplace par `gh`, qui gère ensuite les identifiants pour les mises à jour :
+Le repo est public : le clone ne demande aucune authentification
+([ADR-017](docs/adr/017-clone-anonyme-gh-en-ecriture.md)). Seule l'écriture en
+exige une, par `gh` :
 
 ```bash
-echo "$GH_PAT" | gh auth login --with-token
-chezmoi git -- remote set-url origin https://github.com/wallforfry/dotfiles.git
-unset GH_PAT
+gh auth login
 ```
 
-`gh auth login` installe un helper d'identifiants git global ; `.gitconfig`
-le déclare avec le chemin de `gh` résolu à l'apply, et omet le bloc là où
-`gh` n'est pas installé. `chezmoi update` fonctionne dès lors sans rien
-saisir.
+`gh auth login` installe un helper d'identifiants git global ; `.gitconfig` le
+déclare avec le chemin de `gh` résolu à l'apply, et omet le bloc là où `gh`
+n'est pas installé. Une machine qui n'a jamais authentifié `gh` peut appliquer
+et mettre à jour, pas pousser.
 
 ### Pourquoi pas en SSH ?
 
 `chezmoi init git@github.com:wallforfry/dotfiles.git` fonctionne aussi, mais
 suppose une clé SSH déjà utilisable sur la machine neuve. Avec une clé sur
 YubiKey, l'agent GPG qui l'expose est configuré par `.zprofile` - que chezmoi
-n'a pas encore appliqué à ce stade. Le chemin par token évite cette
+n'a pas encore appliqué à ce stade. Le clone anonyme en HTTPS évite cette
 dépendance circulaire.
 
 ## Outillage
@@ -80,13 +55,19 @@ pour que les shells non interactifs (`ssh nas '...'`, planificateur DSM) les
 trouvent aussi. Les versions d'`age`, `gh`, `jq` et `ripgrep` sont épinglées en
 tête du script ; les modifier suffit à déclencher une réinstallation.
 
-### Pourquoi le repo reste privé
+### Ce que ce repo public ne contient pas
 
-Le rendre public exposerait `encrypted_private_dot_secrets.age` au
-téléchargement, donc à une attaque hors ligne sans limite de temps contre la
-seule passphrase. `dot_gitconfig.tmpl` et le bloc pro de `dot_zshrc.tmpl`
-contiennent par ailleurs des informations d'employeur (noms de projets et de
-configurations Doppler) qui n'ont pas à être publiées.
+Le repo est public, et rien de sensible n'y figure - ni en clair, ni en prose.
+Ce qui l'est et reste nécessaire au déploiement est chiffré par `age` :
+`~/.ssh/config.d/nas.conf`, `~/.config/zsh/pro.zsh`, `~/.config/zsh/pro.zprofile`,
+`~/.config/git/pro.gitconfig`, `~/.claude/CONTEXT.md`. Les fichiers publics les
+chargent sans les nommer, et `.chezmoiignore` écarte les fragments du profil
+`pro` hors de ce profil, pour qu'une machine perso ou le NAS n'aient pas à
+saisir une passphrase pour un fichier qui ne les concerne pas.
+
+La contrepartie est entière : `encrypted_*.age` est téléchargeable par
+quiconque, donc attaquable hors ligne sans limite de temps. La passphrase est la
+seule barrière - voir [ADR-016](docs/adr/016-depot-public-sensible-chiffre.md).
 
 ## Usage
 
@@ -125,6 +106,11 @@ symétrique) et versionné sous `encrypted_private_dot_secrets.age`. La
 passphrase n'est stockée nulle part dans ce repo : elle est saisie à
 `chezmoi apply`. **Perdue, les secrets sont irrécupérables.**
 
+Les autres fichiers chiffrés suivent le même mécanisme : `nas.conf` et les
+fragments du profil `pro`. Le repo étant public, chacun d'eux est
+téléchargeable, donc attaquable hors ligne : la passphrase doit être longue et
+propre à cet usage ([ADR-016](docs/adr/016-depot-public-sensible-chiffre.md)).
+
 ## Profils
 
 `chezmoi init` demande le profil de la machine :
@@ -132,12 +118,13 @@ passphrase n'est stockée nulle part dans ce repo : elle est saisie à
 | Profil | Contenu |
 |---|---|
 | `perso` | base commune uniquement |
-| `pro` | aliases Doppler/REDACTED, `cdb`/`cds`, `claude-REDACTED`, `REDACTED_PROJECT_PATH`, `~/.claude_REDACTED` |
+| `pro` | fragments chiffrés `~/.config/zsh/pro.zsh`, `pro.zprofile`, `~/.config/git/pro.gitconfig`, `~/.claude/CONTEXT.md`, `~/.claude_pro` |
 
 Les blocs macOS (Arc, Homebrew, pnpm, Coursier) ne sont rendus que sur darwin.
 
 L'identité git n'est pas templatée : `~/.gitconfig` bascule déjà entre les deux
-identités par répertoire via `includeIf "gitdir:~/Projects/REDACTED/"`.
+identités par répertoire via un `includeIf` porté par le fragment chiffré
+`~/.config/git/pro.gitconfig`.
 
 ## Décisions d'architecture
 
@@ -181,8 +168,8 @@ l'origine des skills reprises d'un dépôt tiers.
 
 ### Profil pro
 
-`dot_claude_REDACTED/` ne contient que des liens relatifs vers `~/.claude`, pour
-que la session `claude-REDACTED` partage la même source au lieu d'une seconde
+`dot_claude_pro/` ne contient que des liens relatifs vers `~/.claude`, pour
+que la session isolée du profil `pro` partage la même source au lieu d'une seconde
 copie à synchroniser. Le répertoire est ignoré hors profil `pro`.
 
 ### Récupération web

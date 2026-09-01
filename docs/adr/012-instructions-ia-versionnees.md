@@ -8,7 +8,7 @@
 
 `~/.claude` n'était pas versionné. Son `CLAUDE.md` se réduisait à un `@RTK.md` de
 huit octets, aucune skill personnelle n'existait, et le second répertoire de
-configuration `~/.claude_REDACTED` - ouvert par l'alias `claude-REDACTED` - était une
+configuration `~/.claude_pro` - ouvert par un alias du profil `pro` - était une
 copie à maintenir à la main.
 
 Les instructions données à un agent sont de la configuration comme une autre : leur
@@ -32,7 +32,7 @@ l'utilisateur.
 
 `dot_claude/{AGENTS,SOUL,USER}.md.tmpl` n'en sont que des projections d'une ligne,
 par la fonction `include` de chezmoi, et `dot_claude/CLAUDE.md` l'adaptateur Claude
-qui les importe. `dot_claude_REDACTED/` ne contient que des liens relatifs vers
+qui les importe. `dot_claude_pro/` ne contient que des liens relatifs vers
 `~/.claude`.
 
 Les skills vivent sous `dot_claude/skills/<slug>/SKILL.md`. Ce qui est

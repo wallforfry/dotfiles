@@ -21,15 +21,16 @@ nom, découverts plus tard, dans l'historique d'autrui.
 professionnelle à git lui-même :
 
 ```ini
-[includeIf "gitdir:~/Projects/REDACTED/"]
-    path = ~/Projects/REDACTED/.gitconfig
+[includeIf "gitdir:~/Projects/<employeur>/"]
+    path = ~/Projects/<employeur>/.gitconfig
 ```
 
 L'identité est donc fonction du **répertoire du dépôt**, résolue par git à chaque
 commande, et non du profil résolu à l'apply.
 
-`~/Projects/REDACTED/.gitconfig` n'est pas versionné dans ce dépôt : il porte les
-informations d'employeur que [ADR-002](002-depot-prive-secrets-age.md) tient hors du
+Le fragment réel est chiffré ([ADR-016](016-depot-public-sensible-chiffre.md)) : il
+porte les
+informations d'employeur que [ADR-016](016-depot-public-sensible-chiffre.md) tient hors du
 dépôt.
 
 ## Conséquences
@@ -37,12 +38,12 @@ dépôt.
 - L'identité est correcte sans intervention, y compris dans un dépôt cloné le jour
   même.
 - La convention devient une contrainte de rangement : un dépôt professionnel
-  **doit** vivre sous `~/Projects/REDACTED/`. Ailleurs, il hérite silencieusement de
+  **doit** vivre sous le répertoire déclaré. Ailleurs, il hérite silencieusement de
   l'identité personnelle.
 - Le fichier inclus est un prérequis non versionné : sur une machine neuve, son
   absence est silencieuse - git ignore un `includeIf` dont le chemin manque.
 - `~/.gitconfig` reste un template pour une seule autre raison, le chemin de `gh`
-  résolu par `lookPath` ([ADR-003](003-bootstrap-pat-puis-gh.md)).
+  résolu par `lookPath` ([ADR-017](017-clone-anonyme-gh-en-ecriture.md)).
 
 ## Alternatives écartées
 
@@ -52,5 +53,5 @@ dépôt.
   correct mais bruyant, une erreur à chaque premier commit dans un dépôt neuf.
 - **Un hook `pre-commit` vérifiant l'identité** : détecte au lieu de prévenir, et
   doit être installé dans chaque dépôt.
-- **Versionner `~/Projects/REDACTED/.gitconfig`** ici : y ferait entrer les
+- **Versionner en clair le `.gitconfig` de l'employeur** ici : y ferait entrer les
   informations d'employeur que le dépôt tient à l'écart.

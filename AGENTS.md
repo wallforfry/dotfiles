@@ -44,7 +44,7 @@ be conditioned on `.profile` or on the OS.
   and `dot_claude/CLAUDE.md` is the Claude adapter that imports them. Never move content into them.
 - `dot_claude/skills/<slug>/SKILL.md` holds the skills. One skill per directory; optional
   `references/`, `assets/`, `scripts/` subdirectories.
-- `dot_claude_REDACTED/` contains only `symlink_` entries pointing into `~/.claude`, so the work
+- `dot_claude_pro/` contains only `symlink_` entries pointing into `~/.claude`, so the work
   profile shares one source instead of a second copy. It is ignored outside the `pro` profile.
 - **Never add the `exact_` attribute to `dot_claude/`.** `~/.claude` holds live state - sessions,
   projects, plugins - that chezmoi would delete.
@@ -82,7 +82,19 @@ Nothing here runs in CI, so verify locally before delivering:
 
 ## Secrets
 
-- Secrets live in `encrypted_private_dot_secrets.age` and nowhere else. Never write one into a
-  template, a script, a log, or a commit message.
-- The GitHub PAT documented in `README.md` is a bootstrap credential handled by the operator, never
-  by an agent.
+**This repository is public.** Every file in it, and every commit message, is world-readable
+([ADR-016](docs/adr/016-depot-public-sensible-chiffre.md)).
+
+- Nothing sensitive goes in, in clear or in prose: no hostname, IP address, login, employer, client
+  or internal project name, in a template, a script, a log, a commit message, or documentation.
+- What is sensitive and still needed at deploy time is encrypted with `age`: `~/.secrets`,
+  `~/.ssh/config.d/nas.conf`, `~/.config/zsh/pro.zsh`, `~/.config/zsh/pro.zprofile`,
+  `~/.config/git/pro.gitconfig`, `~/.claude/CONTEXT.md`. Add one with
+  `chezmoi add --encrypt <path>`, which the operator runs: it needs the passphrase, so an agent
+  cannot.
+- Public files load those fragments without naming what is in them - a `[ -f … ] && source …`, a git
+  `[include]`, an `@CONTEXT.md` guarded by the `pro` profile.
+- Fragments specific to the `pro` profile are listed in `.chezmoiignore` under
+  `{{ if ne .profile "pro" }}`, so other machines never prompt for a passphrase they do not need.
+- An encrypted file is still downloadable by anyone. The passphrase is the only barrier, and it is
+  attackable offline: never weaken it, never write it down here.

@@ -7,9 +7,10 @@
 ## Contexte
 
 Une partie de la configuration n'a de sens que sur une machine professionnelle :
-alias Doppler, raccourcis `cdb`/`cds`, `REDACTED_PROJECT_PATH`, session Claude
-isolée. La déployer partout pollue les machines personnelles et publie du contexte
-d'employeur là où il n'a rien à faire.
+alias et variables propres aux projets de l'employeur, raccourcis de navigation,
+session Claude isolée. La déployer partout pollue les machines personnelles, et ce
+dépôt étant public, ces fragments y sont chiffrés
+([ADR-016](016-depot-public-sensible-chiffre.md)).
 
 Cette distinction ne se déduit ni du système d'exploitation ni du nom d'hôte : les
 deux profils tournent sur macOS, et les noms d'hôtes ne suivent aucune convention
@@ -26,7 +27,7 @@ Le profil pilote deux mécanismes :
 - des blocs `{{ if eq .profile "pro" }}` dans les templates, pour un fragment de
   fichier ;
 - des entrées conditionnelles dans `.chezmoiignore`, lui-même un template, pour un
-  fichier ou un répertoire entier - c'est ainsi que `.claude_REDACTED` reste absent
+  fichier ou un répertoire entier - c'est ainsi que `.claude_pro` et les fragments chiffrés du profil restent absents
   hors profil `pro`.
 
 Les blocs propres à un système restent portés par `.chezmoi.os`, indépendamment du

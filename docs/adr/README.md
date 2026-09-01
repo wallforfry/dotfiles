@@ -102,8 +102,6 @@ cas la citation est explicite.
 | # | Titre | Date |
 |---|---|---|
 | [001](001-chezmoi-gestionnaire.md) | chezmoi comme gestionnaire de dotfiles | 2026-08 |
-| [002](002-depot-prive-secrets-age.md) | Dépôt privé et secrets chiffrés par `age` | 2026-08 |
-| [003](003-bootstrap-pat-puis-gh.md) | Bootstrap par PAT puis bascule sur `gh` | 2026-08 |
 | [004](004-profils-perso-pro.md) | Profils `perso` et `pro` demandés à l'init | 2026-08 |
 | [005](005-oh-my-zsh-en-external.md) | oh-my-zsh en external, auto-update désactivé | 2026-08 |
 | [006](006-starship-comme-prompt.md) | starship comme prompt unique | 2026-08 |
@@ -116,3 +114,5 @@ cas la citation est explicite.
 | [013](013-conventional-commits.md) | Conventional Commits | 2026-08 |
 | [014](014-recuperation-web-par-paliers.md) | Récupération web par paliers, Firecrawl auto-hébergé | 2026-08 |
 | [015](015-mcp-en-conteneurs-nommes.md) | Serveurs MCP lourds en conteneurs nommés | 2026-08 |
+| [016](016-depot-public-sensible-chiffre.md) | Dépôt public, sensible chiffré et hors prose | 2026-09 |
+| [017](017-clone-anonyme-gh-en-ecriture.md) | Clone anonyme, `gh` comme helper d'écriture | 2026-09 |

@@ -7,8 +7,8 @@
 ## Contexte
 
 Trois outils conditionnent le fonctionnement des dotfiles : `age` déchiffre
-`~/.secrets` ([ADR-002](002-depot-prive-secrets-age.md)), `gh` sert de helper
-d'identifiants ([ADR-003](003-bootstrap-pat-puis-gh.md)), starship fournit le
+`~/.secrets` ([ADR-016](016-depot-public-sensible-chiffre.md)), `gh` sert de helper
+d'identifiants ([ADR-017](017-clone-anonyme-gh-en-ecriture.md)), starship fournit le
 prompt ([ADR-006](006-starship-comme-prompt.md)). Aucun n'est présent sur une
 machine neuve, et le NAS n'a ni Homebrew ni gestionnaire de paquets - l'absence de
 starship y produisait une erreur au login.
