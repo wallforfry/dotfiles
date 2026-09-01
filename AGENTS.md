@@ -24,6 +24,7 @@ where a new file goes from where it must land.
 | `dot_config/` | deployed to `~/.config/` |
 | `dot_local/bin/` | executables deployed to `~/.local/bin`, `executable_` and extensionless |
 | `private_dot_ssh/` | deployed to `~/.ssh` with restricted permissions |
+| `private_dot_gnupg/` | `gpg-agent.conf` only, deployed to `~/.gnupg` with restricted permissions |
 | `harness/` | agent instructions, agnostic of any single agent - not deployed as such |
 | `scripts/` | one-shot maintenance scripts, not deployed |
 | `docs/`, `README.md` | documentation, not deployed |
@@ -46,8 +47,9 @@ be conditioned on `.profile` or on the OS.
   `references/`, `assets/`, `scripts/` subdirectories.
 - `dot_claude_pro/` contains only `symlink_` entries pointing into `~/.claude`, so the work
   profile shares one source instead of a second copy. It is ignored outside the `pro` profile.
-- **Never add the `exact_` attribute to `dot_claude/`.** `~/.claude` holds live state - sessions,
-  projects, plugins - that chezmoi would delete.
+- **Never add the `exact_` attribute to `dot_claude/` or `private_dot_gnupg/`.** `~/.claude` holds
+  live state - sessions, projects, plugins - and `~/.gnupg` holds the keyring and agent sockets.
+  chezmoi would delete whatever the source does not carry.
 
 ## Architecture Decisions
 

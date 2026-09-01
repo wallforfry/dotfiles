@@ -1,0 +1,9 @@
+enable-ssh-support
+default-cache-ttl 60
+max-cache-ttl 120
+{{ if lookPath "pinentry-mac" -}}
+pinentry-program {{ lookPath "pinentry-mac" }}
+{{ else if lookPath "pinentry" -}}
+pinentry-program {{ lookPath "pinentry" }}
+{{ end -}}
+extra-socket ~/.gnupg/S.gpg-agent.extra

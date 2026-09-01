@@ -27,6 +27,9 @@
 # par .zshrc), pinentry-mac (saisie du PIN de la YubiKey, ADR-010), ykman,
 # bitwarden-cli. Et, si la machine est un poste graphique, les apps
 # (ADR-019).
+#
+# bkt, la CLI Bitbucket, n'est posée qu'en profil pro : Bitbucket ne sert que
+# là, et la skill merge-verdict la réclame.
 
 set -eu
 
@@ -57,6 +60,21 @@ if command -v brew >/dev/null; then
     fi
   done
 
+{{ if eq .profile "pro" }}
+  # bkt vient d'un tap tiers, dont Homebrew exige désormais la confiance :
+  # « Refusing to load formula … from untrusted tap ». Accorder cette confiance
+  # est un choix de sécurité durable, qui appartient à l'opérateur - le script
+  # tente l'installation et nomme la commande manquante s'il échoue.
+  if ! command -v bkt >/dev/null; then
+    brew tap avivsinai/tap >/dev/null 2>&1 || true
+    if brew install avivsinai/tap/bitbucket-cli >/dev/null 2>&1; then
+      echo "🪣  bkt installé"
+    else
+      echo "⚠️   bkt non installé : merge-verdict ne pourra pas lire de PR Bitbucket." >&2
+      echo "    brew trust --formula avivsinai/tap/bitbucket-cli, puis relance l'apply." >&2
+    fi
+  fi
+{{ end }}
 {{/* « get » et non « .gui » : une machine installée avant ADR-019 a un
      chezmoi.toml sans cette clé, sur laquelle .gui ferait échouer l'apply. */}}
 {{ if get . "gui" }}

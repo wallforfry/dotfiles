@@ -61,6 +61,12 @@ Sur macOS il passe par Homebrew, et y ajoute `thefuck` (aliasé par `.zshrc`),
 [ADR-010](docs/adr/010-gpg-agent-ssh-sous-condition.md)), `ykman` et
 `bitwarden-cli` (`bw`).
 
+En profil `pro` uniquement, il ajoute `bkt` - la CLI Bitbucket réclamée par la
+skill `merge-verdict`, Bitbucket ne servant que là. Sa formule vient d'un tap
+tiers, dont Homebrew exige la confiance : le script tente l'installation et,
+s'il échoue, imprime le `brew trust --formula` à passer. Accorder cette
+confiance appartient à l'opérateur, pas au dépôt.
+
 Ailleurs il pose des binaires statiques dans `~/bin`, que `.zshenv` met en tête
 du `PATH` - `.zshenv` et pas `.zprofile`, pour que les shells non interactifs
 (`ssh nas '...'`, planificateur DSM) les trouvent aussi. Les versions sont
@@ -157,7 +163,7 @@ passphrase est la seule barrière, et elle est attaquable hors ligne. Elle doit
 | Profil | Contenu |
 |---|---|
 | `perso` | base commune uniquement |
-| `pro` | fragments chiffrés `~/.config/zsh/pro.zsh`, `pro.zprofile`, `~/.config/git/pro.gitconfig`, et `~/.claude_pro` |
+| `pro` | fragments chiffrés `~/.config/zsh/pro.zsh`, `pro.zprofile`, `~/.config/git/pro.gitconfig`, `~/.claude_pro`, et `bkt` |
 
 Sur macOS, une seconde question indépendante - `gui` - décide de l'installation
 des applications ([Applications macOS](#applications-macos)). Les deux
