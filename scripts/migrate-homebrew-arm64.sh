@@ -103,9 +103,14 @@ step_sauvegarder_postgres() {
   echo "Un dump logique traverse le changement d'architecture sans surprise ;"
   echo "une copie du répertoire suppose une version majeure identique."
   echo
-  echo "  $INTEL/bin/brew services start postgresql@16"
+  echo "  export LC_ALL=en_US.UTF-8"
+  echo "  $INTEL/opt/postgresql@16/bin/pg_ctl -D $INTEL/var/postgresql@16 -l ~/.cache/pg16.log start"
   echo "  $INTEL/opt/postgresql@16/bin/pg_dumpall -U \"\$(id -un)\" > ~/pg16-avant-migration.sql"
-  echo "  $INTEL/bin/brew services stop postgresql@16"
+  echo "  $INTEL/opt/postgresql@16/bin/pg_ctl -D $INTEL/var/postgresql@16 stop"
+  echo
+  echo "LC_ALL est obligatoire : sans lui le serveur meurt au démarrage sur"
+  echo "« postmaster became multithreaded during startup ». pg_ctl plutôt que"
+  echo "brew services, pour ne pas poser un LaunchAgent le temps d'un dump."
   echo
   echo "Vérifie que le fichier n'est pas vide avant de continuer :"
   echo
@@ -163,6 +168,11 @@ step_donner_la_priorite_a_arm() {
 step_restaurer_postgres() {
   echo "Recharge le dump dans le PostgreSQL arm64 :"
   echo
+  echo "Le brew arm a créé un cluster vide à l'installation. Si le dump ne"
+  echo "contient qu'un CREATE ROLE et aucun CREATE DATABASE, il n'y a rien à"
+  echo "recharger - initdb a déjà créé le rôle propriétaire."
+  echo
+  echo "  export LC_ALL=en_US.UTF-8"
   echo "  $ARM/bin/brew services start postgresql@16"
   echo "  $ARM/opt/postgresql@16/bin/psql -U \"\$(id -un)\" -d postgres -f ~/pg16-avant-migration.sql"
   echo
