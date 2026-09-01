@@ -1,4 +1,12 @@
 {{ if eq .chezmoi.os "darwin" -}}
+# /usr/local/bin vient de /etc/paths, que path_helper place avant
+# /etc/paths.d/homebrew : sur un mac Apple Silicon portant aussi un Homebrew
+# Intel hérité, le brew de tête est celui de Rosetta. Les formules sans
+# bouteille x86_64 y échouent en compilation. Le préfixe natif passe devant.
+if [ -x /opt/homebrew/bin/brew ]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
 # Added by OrbStack: command-line tools and integration
 source $HOME/.orbstack/shell/init.zsh 2>/dev/null || :
 
