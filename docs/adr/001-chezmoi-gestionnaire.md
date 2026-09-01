@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-08
-- **Commits** : `97a18fc` (initial commit), `scripts/migrate-from-bare.sh`
+- **Commits** : `97a18fc` (initial commit)
 
 ## Contexte
 
@@ -24,9 +24,10 @@ un chemin source détermine sa destination : `dot_<nom>` vers `~/.<nom>`, les
 attributs `private_`, `encrypted_`, `symlink_`, `executable_`, `run_onchange_`
 portant le reste.
 
-`scripts/migrate-from-bare.sh` assure la bascule depuis `~/.dotfiles`. Il est
-idempotent et interruptible, son étape destructive vient en dernier et n'est
-atteinte qu'après validation du shell.
+La bascule depuis `~/.dotfiles` a été assurée par un script idempotent et
+interruptible, dont l'étape destructive venait en dernier et n'était atteinte
+qu'après validation du shell. Toutes les machines étant migrées, il a été retiré
+du dépôt - relisible par `git log -- scripts/`.
 
 ## Conséquences
 

@@ -277,19 +277,6 @@ Fourni par `.chezmoiexternal.toml` sous forme d'archive, rafraîchi tous les
 7 jours par `chezmoi update`. Son auto-update interne est désactivé
 (`zstyle ':omz:update' mode disabled`) pour éviter la désynchronisation.
 
-## Migration depuis l'ancien bare repo
-
-Les machines encore sur l'ancien montage (bare repo `~/.dotfiles` + alias
-`dotfiles`) basculent avec :
-
-```bash
-./scripts/migrate-from-bare.sh --dry-run   # inspection, ne modifie rien
-./scripts/migrate-from-bare.sh             # bascule
-```
-
-Le bare repo n'est supprimé qu'après validation du démarrage du shell, et un
-backup horodaté est conservé dans `~/.dotfiles-backup-<stamp>`.
-
 ## Dépannage
 
 ### Un fichier chiffré reste illisible
