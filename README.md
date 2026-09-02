@@ -267,14 +267,17 @@ le script à conteneur nommé y est faite à la main.
 
 ### Ce qui n'est pas versionné
 
-`~/.claude/settings.json` reste local : il mêle des chemins absolus écrits par
-des installeurs (OpenIsland) et l'état des plugins. Le hook `Stop`
-`~/.claude/hooks/agent-handoff` est donc déployé mais **pas enregistré** -
-l'ajouter à la main dans `settings.json` :
+`~/.claude/settings.json` reste local, et le restera : il mêle des chemins
+absolus écrits par des installeurs tiers, l'état des plugins, une `statusLine`
+et des hooks venus d'ailleurs. Le déployer l'écraserait.
 
-```bash
-jq --arg c "$HOME/.claude/hooks/agent-handoff" '.hooks.Stop += [{hooks: [{type: "command", command: $c}]}]' ~/.claude/settings.json > ~/.cache/settings.json && mv ~/.cache/settings.json ~/.claude/settings.json
-```
+Le hook `Stop` `agent-handoff` y est en revanche **enregistré
+automatiquement** par `run_onchange_after_register-claude-hooks.sh.tmpl`, qui
+fusionne cette seule entrée dans le fichier vivant et laisse le reste intact.
+L'idempotence porte sur le chemin du hook, pas sur sa position : Claude Code
+réordonne les entrées et d'autres outils en insèrent. Une sauvegarde
+`settings.json.bak` est déposée avant toute écriture, et un rendu jq invalide
+laisse le fichier inchangé.
 
 Ne jamais ajouter l'attribut `exact_` à `dot_claude/` : `~/.claude` contient
 l'état vivant des sessions, que chezmoi supprimerait.

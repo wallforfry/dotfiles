@@ -1,0 +1,51 @@
+#!/bin/sh
+# Enregistre les hooks de ce dépôt dans ~/.claude/settings.json.
+#
+# HOOKS_REVISION: 1
+#
+# Ce fichier n'est pas versionné et ne peut pas l'être : il porte l'état vivant
+# d'un agent - plugins, marketplaces, statusLine, et les hooks d'outils tiers
+# installés hors de ce dépôt. Le déployer l'écraserait. On fusionne donc les
+# seules entrées dont ce dépôt est la source, en laissant le reste intact.
+#
+# after et non before : le hook doit exister avant d'être référencé.
+
+set -eu
+
+SETTINGS="$HOME/.claude/settings.json"
+HOOK="$HOME/.claude/hooks/agent-handoff"
+
+if ! command -v jq >/dev/null; then
+  echo "⚠️   jq absent : hook agent-handoff non enregistré" >&2
+  exit 0
+fi
+
+if [ ! -x "$HOOK" ]; then
+  echo "⚠️   $HOOK absent ou non exécutable : rien à enregistrer" >&2
+  exit 0
+fi
+
+mkdir -p "$(dirname "$SETTINGS")"
+[ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
+
+# Idempotence par le chemin du hook, et non par sa position : Claude Code
+# réordonne les entrées, et un autre outil peut en insérer avant.
+if jq -e --arg c "$HOOK" '[.hooks.Stop // [] | .[].hooks // [] | .[].command] | index($c)' \
+     "$SETTINGS" >/dev/null 2>&1; then
+  exit 0
+fi
+
+tmp=$(mktemp "$HOME/.cache/settings.XXXXXX")
+trap 'rm -f "$tmp"' EXIT
+
+# Le fichier vivant est relu, modifié, puis remplacé d'un bloc : une écriture
+# partielle laisserait l'agent sans configuration du tout.
+if jq --arg c "$HOOK" \
+     '.hooks.Stop = ((.hooks.Stop // []) + [{hooks: [{type: "command", command: $c}]}])' \
+     "$SETTINGS" > "$tmp" && jq -e . "$tmp" >/dev/null; then
+  cp "$SETTINGS" "$SETTINGS.bak"
+  mv "$tmp" "$SETTINGS"
+  echo "🪝  hook agent-handoff enregistré dans settings.json"
+else
+  echo "⚠️   settings.json inchangé : la fusion jq a échoué" >&2
+fi

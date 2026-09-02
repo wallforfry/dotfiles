@@ -48,8 +48,13 @@ procédure conditionnelle va dans une skill, chargée au besoin.
   produit un changement qu'un `chezmoi apply` écrasera. Le rappel est dans
   `AGENTS.md`.
 - `~/.claude/settings.json` reste hors du dépôt : il mêle des chemins absolus
-  écrits par des installeurs tiers et de l'état de plugins. Conséquence directe, le
-  hook `Stop` `agent-handoff` est déployé mais doit être enregistré à la main.
+  écrits par des installeurs tiers, de l'état de plugins, une `statusLine`. Le
+  déployer l'écraserait.
+  **Amendement** : la conséquence « le hook `agent-handoff` doit être enregistré
+  à la main » ne tient plus. `run_onchange_after_register-claude-hooks.sh.tmpl`
+  fusionne cette entrée dans le fichier vivant, sans toucher au reste. Le fichier
+  demeure hors du dépôt : c'est la fusion qui est versionnée, pas la
+  configuration.
 - **Ne jamais ajouter l'attribut `exact_` à `dot_claude/`** : `~/.claude` contient
   l'état vivant des sessions et des projets, que chezmoi supprimerait.
 
