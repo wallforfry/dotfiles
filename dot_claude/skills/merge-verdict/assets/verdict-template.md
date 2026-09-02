@@ -14,6 +14,15 @@ publishing an incomplete verdict. This file is English; the verdict itself follo
 the parent PR when the branch is stacked. Then the CI state, open tasks and conflicts, or "none
 observed".>
 
+<Changed-behaviour ledger - REQUIRED as soon as the diff changes an observable behaviour. One row per
+behaviour, in the order they were inventoried in phase 2. Never a prose summary, and never shortened to
+keep the verdict small.
+
+| Behaviour | Positive evidence on this head | Negative witness | Result |
+| --- | --- | --- | --- |
+| <what an outside caller can observe> | <the test or run reproduced here> | <the observed RED, or the faulty variant that failed> | held / absent |
+>
+
 <Blocking paragraph - one clause per blocker: the mechanism, then the invariant it breaks. Close with
 one sentence stating what must become true to lift them. Omit this paragraph entirely when the verdict
 is "approved".>
@@ -37,6 +46,10 @@ When the verdict blocks and the forge carries no native blocking state - Bitbuck
 GitHub - the same line says that this comment is the only thing holding the merge.>
 ```
 
+A row is complete only when both evidence columns were reproduced during this review. Evidence the
+author supplied but that was not reproduced is written as theirs, in the barrier paragraph, and leaves
+the row `absent`. One `absent` row forbids both approval verdicts.
+
 ## Filled example
 
 A _changes required_ verdict. Every identifier and figure below is invented - a committed skill carries
@@ -50,6 +63,11 @@ immediately spends a sentence dismantling its own green.
 
 Review of PR #1042 on a1b2c3d4e5f6, stacked base feat/ledger-read-side@9f8e7d6c5b4a. Pipeline #318
 green, no task and no conflict observed.
+
+| Behaviour | Positive evidence on this head | Negative witness | Result |
+| --- | --- | --- | --- |
+| Closing a ledger creates exactly one successor | 7/7 close unit tests green | absent - no faulty variant run | absent |
+| A concurrent write is carried into the successor | absent | absent | absent |
 
 Blockers: the snapshot and the controls both run before the closing transaction, so a concurrent write
 can vanish from the successor; two simultaneous closes can create two successors, because the retry never
@@ -72,6 +90,9 @@ Do not approve or merge this head.
 ## Self-check before publishing
 
 - The marker is the first line, and its SHA is the head you actually checked out.
+- The ledger carries one row per behaviour inventoried in phase 2, none merged away.
+- No approval verdict ships with an `absent` cell.
+- Evidence the author supplied is attributed to them, never counted as reproduced.
 - Every clause in the blocking paragraph names a sequence of steps, not a quality judgement.
 - The barrier paragraph contains digits, and a sentence saying what those digits do not prove.
 - The barrier paragraph names the command it ran, and that command is the one CI runs.
