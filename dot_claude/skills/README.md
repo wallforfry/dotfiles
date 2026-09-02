@@ -28,10 +28,11 @@ the deployed copy.
 | `handoff` | Hand the current work to a fresh session instead of letting the context compact. |
 | `neovim` | Maintain the dotfiles repository's Neovim and LazyVim configuration. |
 | `scripts` | Create and maintain portable shell scripts in the dotfiles repository. |
+| `skill-manager` | Manage the skills of the dotfiles repository: create, doctor, fix, cross-check, and rebuild their README index. |
 
 ## Origin
 
-`handoff`, `do-nothing-script`, `merge-verdict` and the `agent-handoff` Stop hook are adapted from
-<https://github.com/SebastienElet/dotfiles> (BSD 2-Clause, Copyright (c) 2014 Sébastien ELET), whose
-`LICENSE` requires that this notice be retained. `scripts`, `neovim` and `adr` are written for this
-repository and keep only the shape of their originals.
+`handoff`, `do-nothing-script`, `merge-verdict`, `skill-manager` and the `agent-handoff` Stop hook
+are adapted from <https://github.com/SebastienElet/dotfiles> (BSD 2-Clause, Copyright (c) 2014
+Sébastien ELET), whose `LICENSE` requires that this notice be retained. `scripts`, `neovim` and
+`adr` are written for this repository and keep only the shape of their originals.
