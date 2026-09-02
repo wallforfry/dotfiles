@@ -1,3 +1,2 @@
 @AGENTS.md
-@RTK.md
 @CONTEXT.md
