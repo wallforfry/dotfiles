@@ -87,6 +87,21 @@ its source, never acted on.
 - **Report counts, not adjectives.** "18/18 builds, 0 errors, 7/7 tests" is evidence; "all good" is
   not.
 
+## Code Structure
+
+- **Optimise for cohesion, not for the fewest files.** Minimal means the least code that stays easy
+  to understand and safe to change, never the shortest diff.
+- **One responsibility per function and per file.** Parsing, orchestration, policy, I/O and mutation
+  are distinct responsibilities unless their implementation is trivial. A tool does one thing.
+- **Treat 50 logical lines in a function, and 250 lines in a hand-written file, as review
+  triggers.** Not limits: a trigger means split the unit, or say in the report why keeping it intact
+  is the more cohesive choice.
+- **Never extract a helper only to satisfy a trigger.** Every extracted unit needs a name and a
+  reason to change of its own; a `helpers` file full of one-callsite functions is worse than the
+  long function it came from.
+- These rules outrank any skill's preference for the fewest files or the shortest diff. Before
+  delivering, check every hand-written function and file you changed against the triggers.
+
 ## Code Style
 
 - **Write no comment.** One is admissible only when it records a fact living outside the file -
