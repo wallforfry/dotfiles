@@ -18,6 +18,7 @@ the deployed copy.
 | Skill | Description |
 | --- | --- |
 | `adr` | Write, amend or supersede an architecture decision record. |
+| `agent-instructions` | Maintain coding-agent instructions and their discovery paths. |
 | `merge-verdict` | Deliver a merge verdict on an open pull request, yours or another author's. |
 
 ## Ops
