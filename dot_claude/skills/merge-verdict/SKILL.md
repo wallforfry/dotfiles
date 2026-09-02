@@ -8,6 +8,8 @@ description: >
 compatibility: >
   Authenticated `gh` (GitHub) or `bkt` (Bitbucket), plus an issue tracker CLI or MCP when a blocking
   defect needs a fix ticket.
+metadata:
+  category: dev
 ---
 
 # Merge Verdict

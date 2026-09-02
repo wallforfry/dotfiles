@@ -73,6 +73,7 @@ okif "$n templates rendus sur ${#configs[@]} combinaisons"
 
 head_ "Skills"
 n=0
+readme=dot_claude/skills/README.md
 for d in dot_claude/skills/*/; do
   s="$d/SKILL.md"; slug=$(basename "$d")
   [ -f "$s" ] || { ko "$slug : SKILL.md manquant"; continue; }
@@ -86,11 +87,27 @@ for d in dot_claude/skills/*/; do
     ko "$slug : pas de description"
   fi
   grep -q 'Use when' "$s" || ko "$slug : la description ne dit pas quand l'utiliser"
-  grep -q "$slug" dot_claude/skills/README.md || ko "$slug : absent du tableau de dot_claude/skills/README.md"
+  # Le tableau du README est dérivé du frontmatter : la section qui liste un
+  # skill doit être sa catégorie, sinon l'index n'est plus une projection.
+  categ=$(printf '%s' "$fm" |
+    awk '/^metadata:/{m=1;next} m && /^  category: /{print $2; exit} m && /^[^ ]/{exit}')
+  case "$categ" in
+    dev|ops) ;;
+    *) ko "$slug : metadata.category=« ${categ:-absent} » hors de {dev, ops}" ;;
+  esac
+  sec=$(awk -v s="$slug" '/^## /{c=tolower($2)} $0 ~ "^\\| `" s "` \\|"{print c; exit}' "$readme")
+  if [ -z "$sec" ]; then
+    ko "$slug : absent du tableau de $readme"
+  elif [ "$sec" != "$categ" ]; then
+    ko "$slug : listé sous « $sec » dans le README pour une catégorie « $categ »"
+  fi
   n=$((n + 1))
 done
-listed=$(grep -cE '^\| `[a-z-]+` \|' dot_claude/skills/README.md)
+listed=$(grep -cE '^\| `[a-z-]+` \|' "$readme")
 [ "$listed" -eq "$n" ] || ko "le tableau du README annonce $listed skills pour $n répertoires"
+for slug in $(grep -oE '^\| `[a-z-]+`' "$readme" | tr -d '|` '); do
+  [ -d "dot_claude/skills/$slug" ] || ko "$slug : ligne du README sans répertoire"
+done
 okif "$n skills, frontmatter et tableau cohérents"
 
 head_ "Subagents"

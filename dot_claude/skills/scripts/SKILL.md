@@ -5,6 +5,8 @@ description: >
   a chezmoi run_ script, a helper under scripts/, a shebang, error handling, or tool installation.
   Make sure to use it whenever a change touches an executable in that repository, even if it is
   called a helper or a hook.
+metadata:
+  category: ops
 ---
 
 # Scripts

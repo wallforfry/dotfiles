@@ -44,7 +44,8 @@ be conditioned on `.profile` or on the OS.
 - `dot_claude/{AGENTS,SOUL,USER}.md.tmpl` are one-line projections - `{{ include "harness/…" }}` -
   and `dot_claude/CLAUDE.md` is the Claude adapter that imports them. Never move content into them.
 - `dot_claude/skills/<slug>/SKILL.md` holds the skills. One skill per directory; optional
-  `references/`, `assets/`, `scripts/` subdirectories.
+  `references/`, `assets/`, `scripts/`, `evals/` subdirectories. Frontmatter carries
+  `metadata.category` (`dev` or `ops`), from which `dot_claude/skills/README.md` is derived.
 - `dot_claude_pro/` contains only `symlink_` entries pointing into `~/.claude`, so the work
   profile shares one source instead of a second copy. It is ignored outside the `pro` profile.
 - **Never add the `exact_` attribute to `dot_claude/` or `private_dot_gnupg/`.** `~/.claude` holds

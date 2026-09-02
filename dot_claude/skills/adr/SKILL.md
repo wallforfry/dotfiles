@@ -5,6 +5,8 @@ description: >
   recording, when asked whether something deserves an ADR, when a change would contradict a recorded
   decision, or when an ADR index needs rebuilding. Make sure to use it whenever a decision's rationale
   is about to be written down, even if the term ADR is never used.
+metadata:
+  category: dev
 ---
 
 # ADR

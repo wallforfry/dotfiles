@@ -5,6 +5,8 @@ description: >
   printed then awaiting the operator, automated one step at a time. Use when scripting a runbook,
   checklist, release, provisioning, or onboarding procedure. Make sure to use it whenever the steps
   cannot all be automated yet, even if the term is never used.
+metadata:
+  category: ops
 ---
 
 # Do-Nothing Script
