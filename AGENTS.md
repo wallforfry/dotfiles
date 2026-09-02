@@ -89,6 +89,9 @@ Nothing here runs in CI, so verify locally before delivering:
 
 - Nothing sensitive goes in, in clear or in prose: no hostname, IP address, login, employer, client
   or internal project name, in a template, a script, a log, a commit message, or documentation.
+- **Nor the machine's third-party stack.** The list of installed tools - PaaS, CI, secret-manager
+  CLIs - maps the infrastructure its owner works on. Name only the tools this repository depends on,
+  because a deployed file requires them ([ADR-007](docs/adr/007-outillage-run-onchange.md)).
 - What is sensitive and still needed at deploy time is encrypted with `age`: `~/.secrets`,
   `~/.ssh/config.d/nas.conf`, `~/.config/zsh/pro.zsh`, `~/.config/zsh/pro.zprofile`,
   `~/.config/git/pro.gitconfig`, `~/.claude/CONTEXT.md`. Add one with

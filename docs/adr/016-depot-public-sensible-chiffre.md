@@ -52,6 +52,15 @@ Le dépôt est public. Rien de sensible n'y figure, ni en clair ni en prose :
    `~/.claude/CONTEXT.md`, où `harness/USER.md` renvoie. Un dépôt public dit
    déjà à qui il appartient : la liste de ce sur quoi son auteur travaille est
    une information de plus, qu'il n'a pas à donner.
+
+   **La pile technique relève de la même règle** : la liste des outils tiers
+   installés sur une machine - CLI de PaaS, de CI, de gestion de secrets - dit
+   sur quelle infrastructure travaille son propriétaire, et un lecteur qui sait
+   déjà pour qui il travaille en tire une carte de ce qu'il faudrait attaquer.
+   Seuls les outils dont ce dépôt dépend sont nommés, parce qu'un fichier
+   déployé les réclame ([ADR-007](007-outillage-run-onchange.md)) ; ce qui est
+   installé par ailleurs n'a pas à figurer ici. La règle couvre le message de
+   commit au même titre que le template, la prose et le journal.
 5. **L'historique est réécrit avant publication** (`git-filter-repo`), le dépôt
    distant est basculé en public, et la passphrase `age` est changée : la
    précédente a protégé un fichier désormais téléchargeable par quiconque.
