@@ -59,8 +59,9 @@ the field means.
 | `ops` | the machine and the agent itself: tooling, configuration, procedures, skill and instruction management |
 
 Two categories, because the repository has two. Add a third only when a skill genuinely fits
-neither, and update `scripts/verify.sh` and `sync-index` in the same commit - the category list
-lives in three places and a fourth would be a fourth thing to forget.
+neither, and update the four places that name them in the same commit: the `case` in
+`scripts/verify.sh`, which is the authority, then this table, the section order in
+[sync-index.md](sync-index.md), and the Conventions list of `dot_claude/skills/README.md`.
 
 ### Description format
 
@@ -167,6 +168,7 @@ rules, and [evals.md](evals.md) for the optional scenario files.
 - a `description` exists and contains `Use when`;
 - `metadata.category` is `dev` or `ops`;
 - the skill is listed in the README under the section matching its category;
+- its README row still derives from the frontmatter description, first sentence included;
 - the row count matches the directory count, and no row lacks a directory.
 
 Everything else in this file is judgement, and belongs to `doctor`. A red barrier is a FAIL that no

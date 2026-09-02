@@ -89,8 +89,13 @@ for d in dot_claude/skills/*/; do
   grep -q 'Use when' "$s" || ko "$slug : la description ne dit pas quand l'utiliser"
   # Le tableau du README est dérivé du frontmatter : la section qui liste un
   # skill doit être sa catégorie, sinon l'index n'est plus une projection.
+  # Indentation et guillemets sont laissés à YAML : « category: dev »,
+  # « category: "dev" » et quatre espaces sont le même document, et une
+  # barrière rouge sur un fichier valide use la confiance qu'elle demande.
   categ=$(printf '%s' "$fm" |
-    awk '/^metadata:/{m=1;next} m && /^  category: /{print $2; exit} m && /^[^ ]/{exit}')
+    awk '/^metadata:/{m=1;next}
+         m && /^[ \t]+category:/{sub(/^[ \t]+category:[ \t]*/,""); gsub(/["'\'']/,""); print; exit}
+         m && /^[^ \t]/{exit}')
   case "$categ" in
     dev|ops) ;;
     *) ko "$slug : metadata.category=« ${categ:-absent} » hors de {dev, ops}" ;;
@@ -100,6 +105,24 @@ for d in dot_claude/skills/*/; do
     ko "$slug : absent du tableau de $readme"
   elif [ "$sec" != "$categ" ]; then
     ko "$slug : listé sous « $sec » dans le README pour une catégorie « $categ »"
+  fi
+  # Le README se dit dérivé du frontmatter : sans ce contrôle, seule
+  # l'appartenance était vérifiée, et une description modifiée sans
+  # régénération laissait la barrière verte sur un index qui mentait.
+  attendu=$(awk '/^description:/{d=1; sub(/^description:[ \t]*>?-?[ \t]*/,""); s=$0; next}
+                 d && /^[^ \t]/{d=0}
+                 d {sub(/^[ \t]+/,""); s=(s=="" ? $0 : s " " $0)}
+                 END{sub(/^[ \t]+/,"",s); print s}' <<<"$fm")
+  attendu=${attendu%%. *}.
+  cellule=$(awk -v s="$slug" -F' \\| ' '$0 ~ "^\\| `" s "` \\|"{print $2; exit}' "$readme")
+  cellule=${cellule% |}
+  if [ -n "$sec" ]; then
+    if [ -z "$cellule" ]; then
+      ko "$slug : ligne du README illisible, dérivation non vérifiée"
+    elif [ "$cellule" != "$attendu" ]; then
+      ko "$slug : la ligne du README ne dérive plus de la description du frontmatter"
+      printf '      README : %s\n      SKILL  : %s\n' "$cellule" "$attendu"
+    fi
   fi
   n=$((n + 1))
 done
