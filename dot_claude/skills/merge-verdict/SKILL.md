@@ -71,7 +71,10 @@ first, unless the request explicitly says to post directly.
    Only the third form can become a blocker. When the head under review was written in this session,
    delegate the sweep to a fresh read-only context scoped to the diff: the context that produced the
    diff shares the blind spot that produced the defect, and records `holds` for the class it has just
-   broken. The sweep can add findings; it can neither replace a ledger row nor turn `absent`
+   broken. When no fresh context is available - a host that spawns no subagent, or a session whose
+   rules forbid it - run the sweep here and write its provenance into the barrier paragraph as a
+   declared limit of the evidence. Skipping the sweep is not the alternative, and neither is claiming
+   an independence you did not have. The sweep can add findings; it can neither replace a ledger row nor turn `absent`
    behaviour-level evidence into `holds`.
 
 4. **Run the barrier, then declare its holes.** Run lint, typecheck and tests the way the project runs
@@ -162,7 +165,8 @@ first, unless the request explicitly says to post directly.
 - Never call a passing test a negative witness without an observed failure when the behaviour is
   broken.
 - Never report as absent, or demand in a lift criterion, evidence the PR already supplies.
-- Never sweep the failure classes on a head you wrote in this session from the context that wrote it.
+- Never sweep the failure classes on a head you wrote in this session from the context that wrote it
+  without saying so in the verdict; independence is either obtained, or declared absent.
 - Never leave a limit of the evidence implicit; the barrier's gaps belong in the verdict text.
 - Never publish two verdicts for the same `<pr>:<sha>`; update the existing comment instead.
 - Never create a ticket solely to request, schedule or record a re-review.

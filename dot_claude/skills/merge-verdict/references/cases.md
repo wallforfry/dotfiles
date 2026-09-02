@@ -91,6 +91,14 @@ test-first RED and no faulty variant for any of the four.
 to do; nothing here is evidence that it does. Anyone claiming otherwise is doing exactly what phase 4
 exists to prevent - reading an intention as a measurement.
 
+One run has happened that is not a case. On four self-authored pull requests of this repository,
+phases 1 to 5 only, publication not reached: three verdicts of _approved_ or _approved with
+reservations_ and one reservation that came straight back into the skill. The failure-class sweep
+could not be delegated - the session's own rules forbade spawning a subagent - which is why phase 3
+now carries a fallback instead of a step that can only be violated. The repository's barrier was
+executed on each of the four head SHAs. Nothing about publication, the marker or either forge was
+exercised.
+
 Append a run here when one happens: date, forge, which phases were reached, the verdict obtained
 against the verdict expected, and what came back into the skill. Keep the record free of anything
 belonging to the reviewed repository - no PR number, SHA, branch name, build count or defect detail.
