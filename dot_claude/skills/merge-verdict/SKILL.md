@@ -18,8 +18,9 @@ metadata:
 
 The output is a verdict that commits to a merge decision, not a list of remarks. Three properties
 separate it from a default review: every blocking finding names a failure mechanism that breaks an
-invariant the code claims to hold, the evidence is measured on the exact head SHA under review, and
-the limits of that evidence are declared inside the verdict. A green barrier whose gaps stay implicit
+invariant the code claims to hold, every changed observable behaviour carries behaviour-level
+evidence measured on the exact head SHA under review, and the limits of that evidence are declared
+inside the verdict. A green barrier whose gaps stay implicit
 is the failure this skill exists to prevent - a verdict is only as strong as what it admits it did
 not test.
 
@@ -51,13 +52,30 @@ first, unless the request explicitly says to post directly.
    diff that will land. A review not anchored on a named SHA is invalid.
 
 2. **Understand before judging.** Read the PR description, the design documents and ADRs it cites, and
-   the whole diff. Restate the invariant the code claims to hold, in one sentence. Producing a
-   blocking finding before the flow is traced end to end is forbidden: the mechanism is what makes a
-   finding blocking, and you cannot name a mechanism you have not followed.
+   the whole diff. The attachments are part of the description: a screenshot or an uploaded log is
+   evidence the author supplied, and the forge returns it as raw markup that a text pass slides over.
+   Open every one, in the comments too. Restate the invariant the code claims to hold, in one
+   sentence. Producing a blocking finding before the flow is traced end to end is forbidden: the
+   mechanism is what makes a finding blocking, and you cannot name a mechanism you have not followed.
+
+   Then inventory every externally observable behaviour the diff adds, removes or changes, and open
+   the ledger: one row per behaviour, with its positive evidence on the exact head, its negative
+   witness, and its result. A negative witness is an executed test-first RED, or a controlled faulty
+   variant derived from the exact head and shown to fail when the behaviour is broken; restore and
+   verify the head before running its positive barrier. A passing regression test with no observed
+   failing counterpart is positive evidence only, and a green aggregate barrier is evidence for no
+   individual row. Missing evidence is recorded as `absent`, never inferred.
 
 3. **Sweep the failure classes.** Put all ten questions in `references/failure-classes.md` to the diff.
    Record, per class, one of: not applicable, holds because `<evidence>`, or broken by `<mechanism>`.
-   Only the third form can become a blocker.
+   Only the third form can become a blocker. When the head under review was written in this session,
+   delegate the sweep to a fresh read-only context scoped to the diff: the context that produced the
+   diff shares the blind spot that produced the defect, and records `holds` for the class it has just
+   broken. When no fresh context is available - a host that spawns no subagent, or a session whose
+   rules forbid it - run the sweep here and write its provenance into the barrier paragraph as a
+   declared limit of the evidence. Skipping the sweep is not the alternative, and neither is claiming
+   an independence you did not have. The sweep can add findings; it can neither replace a ledger row nor turn `absent`
+   behaviour-level evidence into `holds`.
 
 4. **Run the barrier, then declare its holes.** Run lint, typecheck and tests the way the project runs
    them - including inside a container when the project requires it, since numbers from the wrong
@@ -70,8 +88,21 @@ first, unless the request explicitly says to post directly.
    exercises the changed code, that absence is the review's first finding, not a reason to announce
    green.
 
+   Then attribute every piece of evidence: measured here, supplied by the author and not reproduced
+   here, or absent. The three are not interchangeable. "Not observed" written over evidence sitting
+   in the description is a false statement about the author's work, and a lift criterion asking for a
+   run the PR already shows asks them to repeat themselves - what is missing there is a control in
+   the repository, so name the control, not the re-run. Complete the ledger from what this review
+   actually reproduced; the author's evidence stays attributed and does not fill an approval row
+   until it is reproduced.
+
 5. **Return a verdict.** Exactly one of _changes required_, _approved with reservations_, _approved_.
-   Each blocking finding carries its named mechanism and its lift criterion - what must become true
+   Write it in the order defined by `assets/verdict-template.md`, with the complete ledger before the
+   blocking paragraph: one row per inventoried behaviour, never a prose summary of the rows. Both
+   approval verdicts require every row to hold reproduced positive evidence on the exact head and a
+   reproduced negative witness, with no contradictory result; otherwise the verdict is _changes
+   required_ and the missing evidence is the lift criterion.
+   Each other blocking finding carries its named mechanism and its lift criterion - what must become true
    for the block to go away. Reservations are for mechanisms whose consequence is bounded; a mechanism
    that can lose or corrupt data blocks even when the author disagrees. A style, naming or structure
    preference never blocks: label it non-blocking, or drop it.
@@ -82,7 +113,8 @@ first, unless the request explicitly says to post directly.
    prefixed with the idempotency marker `<!-- merge-verdict:<pr>:<head-sha-12> -->` - not a rain of
    inline comments. Search the existing comments for that marker first: a verdict carrying the same
    `<pr>:<sha>` is updated in place, never duplicated. Re-read before publishing - past about thirty
-   lines, non-blocking remarks are posing as blockers. On GitHub, _changes required_ is published with
+   lines, non-blocking remarks are posing as blockers, but never shorten the ledger to fit that
+   count. On GitHub, _changes required_ is published with
    `gh pr review --request-changes`, the native state, unless you authored the PR: GitHub refuses it
    there, and Bitbucket has no reliable equivalent at all. Whenever that native state is unavailable,
    the comment _is_ the verdict and its closing sentence carries the whole enforcement - say so, so
@@ -105,6 +137,14 @@ first, unless the request explicitly says to post directly.
   consequence is bounded. If you cannot state the bound, the verdict is _changes required_.
 - **A missing feature reported as an omission** - an absent regulatory or business control is either a
   declared contract (what, why, lift condition) or a blocker. Silence is the defect, not the absence.
+- **The author's evidence read as absent** - a screenshot of the output comes back from the forge as
+  an `<img>` tag inside the body, and a text pass slides over it. The verdict then announces that
+  nothing was observed and makes the merge conditional on steps the author has already run and
+  attached, which reads as not having read the PR. Open every attachment in phase 2, and label
+  supplied evidence as theirs.
+- **A green aggregate barrier read as behavioural evidence** - a suite that passes proves the suite
+  passes. A row of the ledger is filled by a test that was seen to fail when the behaviour is broken,
+  not by a total.
 - **Numbers copied from the PR's own pipeline** - a green pipeline is context for phase 1, never the
   barrier of phase 4. The barrier is what you ran, authenticated, on the head you checked out.
 - **The package script mistaken for the CI gate** - the repository's `lint` script may walk the whole
@@ -119,6 +159,14 @@ first, unless the request explicitly says to post directly.
 - Never publish a blocking finding without a named failure mechanism and a lift criterion.
 - Never block on style, naming or structure preference; label it non-blocking.
 - Never open a review that is not anchored on a head SHA.
+- Never issue either approval verdict unless every changed observable behaviour carries reproduced
+  positive evidence on the exact head and a reproduced negative witness.
+- Never infer behaviour-level evidence from an aggregate green barrier.
+- Never call a passing test a negative witness without an observed failure when the behaviour is
+  broken.
+- Never report as absent, or demand in a lift criterion, evidence the PR already supplies.
+- Never sweep the failure classes on a head you wrote in this session from the context that wrote it
+  without saying so in the verdict; independence is either obtained, or declared absent.
 - Never leave a limit of the evidence implicit; the barrier's gaps belong in the verdict text.
 - Never publish two verdicts for the same `<pr>:<sha>`; update the existing comment instead.
 - Never create a ticket solely to request, schedule or record a re-review.
@@ -131,4 +179,6 @@ first, unless the request explicitly says to post directly.
 - [references/failure-classes.md](references/failure-classes.md) - the ten failure classes as questions
   to put to the diff. Read in phase 3.
 - [assets/verdict-template.md](assets/verdict-template.md) - the verdict skeleton with its required
-  slots. Filled in phase 6.
+  slots, ledger included. Filled in phase 5, published in phase 6.
+- [references/cases.md](references/cases.md) - three behavioural cases with their expected verdicts,
+  and the record of what they have never validated.
