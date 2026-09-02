@@ -5,6 +5,8 @@ description: >
   window is nearly full, a Stop hook reports the handoff threshold, or a resume prompt is asked
   for. Make sure to use it whenever a session must continue elsewhere, even if the context limit
   is never named.
+metadata:
+  category: ops
 ---
 
 # Handoff

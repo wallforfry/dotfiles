@@ -4,6 +4,8 @@ description: >
   Maintain the dotfiles repository's Neovim and LazyVim configuration. Use when editing Lua under
   dot_config/nvim/, adding or disabling a plugin, changing options, or updating keymaps. Make sure to
   use it whenever a change affects LazyVim specs or Neovim behaviour, even if Neovim is unnamed.
+metadata:
+  category: ops
 ---
 
 # Neovim (LazyVim)

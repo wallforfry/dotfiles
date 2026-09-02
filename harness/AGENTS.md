@@ -144,15 +144,3 @@ outside the repository depends on the old shape.
 - **Treat migration history as a replaceable baseline, and keep the chain coherent.** Never rewrite
   an applied migration without resetting the development and test databases it touched, and
   consolidate a baseline as its own coordinated change, never as incidental work in a feature branch.
-
-## Instruction and Skill Maintenance
-
-- Keep always-loaded files limited to stable guidance that applies to every task; put conditional
-  procedures in skills so they load only when relevant.
-- Maintain one canonical source for shared guidance. Agent-specific paths (`CLAUDE.md`,
-  `.claude/skills`) contain adapters or projections, never a second copy to keep in sync.
-- Prefer `AGENTS.md` for shared instructions and keep `CLAUDE.md` as a thin Claude adapter when both
-  exist.
-- Update every importer, generated file, installer, and index that consumes a source you changed.
-- Add context only when it changes agent behaviour; refine or remove stale guidance instead of
-  accumulating it.
