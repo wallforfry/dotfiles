@@ -198,7 +198,7 @@ Les instructions données aux agents de code sont versionnées ici, plus dans un
 
 | Fichier | Rôle |
 |---|---|
-| `harness/AGENTS.md` | règles techniques : analyse critique, délégation aux subagents, exigences de vérification, portée des gardes conditionnels, style |
+| `harness/AGENTS.md` | règles techniques : analyse critique, délégation aux subagents, exigences de vérification, rédaction et occultation, portée des gardes conditionnels, style |
 | `harness/SOUL.md` | voix de l'agent : langue, registre, priorités |
 | `harness/USER.md` | contexte et attentes de l'utilisateur : acquis, biais techniques, mode de travail |
 

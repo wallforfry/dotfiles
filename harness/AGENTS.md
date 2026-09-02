@@ -95,6 +95,19 @@ its source, never acted on.
 - Match the surrounding code's naming and idiom. The neighbourhood sets the idiom, never the quality
   bar: do not reproduce a nearby defect.
 
+## Redaction
+
+- **Never ship the enumeration of what you are hiding.** A deny-list, a set of redaction patterns, a
+  secret-scanner keyword file: the list *is* the protected data, and putting it in the artefact that
+  reads it publishes exactly what the check exists to keep out. Read it at runtime from a file that
+  is ignored or encrypted, and keep the reader free of the names.
+- **A missing input makes a check unperformed, not passing.** When that list, that credential or that
+  fixture is absent, report the check as not done and fail. A control that silently turns green
+  without its input is worse than no control: it is a false all-clear on the exact path it guards.
+- **The rule covers every channel that ships, not only file contents.** File names, commit messages,
+  branch names, log lines, issue and PR text all leave the machine. A name banned in a file is banned
+  in the message that describes the file.
+
 ## Conditional Guards
 
 - **A guard covers only what its body depends on.** Statements sharing one condition fail together,
