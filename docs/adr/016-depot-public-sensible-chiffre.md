@@ -39,7 +39,9 @@ Le dépôt est public. Rien de sensible n'y figure, ni en clair ni en prose :
    selon le mécanisme d'[ADR-018](018-chiffrement-par-paire-de-cles.md) :
    `~/.secrets`, `nas.conf`, `~/.config/zsh/pro.zsh`,
    `~/.config/zsh/pro.zprofile`, `~/.config/git/pro.gitconfig`,
-   `~/.claude/CONTEXT.md`.
+   `~/.claude/CONTEXT.md`, `~/.config/dotfiles/sensible.txt`. Ce dernier est la
+   liste des noms que `scripts/verify.sh` interdit : l'énumération est la donnée
+   à protéger, donc elle ne peut pas vivre dans le script qui la lit.
 2. **Les fichiers publics chargent ces fragments sans les nommer** : un
    `[ -f … ] && source …` en zsh, un `[include]` en git - git ignore silencieusement
    un chemin absent - et `@CONTEXT.md` dans `dot_claude/CLAUDE.md`.

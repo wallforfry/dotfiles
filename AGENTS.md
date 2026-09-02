@@ -73,9 +73,16 @@ be conditioned on `.profile` or on the OS.
 
 ## Verification
 
-Nothing here runs in CI, so verify locally before delivering:
+Nothing here runs in CI, so verify locally before delivering. **`bash scripts/verify.sh` is the
+mechanical barrier**: shell syntax and template rendering across three profile combinations, skill
+frontmatter and its README table, the ADR index, sensitive names in the tree and in unpushed commit
+messages, and encryption of every `.age` fragment. It reports counts and exits non-zero on the first
+failing check. Run it before every commit.
 
-- `chezmoi diff` - the deployed effect of the change. Read it in full; it is the only barrier.
+What it cannot decide, verify by hand:
+
+- `chezmoi diff` - the deployed effect of the change. Read it in full; the script says nothing about
+  whether the change is correct, only that it is well-formed.
 - `chezmoi execute-template < <file>` - render a template in isolation when the diff is unclear.
 - `bash -n <script>` - syntax of any shell script touched.
 - Templates using `.profile` must be checked against both values, not just the current machine's.
@@ -94,7 +101,8 @@ Nothing here runs in CI, so verify locally before delivering:
   because a deployed file requires them ([ADR-007](docs/adr/007-outillage-run-onchange.md)).
 - What is sensitive and still needed at deploy time is encrypted with `age`: `~/.secrets`,
   `~/.ssh/config.d/nas.conf`, `~/.config/zsh/pro.zsh`, `~/.config/zsh/pro.zprofile`,
-  `~/.config/git/pro.gitconfig`, `~/.claude/CONTEXT.md`. Add one with
+  `~/.config/git/pro.gitconfig`, `~/.claude/CONTEXT.md`, `~/.config/dotfiles/sensible.txt` - the
+  list of names `scripts/verify.sh` forbids, which is itself the data to protect. Add one with
   `chezmoi add --encrypt <path>`, which the operator runs: it needs the passphrase, so an agent
   cannot.
 - Public files load those fragments without naming what is in them - a `[ -f … ] && source …`, a git
