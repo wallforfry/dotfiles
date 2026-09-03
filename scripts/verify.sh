@@ -175,9 +175,12 @@ motifs_ip='(^|[^0-9.])((1[0-9]{2}|2[0-9]{2}|[1-9][0-9]?)\.){3}(1[0-9]{2}|2[0-9]{
 # La version précédente annonçait « aucune occurrence » en tenant la preuve.
 if [ -z "$motifs" ]; then
   ko "$LISTE absent ou vide : le contrôle des noms sensibles n'a pas été fait"
-  motifs='^$'
 fi
-hits=$( { git grep -inE "$motifs" -- . ':!docs/adr/016-*'
+# Sans liste, ne pas chercher : un motif de repli vide s'apparie à chaque ligne
+# blanche et rapportait des occurrences imaginaires - un compte faux sur un
+# contrôle déjà rouge use la confiance qu'il demande. Le contrôle des adresses
+# ne dépend pas de la liste et reste fait.
+hits=$( { [ -n "$motifs" ] && git grep -inE "$motifs" -- . ':!docs/adr/016-*'
           git grep -inE "$motifs_ip" -- . | grep -vE '127\.0\.0\.1|0\.0\.0\.0'; } 2>/dev/null || true)
 if [ -n "$hits" ]; then
   ko "arbre : $(printf '%s\n' "$hits" | wc -l | tr -d ' ') occurrence(s)"
@@ -185,7 +188,7 @@ if [ -n "$hits" ]; then
 else
   ok "arbre : aucune occurrence"
 fi
-if git rev-parse origin/main >/dev/null 2>&1; then
+if [ -n "$motifs" ] && git rev-parse origin/main >/dev/null 2>&1; then
   hits=$(git log origin/main..HEAD --format='%B' | grep -inE "$motifs" || true)
   if [ -n "$hits" ]; then
     ko "messages de commit non poussés : $(printf '%s\n' "$hits" | wc -l | tr -d ' ') occurrence(s)"
