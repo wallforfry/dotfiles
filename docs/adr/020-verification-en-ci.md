@@ -41,8 +41,16 @@ contents: read`. Il porte deux jobs :
   `chezmoi cat ~/.config/dotfiles/sensible.txt`.
 - **`depot`** fait un vrai `chezmoi apply --exclude=scripts,externals` sur la
   matrice `{ubuntu-latest, macos-latest} × {perso, pro}`, dans le `$HOME` du
-  runner - jetable par construction - puis exige un `chezmoi diff` vide, ce qui
-  teste l'idempotence.
+  runner - jetable par construction - puis exige un `chezmoi status` vide, ce
+  qui teste l'idempotence.
+
+**Aucune commande de la CI n'écrit le contenu rendu d'une cible.** Les logs d'un
+dépôt public sont lisibles par tous, et un fragment déchiffré en sort aussi
+sûrement que d'un fichier versionné. `apply --verbose` et `chezmoi diff`
+émettent un diff unifié des fichiers écrits, donc le clair des sept fragments
+`age` sur un `$HOME` vierge : ni l'un ni l'autre n'est admis, et `verify.sh`
+refuse désormais leur retour dans `.github/`. L'idempotence se lit dans
+`chezmoi status`, qui ne donne que des chemins.
 
 L'action composite `.github/actions/setup-chezmoi` installe le binaire `chezmoi`
 amont à une version épinglée, écrit la clé privée, sème un `chezmoi.toml`
@@ -74,6 +82,14 @@ déployé.
   d'un dépôt public : la compromettre équivaut à les publier. En conséquence,
   aucun `pull_request_target`, aucune action tierce, et `actions/checkout` seul
   y a accès.
+- **Le canal des logs est aussi dangereux que l'exfiltration de la clé**, et
+  moins visible : la première version de ce workflow portait `--verbose` sur
+  `apply`, et le run
+  [33739550006](https://github.com/wallforfry/dotfiles/actions/runs/33739550006)
+  a publié en clair les six cibles chiffrées avant que la revue ne l'arrête. Le
+  masquage de secrets de GitHub ne couvre que la valeur de `AGE_KEY`, jamais les
+  clairs qu'elle produit. Toute commande ajoutée à ce workflow se juge sur ce
+  critère.
 - **Une PR de fork sortira rouge**, faute de secret. Assumé sur un dépôt à un
   auteur : mieux vaut un rouge lisible qu'un vert obtenu en sautant le contrôle.
 - Le job `depot` ne teste pas l'amorçage d'une machine : `--exclude=scripts`

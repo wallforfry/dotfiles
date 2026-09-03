@@ -57,12 +57,16 @@ jobs:
       # scripts et externals exclus : les premiers installent une chaîne
       # d'outils entière, le second télécharge oh-my-zsh à chaque exécution.
       # Ce job vérifie le dépôt des fichiers, pas l'amorçage d'une machine.
+      #
+      # Ni --verbose ni chezmoi diff : les deux émettent le contenu rendu des
+      # cibles, fragments déchiffrés compris, dans des logs publics. Le job a
+      # besoin de savoir qu'il y a écart et où, jamais de quoi (ADR-016).
       - name: chezmoi apply
-        run: chezmoi apply --source="$PWD" --exclude=scripts,externals --verbose
+        run: chezmoi apply --source="$PWD" --exclude=scripts,externals
       - name: aucun écart après application
         run: |
           set -euo pipefail
-          ecart=$(chezmoi diff --source="$PWD" --exclude=scripts,externals)
+          ecart=$(chezmoi status --source="$PWD" --exclude=scripts,externals)
           if [ -n "$ecart" ]; then
             printf '%s\n' "$ecart"
             echo "::error::chezmoi apply n'est pas idempotent sur ${{ matrix.os }} / ${{ matrix.profile }}" >&2

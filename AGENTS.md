@@ -96,6 +96,11 @@ What it cannot decide, verify by hand:
 demand ([ADR-020](docs/adr/020-verification-en-ci.md)). It needs the `AGE_KEY` secret and never
 covers DSM, which has no runner: a DSM-specific change stays a manual check.
 
+**No command added there may write a target's rendered content.** `apply --verbose` and
+`chezmoi diff` emit a unified diff of what they write, which on a public runner publishes the
+cleartext of every `age` fragment. `verify.sh` refuses both in `.github/`; read the deployed effect
+with `chezmoi status`, which prints paths only.
+
 ## Secrets
 
 **This repository is public.** Every file in it, and every commit message, is world-readable

@@ -152,6 +152,26 @@ if [ -d dot_claude/agents ] && [ ! -L dot_claude_pro/symlink_agents ] && [ ! -f 
 fi
 okif "$n subagents, frontmatter cohérent et partagé avec le profil pro"
 
+head_ "Workflows"
+# Les logs d'un dépôt public sont lisibles par tous, et un fragment déchiffré
+# y sort aussi sûrement que d'un fichier versionné. Trois commandes émettent le
+# contenu rendu d'une cible : « apply --verbose », « chezmoi diff », et un
+# « chezmoi cat » sans redirection. Aucune n'est nécessaire à la CI, donc
+# aucune n'y est admise. Les lignes de commentaire sont exclues : elles
+# nomment ces commandes pour expliquer pourquoi elles sont absentes.
+n=0
+for f in $(git ls-files '.github/*'); do
+  vu=$(grep -nE '^[^#]*(--verbose|chezmoi[[:space:]]+diff)' "$f" || true)
+  cat_nu=$(grep -nE '^[^#]*chezmoi[^#]*[[:space:]]cat[[:space:]]' "$f" |
+    grep -vE '>[[:space:]]*("?\$|/dev/null)' || true)
+  if [ -n "$vu" ] || [ -n "$cat_nu" ]; then
+    ko "$f : commande qui écrirait le contenu rendu d'une cible dans un log public"
+    printf '%s\n' "$vu" "$cat_nu" | grep -v '^$' | head -3 | sed 's/^/      /'
+  fi
+  n=$((n + 1))
+done
+okif "$n fichiers de CI, aucune sortie de contenu rendu"
+
 head_ "Index des ADR"
 if diff <(ls docs/adr | grep -oE '^[0-9]{3}') \
         <(grep -oE '^\| \[[0-9]{3}\]' docs/adr/README.md | grep -oE '[0-9]{3}') >/dev/null; then
