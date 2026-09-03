@@ -118,3 +118,4 @@ cas la citation est explicite.
 | [017](017-clone-anonyme-gh-en-ecriture.md) | Clone anonyme, `gh` comme helper d'écriture | 2026-09 |
 | [018](018-chiffrement-par-paire-de-cles.md) | Chiffrement par paire de clés `age`, clé déverrouillée une fois | 2026-09 |
 | [019](019-poste-graphique-et-apps-macos.md) | Applications macOS derrière une donnée `gui`, posées dans `~/Applications` | 2026-09 |
+| [020](020-verification-en-ci.md) | Barrière rejouée en CI, clé `age` en secret | 2026-09 |
