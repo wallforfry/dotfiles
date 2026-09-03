@@ -8,8 +8,8 @@ tools: Bash, Read, Grep, Glob
 
 ## Overview
 
-This repository has no CI. `scripts/verify.sh` is its mechanical barrier; everything it cannot
-decide is what this agent is for. Run the script first, then judge what a script cannot: whether the
+`scripts/verify.sh` is this repository's mechanical barrier - CI replays it, but only once the
+change is pushed. Everything it cannot decide is what this agent is for. Run the script first, then judge what a script cannot: whether the
 deployed effect matches the intent, whether a file landed at the right path with the right
 attributes, and whether the change contradicts a recorded decision.
 

@@ -136,6 +136,23 @@ chezmoi diff
 chezmoi status
 ```
 
+### Vérifier avant de pousser
+
+```bash
+bash scripts/verify.sh
+```
+
+Syntaxe des scripts, rendu des templates sur les trois combinaisons de profil,
+cohérence des skills et de l'index des ADR, absence de nom sensible en clair,
+chiffrement des fragments. Sort en 1 au premier contrôle rouge.
+
+`.github/workflows/verify.yml` rejoue ce script à chaque poussée, puis fait un
+vrai `chezmoi apply` sur `ubuntu-latest` et `macos-latest`, pour les deux
+profils. Il exige un secret `AGE_KEY` portant la clé privée `age` - sans elle,
+les fragments chiffrés restent illisibles et le contrôle des noms sensibles se
+déclare non fait. DSM n'a pas de runner et reste vérifié à la main
+([ADR-020](docs/adr/020-verification-en-ci.md)).
+
 ## Secrets
 
 Sept fichiers sont chiffrés par [age](https://age-encryption.org) et versionnés

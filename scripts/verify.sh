@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Barrière mécanique de ce dépôt : rien ne tourne en CI, donc tout se vérifie ici.
+# Barrière mécanique de ce dépôt, lancée à la main comme depuis
+# .github/workflows/verify.yml (ADR-020).
 #
-# bash et non sh POSIX : ne tourne jamais au bootstrap, seulement à la main ou
-# depuis le subagent dotfiles-reviewer.
+# bash et non sh POSIX : ne tourne jamais au bootstrap, seulement à la main, en
+# CI, ou depuis le subagent dotfiles-reviewer.
 #
 # Sort en 1 dès qu'un contrôle échoue, et rapporte des comptes, pas des adjectifs.
 

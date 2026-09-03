@@ -1,0 +1,71 @@
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Ce dépôt est public : rien ici ne doit écrire, et la clé age ne sort pas des
+# jobs qui en ont besoin (ADR-016).
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Rejoue la barrière locale. Un seul runner suffit : le script couvre lui-même
+  # les trois combinaisons de profil par rendu de template.
+  barriere:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Le contrôle des messages de commit compare origin/main..HEAD :
+          # sans l'historique, il se sauterait en silence.
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-chezmoi
+        with:
+          age-key: ${{ secrets.AGE_KEY }}
+          profile: perso
+      - name: scripts/verify.sh
+        run: |
+          set -euo pipefail
+          liste=$(mktemp)
+          trap 'rm -f "$liste"' EXIT
+          chezmoi cat "$HOME/.config/dotfiles/sensible.txt" > "$liste"
+          SENSIBLE_LIST="$liste" bash scripts/verify.sh
+
+  # Ce que la barrière ne sait pas faire : le dépôt effectif. Le runner est
+  # jetable, donc son propre $HOME sert de destination.
+  depot:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        profile: [perso, pro]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-chezmoi
+        with:
+          age-key: ${{ secrets.AGE_KEY }}
+          profile: ${{ matrix.profile }}
+      # scripts et externals exclus : les premiers installent une chaîne
+      # d'outils entière, le second télécharge oh-my-zsh à chaque exécution.
+      # Ce job vérifie le dépôt des fichiers, pas l'amorçage d'une machine.
+      - name: chezmoi apply
+        run: chezmoi apply --exclude=scripts,externals --verbose
+      - name: aucun écart après application
+        run: |
+          set -euo pipefail
+          ecart=$(chezmoi diff --exclude=scripts,externals)
+          if [ -n "$ecart" ]; then
+            printf '%s\n' "$ecart"
+            echo "::error::chezmoi apply n'est pas idempotent sur ${{ matrix.os }} / ${{ matrix.profile }}" >&2
+            exit 1
+          fi
+          echo "état stable sur ${{ matrix.os }} / ${{ matrix.profile }}"
