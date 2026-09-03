@@ -45,8 +45,14 @@ contents: read`. Il porte deux jobs :
   teste l'idempotence.
 
 L'action composite `.github/actions/setup-chezmoi` installe le binaire `chezmoi`
-amont à une version épinglée, écrit la clé privée, puis appelle
-`chezmoi init --promptChoice profile=… --promptBool gui=false`.
+amont à une version épinglée, écrit la clé privée, sème un `chezmoi.toml`
+réduit à `[data]` puis lance `chezmoi init`. Semer les données plutôt que
+passer `--promptChoice` : la clé de ce flag est le **texte de la question** et
+non le nom du champ, ce qui couperait la CI à la moindre reformulation, tandis
+que `promptChoiceOnce` rend sans rien demander une valeur déjà présente dans la
+configuration - le mécanisme dont `verify.sh` se sert déjà. Chaque appel porte
+`--source` : `init` n'inscrit pas la source dans la configuration, et
+`CHEZMOI_SOURCE_DIR` est une variable que chezmoi produit, pas une qu'il lit.
 
 **Le secret `AGE_KEY` porte la clé privée `age`, pas la passphrase de
 `age-key.txt.age`** : `age` ne déchiffre une clé protégée par passphrase qu'au
@@ -95,6 +101,11 @@ déployé.
   maximale, mais chaque job téléchargerait la chaîne d'outils entière et
   oh-my-zsh, pour tester l'amorçage - un besoin distinct de celui-ci, et payé en
   minutes macOS.
+- **`chezmoi init --promptChoice profile=… --promptBool gui=false`.** Première
+  version, rouge sur les cinq jobs du premier run : `could not open a new TTY:
+  open /dev/tty: no such device or address`. La clé attendue par ces flags est
+  le texte de la question - `--promptChoice "Profil de cette machine=perso"`
+  fonctionne, mais lie la CI à la formulation d'une invite.
 - **Une action tierce d'installation de chezmoi.** Un `curl` d'une version
   épinglée fait la même chose sans donner accès à un job qui manipule la clé
   privée.

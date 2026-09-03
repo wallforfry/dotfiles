@@ -36,7 +36,7 @@ jobs:
           set -euo pipefail
           liste=$(mktemp)
           trap 'rm -f "$liste"' EXIT
-          chezmoi cat "$HOME/.config/dotfiles/sensible.txt" > "$liste"
+          chezmoi cat --source="$PWD" "$HOME/.config/dotfiles/sensible.txt" > "$liste"
           SENSIBLE_LIST="$liste" bash scripts/verify.sh
 
   # Ce que la barrière ne sait pas faire : le dépôt effectif. Le runner est
@@ -58,11 +58,11 @@ jobs:
       # d'outils entière, le second télécharge oh-my-zsh à chaque exécution.
       # Ce job vérifie le dépôt des fichiers, pas l'amorçage d'une machine.
       - name: chezmoi apply
-        run: chezmoi apply --exclude=scripts,externals --verbose
+        run: chezmoi apply --source="$PWD" --exclude=scripts,externals --verbose
       - name: aucun écart après application
         run: |
           set -euo pipefail
-          ecart=$(chezmoi diff --exclude=scripts,externals)
+          ecart=$(chezmoi diff --source="$PWD" --exclude=scripts,externals)
           if [ -n "$ecart" ]; then
             printf '%s\n' "$ecart"
             echo "::error::chezmoi apply n'est pas idempotent sur ${{ matrix.os }} / ${{ matrix.profile }}" >&2

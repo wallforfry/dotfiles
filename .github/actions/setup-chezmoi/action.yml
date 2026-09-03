@@ -58,13 +58,23 @@ runs:
         umask 077
         printf '%s\n' "$AGE_KEY" > "$HOME/.config/chezmoi/key.txt"
 
-    # promptChoiceOnce ne se force pas depuis un flag de rendu : la
-    # configuration doit exister avant tout, et verify.sh la prend pour base.
+    # promptChoiceOnce rend la valeur déjà présente dans les données de la
+    # configuration et ne demande rien : la semer suffit, et chezmoi init
+    # remplace ensuite ce fichier par le rendu complet du template en gardant
+    # [data]. Les flags --promptChoice/--promptBool ne feraient pas l'affaire :
+    # leur clé est le texte de la question, pas le nom du champ, ce qui
+    # couperait la CI à la moindre reformulation.
     - shell: bash
+      env:
+        PROFILE: ${{ inputs.profile }}
       run: |
         set -euo pipefail
-        chezmoi init --source="$PWD" \
-          --promptChoice "profile=${{ inputs.profile }}" \
-          --promptBool "gui=false"
-        chezmoi cat "$HOME/.config/dotfiles/sensible.txt" >/dev/null
-        echo "clé age opérationnelle, profil ${{ inputs.profile }}"
+        printf '[data]\n    profile = "%s"\n    gui = false\n' "$PROFILE" \
+          > "$HOME/.config/chezmoi/chezmoi.toml"
+        chezmoi init --source="$PWD"
+        # --source à chaque appel : init ne l'inscrit pas dans la configuration,
+        # et CHEZMOI_SOURCE_DIR est une variable que chezmoi produit pour ses
+        # scripts, pas une qu'il lit. Sans le flag, tout appel ultérieur viserait
+        # ~/.local/share/chezmoi, absent du runner.
+        chezmoi cat --source="$PWD" "$HOME/.config/dotfiles/sensible.txt" >/dev/null
+        echo "clé age opérationnelle, profil $PROFILE"
