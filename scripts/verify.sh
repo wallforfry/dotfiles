@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Barrière mécanique de ce dépôt : rien ne tourne en CI, donc tout se vérifie ici.
+# Barrière mécanique de ce dépôt, lancée à la main comme depuis
+# .github/workflows/verify.yml (ADR-020).
 #
-# bash et non sh POSIX : ne tourne jamais au bootstrap, seulement à la main ou
-# depuis le subagent dotfiles-reviewer.
+# bash et non sh POSIX : ne tourne jamais au bootstrap, seulement à la main, en
+# CI, ou depuis le subagent dotfiles-reviewer.
 #
 # Sort en 1 dès qu'un contrôle échoue, et rapporte des comptes, pas des adjectifs.
 
@@ -151,6 +152,26 @@ if [ -d dot_claude/agents ] && [ ! -L dot_claude_pro/symlink_agents ] && [ ! -f 
 fi
 okif "$n subagents, frontmatter cohérent et partagé avec le profil pro"
 
+head_ "Workflows"
+# Les logs d'un dépôt public sont lisibles par tous, et un fragment déchiffré
+# y sort aussi sûrement que d'un fichier versionné. Trois commandes émettent le
+# contenu rendu d'une cible : « apply --verbose », « chezmoi diff », et un
+# « chezmoi cat » sans redirection. Aucune n'est nécessaire à la CI, donc
+# aucune n'y est admise. Les lignes de commentaire sont exclues : elles
+# nomment ces commandes pour expliquer pourquoi elles sont absentes.
+n=0
+for f in $(git ls-files '.github/*'); do
+  vu=$(grep -nE '^[^#]*(--verbose|chezmoi[[:space:]]+diff)' "$f" || true)
+  cat_nu=$(grep -nE '^[^#]*chezmoi[^#]*[[:space:]]cat[[:space:]]' "$f" |
+    grep -vE '>[[:space:]]*("?\$|/dev/null)' || true)
+  if [ -n "$vu" ] || [ -n "$cat_nu" ]; then
+    ko "$f : commande qui écrirait le contenu rendu d'une cible dans un log public"
+    printf '%s\n' "$vu" "$cat_nu" | grep -v '^$' | head -3 | sed 's/^/      /'
+  fi
+  n=$((n + 1))
+done
+okif "$n fichiers de CI, aucune sortie de contenu rendu"
+
 head_ "Index des ADR"
 if diff <(ls docs/adr | grep -oE '^[0-9]{3}') \
         <(grep -oE '^\| \[[0-9]{3}\]' docs/adr/README.md | grep -oE '[0-9]{3}') >/dev/null; then
@@ -174,9 +195,12 @@ motifs_ip='(^|[^0-9.])((1[0-9]{2}|2[0-9]{2}|[1-9][0-9]?)\.){3}(1[0-9]{2}|2[0-9]{
 # La version précédente annonçait « aucune occurrence » en tenant la preuve.
 if [ -z "$motifs" ]; then
   ko "$LISTE absent ou vide : le contrôle des noms sensibles n'a pas été fait"
-  motifs='^$'
 fi
-hits=$( { git grep -inE "$motifs" -- . ':!docs/adr/016-*'
+# Sans liste, ne pas chercher : un motif de repli vide s'apparie à chaque ligne
+# blanche et rapportait des occurrences imaginaires - un compte faux sur un
+# contrôle déjà rouge use la confiance qu'il demande. Le contrôle des adresses
+# ne dépend pas de la liste et reste fait.
+hits=$( { [ -n "$motifs" ] && git grep -inE "$motifs" -- . ':!docs/adr/016-*'
           git grep -inE "$motifs_ip" -- . | grep -vE '127\.0\.0\.1|0\.0\.0\.0'; } 2>/dev/null || true)
 if [ -n "$hits" ]; then
   ko "arbre : $(printf '%s\n' "$hits" | wc -l | tr -d ' ') occurrence(s)"
@@ -184,7 +208,7 @@ if [ -n "$hits" ]; then
 else
   ok "arbre : aucune occurrence"
 fi
-if git rev-parse origin/main >/dev/null 2>&1; then
+if [ -n "$motifs" ] && git rev-parse origin/main >/dev/null 2>&1; then
   hits=$(git log origin/main..HEAD --format='%B' | grep -inE "$motifs" || true)
   if [ -n "$hits" ]; then
     ko "messages de commit non poussés : $(printf '%s\n' "$hits" | wc -l | tr -d ' ') occurrence(s)"

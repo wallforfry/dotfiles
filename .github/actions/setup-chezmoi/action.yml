@@ -1,0 +1,80 @@
+name: setup-chezmoi
+description: Installe chezmoi, écrit la configuration du profil demandé et pose la clé privée age.
+
+inputs:
+  age-key:
+    description: Clé privée age (AGE-SECRET-KEY-1…). Sans elle, les fragments chiffrés restent illisibles.
+    required: true
+  profile:
+    description: Profil de la machine simulée, « perso » ou « pro ».
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # Binaire amont épinglé plutôt qu'une action tierce : la clé privée passe
+    # par l'environnement de ce job, donc rien d'inutile n'y tourne. Version
+    # alignée sur celle du poste. age n'est pas installé : l'implémentation
+    # intégrée à chezmoi suffit tant qu'il s'agit d'une clé et non d'une
+    # passphrase (ADR-018).
+    - shell: bash
+      env:
+        CHEZMOI_VERSION: 2.72.1
+      run: |
+        set -euo pipefail
+        case "$RUNNER_OS" in
+          Linux) os=linux ;;
+          macOS) os=darwin ;;
+          *) echo "::error::$RUNNER_OS non géré" >&2; exit 1 ;;
+        esac
+        case "$(uname -m)" in
+          x86_64)        arch=amd64 ;;
+          aarch64|arm64) arch=arm64 ;;
+          *) echo "::error::architecture $(uname -m) non gérée" >&2; exit 1 ;;
+        esac
+        mkdir -p "$HOME/.local/bin"
+        curl -fsSL "https://github.com/twpayne/chezmoi/releases/download/v${CHEZMOI_VERSION}/chezmoi_${CHEZMOI_VERSION}_${os}_${arch}.tar.gz" |
+          tar xz -C "$HOME/.local/bin" chezmoi
+        chmod +x "$HOME/.local/bin/chezmoi"
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+    # La clé avant la configuration : chezmoi init rend .chezmoi.toml.tmpl, qui
+    # ne déchiffre rien, mais tout ce qui suit en a besoin.
+    #
+    # Le secret porte la clé privée et non la passphrase de age-key.txt.age :
+    # age ne déchiffre une clé protégée par passphrase qu'au travers d'un
+    # terminal, absent d'un runner. Clé absente ou inopérante : job rouge, et
+    # non un contrôle silencieusement sauté (ADR-016).
+    - shell: bash
+      env:
+        AGE_KEY: ${{ inputs.age-key }}
+      run: |
+        set -euo pipefail
+        if [ -z "$AGE_KEY" ]; then
+          echo "::error::secret AGE_KEY absent : les fragments chiffrés resteraient illisibles" >&2
+          exit 1
+        fi
+        mkdir -p "$HOME/.config/chezmoi"
+        umask 077
+        printf '%s\n' "$AGE_KEY" > "$HOME/.config/chezmoi/key.txt"
+
+    # promptChoiceOnce rend la valeur déjà présente dans les données de la
+    # configuration et ne demande rien : la semer suffit, et chezmoi init
+    # remplace ensuite ce fichier par le rendu complet du template en gardant
+    # [data]. Les flags --promptChoice/--promptBool ne feraient pas l'affaire :
+    # leur clé est le texte de la question, pas le nom du champ, ce qui
+    # couperait la CI à la moindre reformulation.
+    - shell: bash
+      env:
+        PROFILE: ${{ inputs.profile }}
+      run: |
+        set -euo pipefail
+        printf '[data]\n    profile = "%s"\n    gui = false\n' "$PROFILE" \
+          > "$HOME/.config/chezmoi/chezmoi.toml"
+        chezmoi init --source="$PWD"
+        # --source à chaque appel : init ne l'inscrit pas dans la configuration,
+        # et CHEZMOI_SOURCE_DIR est une variable que chezmoi produit pour ses
+        # scripts, pas une qu'il lit. Sans le flag, tout appel ultérieur viserait
+        # ~/.local/share/chezmoi, absent du runner.
+        chezmoi cat --source="$PWD" "$HOME/.config/dotfiles/sensible.txt" >/dev/null
+        echo "clé age opérationnelle, profil $PROFILE"

@@ -74,7 +74,8 @@ be conditioned on `.profile` or on the OS.
 
 ## Verification
 
-Nothing here runs in CI, so verify locally before delivering. **`bash scripts/verify.sh` is the
+Verify locally before delivering: CI repeats the same barrier, it does not replace it, and it only
+reports once the change is pushed. **`bash scripts/verify.sh` is the
 mechanical barrier**: shell syntax and template rendering across three profile combinations, skill
 frontmatter and its README table, the ADR index, sensitive names in the tree and in unpushed commit
 messages, and encryption of every `.age` fragment. It reports counts and exits non-zero on the first
@@ -89,6 +90,16 @@ What it cannot decide, verify by hand:
 - Templates using `.profile` must be checked against both values, not just the current machine's.
 - Say which OS you exercised. This repository targets macOS, Linux and Synology DSM; DSM notably
   mounts `/tmp` with `noexec`, which is why `scriptTempDir` is set in `.chezmoi.toml.tmpl`.
+
+`.github/workflows/verify.yml` runs the barrier on Linux and then a real `chezmoi apply` on
+`ubuntu-latest` and `macos-latest` for both profiles, on push to `main`, on pull requests and on
+demand ([ADR-020](docs/adr/020-verification-en-ci.md)). It needs the `AGE_KEY` secret and never
+covers DSM, which has no runner: a DSM-specific change stays a manual check.
+
+**No command added there may write a target's rendered content.** `apply --verbose` and
+`chezmoi diff` emit a unified diff of what they write, which on a public runner publishes the
+cleartext of every `age` fragment. `verify.sh` refuses both in `.github/`; read the deployed effect
+with `chezmoi status`, which prints paths only.
 
 ## Secrets
 
