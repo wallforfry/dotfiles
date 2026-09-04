@@ -81,6 +81,10 @@ frontmatter and its README table, the ADR index, sensitive names in the tree and
 messages, and encryption of every `.age` fragment. It reports counts and exits non-zero on the first
 failing check. Run it before every commit.
 
+A green barrier is not correctness. Before committing or pushing a change whose deployed effect
+matters, delegate the reading of `chezmoi diff` to the `dotfiles-reviewer` subagent: it judges what
+the script cannot decide.
+
 What it cannot decide, verify by hand:
 
 - `chezmoi diff` - the deployed effect of the change. Read it in full; the script says nothing about
