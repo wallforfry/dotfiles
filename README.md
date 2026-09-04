@@ -144,7 +144,20 @@ bash scripts/verify.sh
 
 Syntaxe des scripts, rendu des templates sur les trois combinaisons de profil,
 cohérence des skills et de l'index des ADR, absence de nom sensible en clair,
-chiffrement des fragments. Sort en 1 au premier contrôle rouge.
+chiffrement des fragments, absence d'attribut `exact_` sur les répertoires
+d'état vivant, et sous-répertoires de skill limités à `references/`, `assets/`
+et `scripts/`. Sort en 1 au premier contrôle rouge.
+
+```bash
+bash scripts/harness-audit.sh
+```
+
+Le pendant mesuré, jamais joué en CI : coût du contexte toujours chargé, retard
+de la source de déploiement sur `origin/main`, activation réelle de chaque skill
+et subagent, taux de violation des deux règles observables avant et après leur
+introduction, et pouvoir de détection de `verify.sh` par injection de onze
+défauts dans un clone. Sort en 1 si un défaut passe ou si une mesure n'a pas pu
+être faite.
 
 `.github/workflows/verify.yml` rejoue ce script sur `push` vers `main`, sur
 `pull_request` vers `main` et à la demande, puis fait un vrai `chezmoi apply`
@@ -245,8 +258,9 @@ copie à synchroniser. Le répertoire est ignoré hors profil `pro`.
 
 ### Récupération web
 
-`harness/AGENTS.md` décrit une escalade à trois paliers : fetch intégré, Firecrawl
-auto-hébergé, puis CloakBrowser pour l'anti-bot. Les deux derniers sont pilotés par des
+La skill `web-fetching` décrit une escalade à trois paliers : fetch intégré,
+Firecrawl auto-hébergé, puis CloakBrowser pour l'anti-bot. `harness/AGENTS.md` n'en
+garde que la règle d'usage, qui vaut pour toute tâche. Les deux derniers sont pilotés par des
 scripts de `~/.local/bin`, tous bâtis sur le même principe - **un conteneur nommé,
 réutilisé par toutes les sessions**.
 
