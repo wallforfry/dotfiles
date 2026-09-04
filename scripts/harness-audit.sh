@@ -15,7 +15,11 @@
 
 set -uo pipefail
 
-cd "$(git rev-parse --show-toplevel)"
+root=$(git rev-parse --show-toplevel) || {
+  echo "❌  hors d'un dépôt git : aucune mesure possible" >&2
+  exit 1
+}
+cd "$root"
 
 fail=0
 ok() { printf '  ✅  %s\n' "$1"; }
@@ -33,13 +37,31 @@ fi
 
 # --- 1. contexte toujours chargé ---------------------------------------------
 head_ "Contexte toujours chargé"
+# Les descriptions de frontmatter comptent : elles sont le routeur, donc
+# toujours en contexte. Sans elles, déplacer une section vers une skill
+# paraîtrait gratuit alors qu'il déplace une part du coût dans le routeur.
 total=0
-for f in harness/AGENTS.md harness/SOUL.md harness/USER.md AGENTS.md; do
-  b=$(wc -c <"$f" | tr -d ' ')
-  total=$((total + b))
-  printf '  %-20s %6s o  ~%5s jetons\n' "$(basename "$f")" "$b" "$((b / 4))"
+mesure() { # mesure <étiquette> <octets>
+  total=$((total + $2))
+  printf '  %-34s %6s o  ~%5s jetons\n' "$1" "$2" "$(($2 / 4))"
+}
+for f in harness/AGENTS.md harness/SOUL.md harness/USER.md AGENTS.md dot_claude/CLAUDE.md; do
+  if [ ! -f "$f" ]; then
+    ko "$f absent : coût du contexte non mesuré"
+    continue
+  fi
+  mesure "$f" "$(wc -c <"$f" | tr -d ' ')"
 done
+# Une description est un bloc plié « description: > » : tout jusqu'à la
+# prochaine clé de premier niveau.
+descs=$(awk 'FNR==1{d=0}
+             /^description:/{d=1; n+=length($0)+1; next}
+             d && /^[^ \t]/{d=0}
+             d {n+=length($0)+1}
+             END{print n+0}' dot_claude/skills/*/SKILL.md dot_claude/agents/*.md)
+mesure "descriptions (routeur des skills)" "$descs"
 ok "$total octets, ~$((total / 4)) jetons sur chaque tâche de ce dépôt"
+echo "  ~/.claude/CONTEXT.md est chiffré : son coût n'est pas mesurable ici"
 
 # --- 2. retard de la source de déploiement ------------------------------------
 head_ "Source de déploiement"
@@ -62,15 +84,19 @@ else
   fi
 fi
 
-# --- 3. activation réelle -----------------------------------------------------
-head_ "Activation des skills et des subagents"
+# --- 3. activation réelle et adhérence observable -----------------------------
+# Un seul parcours des JSONL : les deux mesures lisent les mêmes lignes, et deux
+# parcours de plusieurs centaines de sessions coûtent le double pour rien.
+head_ "Activation et adhérence (règles introduites le $SINCE)"
 if [ ! -d "$PROJECTS" ]; then
-  ko "$PROJECTS absent : activation non mesurée"
-else
-  python3 - "$PROJECTS" <<'PY'
+  ko "$PROJECTS absent : activation et adhérence non mesurées"
+elif ! python3 - "$PROJECTS" "$SINCE" <<'PY'
 import json, os, sys, glob, collections
-root = sys.argv[1]
+root, since = sys.argv[1], sys.argv[2]
+EXT = ('.ts', '.tsx', '.js', '.py', '.lua', '.rs', '.go', '.sh')
 skills = collections.Counter(); agents = collections.Counter()
+blocks = collections.Counter(); dash = collections.Counter()
+lines = collections.Counter(); comments = collections.Counter()
 sessions = 0; days = []
 for f in glob.glob(os.path.join(root, '**', '*.jsonl'), recursive=True):
     sessions += 1
@@ -82,56 +108,10 @@ for f in glob.glob(os.path.join(root, '**', '*.jsonl'), recursive=True):
                 d = json.loads(line)
             except ValueError:
                 continue
-            if d.get('timestamp'):
-                days.append(d['timestamp'][:10])
-            c = (d.get('message') or {}).get('content')
-            if not isinstance(c, list):
-                continue
-            for b in c:
-                if not isinstance(b, dict) or b.get('type') != 'tool_use':
-                    continue
-                i = b.get('input') or {}
-                if b.get('name') == 'Skill':
-                    skills[str(i.get('skill'))] += 1
-                elif b.get('name') in ('Task', 'Agent'):
-                    agents[str(i.get('subagent_type'))] += 1
-print(f'  {sessions} sessions, {min(days)} au {max(days)}' if days else f'  {sessions} sessions')
-local = sorted(os.listdir('dot_claude/skills'))
-local = [s for s in local if os.path.exists(f'dot_claude/skills/{s}/SKILL.md')]
-print('  skills de ce dépôt :')
-for s in local:
-    print(f'    {skills.get(s, 0):5d}  {s}')
-print('  autres skills activées, top 5 :')
-for n, c in [(n, c) for n, c in skills.most_common() if n not in local][:5]:
-    print(f'    {c:5d}  {n}')
-print('  subagents :')
-for n, c in agents.most_common(6):
-    print(f'    {c:5d}  {n}')
-PY
-  ok "activation mesurée sur les transcripts disponibles"
-fi
-
-# --- 4. adhérence aux règles observables --------------------------------------
-head_ "Adhérence observable (règles introduites le $SINCE)"
-if [ ! -d "$PROJECTS" ]; then
-  ko "$PROJECTS absent : adhérence non mesurée"
-else
-  python3 - "$PROJECTS" "$SINCE" <<'PY'
-import json, os, sys, glob, collections
-root, since = sys.argv[1], sys.argv[2]
-EXT = ('.ts', '.tsx', '.js', '.py', '.lua', '.rs', '.go', '.sh')
-blocks = collections.Counter(); dash = collections.Counter()
-lines = collections.Counter(); comments = collections.Counter()
-for f in glob.glob(os.path.join(root, '**', '*.jsonl'), recursive=True):
-    with open(f, encoding='utf-8', errors='replace') as fh:
-        for line in fh:
-            if not line.strip():
-                continue
-            try:
-                d = json.loads(line)
-            except ValueError:
-                continue
-            era = 'avant' if (d.get('timestamp') or '')[:10] < since else 'depuis'
+            ts = (d.get('timestamp') or '')[:10]
+            if ts:
+                days.append(ts)
+            era = 'avant' if ts < since else 'depuis'
             m = d.get('message') or {}
             c = m.get('content')
             if not isinstance(c, list):
@@ -139,19 +119,38 @@ for f in glob.glob(os.path.join(root, '**', '*.jsonl'), recursive=True):
             for b in c:
                 if not isinstance(b, dict):
                     continue
-                if b.get('type') == 'text' and m.get('role') == 'assistant':
+                kind = b.get('type')
+                if kind == 'text' and m.get('role') == 'assistant':
                     blocks[era] += 1
                     dash[era] += b.get('text', '').count('—')
-                elif b.get('type') == 'tool_use' and b.get('name') == 'Write':
-                    i = b.get('input') or {}
-                    if str(i.get('file_path', '')).endswith(EXT):
+                elif kind == 'tool_use':
+                    name = b.get('name'); i = b.get('input') or {}
+                    if name == 'Skill':
+                        skills[str(i.get('skill'))] += 1
+                    elif name in ('Task', 'Agent'):
+                        agents[str(i.get('subagent_type'))] += 1
+                    elif name == 'Write' and str(i.get('file_path', '')).endswith(EXT):
                         for L in str(i.get('content', '')).split('\n'):
-                            s = L.strip()
-                            if not s:
+                            t = L.strip()
+                            if not t:
                                 continue
                             lines[era] += 1
-                            if s.startswith(('//', '#', '--', '/*', '*')):
+                            if t.startswith(('//', '#', '--', '/*', '*')):
                                 comments[era] += 1
+if not sessions:
+    sys.exit('  aucun transcript lu')
+print(f'  {sessions} sessions, {min(days)} au {max(days)}' if days else f'  {sessions} sessions')
+local = sorted(d for d in os.listdir('dot_claude/skills')
+               if os.path.exists(f'dot_claude/skills/{d}/SKILL.md'))
+print('  skills de ce dépôt :')
+for name in local:
+    print(f'    {skills.get(name, 0):5d}  {name}')
+print('  autres skills activées, top 5 :')
+for name, count in [(n, c) for n, c in skills.most_common() if n not in local][:5]:
+    print(f'    {count:5d}  {name}')
+print('  subagents :')
+for name, count in agents.most_common(6):
+    print(f'    {count:5d}  {name}')
 def rate(a, b):
     return a / b if b else 0.0
 print('  tiret cadratin par bloc de texte assistant :')
@@ -161,17 +160,23 @@ print('  lignes de commentaire dans le code écrit :')
 for era in ('avant', 'depuis'):
     print(f'    {era:6s}  {lines[era]:6d} lignes  {comments[era]:6d} commentaires  {rate(comments[era], lines[era]):.3f}')
 PY
-  ok "adhérence mesurée ; corrélationnelle, le modèle a changé sur la même période"
+then
+  ko "lecture des transcripts interrompue : activation et adhérence non mesurées"
+else
+  ok "mesuré sur les transcripts disponibles ; l'adhérence est corrélationnelle, le modèle a changé sur la même période"
 fi
 
-# --- 5. pouvoir de détection de la barrière -----------------------------------
+# --- 4. pouvoir de détection de la barrière -----------------------------------
 head_ "Pouvoir de détection de scripts/verify.sh"
+mkdir -p "$HOME/.cache"
 tmp=$(mktemp -d "$HOME/.cache/harness-audit.XXXXXX")
 trap 'rm -rf "$tmp"' EXIT
+branche=$(git rev-parse --abbrev-ref HEAD)
 if ! git clone -q "$PWD" "$tmp/rep" 2>/dev/null; then
   ko "clone impossible : détection non mesurée"
 else
-  (cd "$tmp/rep" && git checkout -q "$(git -C "$PWD" rev-parse --abbrev-ref HEAD)" 2>/dev/null) || true
+  # La branche est résolue avant le cd : $PWD s'évalue après, donc dans le clone.
+  (cd "$tmp/rep" && git checkout -q "$branche" 2>/dev/null) || true
   if ! (cd "$tmp/rep" && bash scripts/verify.sh >/dev/null 2>&1); then
     ko "le clone est rouge avant toute mutation : détection non mesurable"
   else
@@ -180,8 +185,11 @@ else
     while IFS='|' read -r label code; do
       [ -z "$label" ] && continue
       count=$((count + 1))
-      (cd "$tmp/rep" && git checkout -q -- . && git clean -qfd && python3 -c "$code")
-      if (cd "$tmp/rep" && bash scripts/verify.sh >/dev/null 2>&1); then
+      # Une mutation qui ne s'applique plus - chaîne cherchée disparue - serait
+      # rapportée « non détectée », donc attribuée à la barrière.
+      if ! (cd "$tmp/rep" && git checkout -q -- . && git clean -qfd && python3 -c "$code"); then
+        ko "mutation inapplicable, à réécrire : $label"
+      elif (cd "$tmp/rep" && bash scripts/verify.sh >/dev/null 2>&1); then
         ko "mutation non détectée : $label"
       else
         detected=$((detected + 1))
