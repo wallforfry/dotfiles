@@ -24,7 +24,10 @@ render() { # render <config> <fichier>
 }
 
 # --- configurations de rendu, une par combinaison à couvrir -------------------
-tmp=$(mktemp -d "${TMPDIR:-/tmp}/verify.XXXXXX")
+# Jamais sous /tmp : monté noexec sur DSM, et la skill scripts l'interdit à
+# tout script du dépôt, y compris à cette barrière.
+mkdir -p "$HOME/.cache"
+tmp=$(mktemp -d "$HOME/.cache/verify.XXXXXX")
 trap 'rm -rf "$tmp"' EXIT
 # La configuration vivante sert de base : execute-template n'a pas de
 # --promptDefaults, et promptChoiceOnce ne peut pas être forcé depuis un flag.

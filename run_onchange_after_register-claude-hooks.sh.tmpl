@@ -35,6 +35,9 @@ if jq -e --arg c "$HOOK" '[.hooks.Stop // [] | .[].hooks // [] | .[].command] | 
   exit 0
 fi
 
+# ~/.cache n'existe pas sur un home neuf, et set -eu ferait avorter
+# chezmoi apply en laissant le répertoire personnel à moitié configuré.
+mkdir -p "$HOME/.cache"
 tmp=$(mktemp "$HOME/.cache/settings.XXXXXX")
 trap 'rm -f "$tmp"' EXIT
 
