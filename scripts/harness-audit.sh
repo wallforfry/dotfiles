@@ -174,6 +174,8 @@ ADR présente hors index|import glob,shutil;shutil.copy(glob.glob('docs/adr/001-
 fragment .age en clair|open('age-key.txt.age','w').write('texte en clair\n')
 chezmoi diff introduit en CI|p='.github/workflows/verify.yml';s=open(p).read();open(p,'w').write(s.replace('chezmoi status','chezmoi diff'))
 skill sans ligne d'index|import os;os.makedirs('dot_claude/skills/fantome',exist_ok=True);open('dot_claude/skills/fantome/SKILL.md','w').write('---\nname: fantome\ndescription: Rien. Use when jamais.\nmetadata:\n  category: dev\n---\n# Fantome\n')
+sous-répertoire de skill hors liste|import os;os.makedirs('dot_claude/skills/adr/evals',exist_ok=True);open('dot_claude/skills/adr/evals/x.json','w').write('{}')
+attribut exact_ sur l'état vivant|open('dot_claude/exact_zzz','w').write('')
 MUT
     if [ "$detected" -eq "$count" ]; then
       ok "$detected/$count défauts injectés détectés"
