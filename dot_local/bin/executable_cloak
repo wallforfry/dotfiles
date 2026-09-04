@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# CloakBrowser, palier 4 de l'escalade de récupération web décrite dans
-# harness/AGENTS.md. bash et non sh POSIX : ne tourne jamais au bootstrap.
+# CloakBrowser, palier 3 de l'escalade de récupération web décrite dans
+# la skill web-fetching. bash et non sh POSIX : ne tourne jamais au bootstrap.
 #
 #   cloak --start    démarre le conteneur (idempotent)
 #   cloak --stop     l'arrête

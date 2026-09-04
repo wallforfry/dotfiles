@@ -31,6 +31,7 @@ the deployed copy.
 | `neovim` | Maintain the dotfiles repository's Neovim and LazyVim configuration. |
 | `scripts` | Create and maintain portable shell scripts in the dotfiles repository. |
 | `skill-manager` | Manage the skills of the dotfiles repository: create, doctor, fix, cross-check, and rebuild their README index. |
+| `web-fetching` | Retrieve a web page, a batch of pages or a search result through the escalation tiers, and stop what the retrieval started. |
 
 ## Origin
 
