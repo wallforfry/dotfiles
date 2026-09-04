@@ -56,7 +56,7 @@ that did not run is reported as not done, never as green.
 ## Gotchas
 
 - **Reading an activation count as a verdict** - `scripts` has zero activations and guards the
-  bootstrap of a host with no package manager. Fréquence and criticality are different axes.
+  bootstrap of a host with no package manager. Frequency and criticality are different axes.
 - **Printing a transcript path** - project directory names carry client and employer names, and this
   repository is public (ADR-016). The script aggregates and never prints a path; keep it that way.
 - **Comparing rates across a rule change and a model change** - both happened in August 2026. The
