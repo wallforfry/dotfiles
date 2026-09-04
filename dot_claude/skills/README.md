@@ -28,7 +28,7 @@ the deployed copy.
 | --- | --- |
 | `do-nothing-script` | Turn a repeated manual procedure into a do-nothing script (Slimmon): one function per step, printed then awaiting the operator, automated one step at a time. |
 | `handoff` | Hand the current work to a fresh session instead of letting the context compact. |
-| `harness-audit` | Re-measure the harness: context cost, real skill and subagent activation, adherence to the two observable rules, and what the verification barrier actually detects. |
+| `harness-audit` | Re-measure the harness: context cost, deployment lag, real skill and subagent activation, adherence to the two observable rules, and what the verification barrier actually detects. |
 | `harness-reflection` | Turn a repeated agent failure into one evidence-backed harness change. |
 | `neovim` | Maintain the dotfiles repository's Neovim and LazyVim configuration. |
 | `scripts` | Create and maintain portable shell scripts in the dotfiles repository. |

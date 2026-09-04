@@ -1,8 +1,8 @@
 ---
 name: harness-audit
 description: >
-  Re-measure the harness: context cost, real skill and subagent activation, adherence to the two
-  observable rules, and what the verification barrier actually detects.
+  Re-measure the harness: context cost, deployment lag, real skill and subagent activation,
+  adherence to the two observable rules, and what the verification barrier actually detects.
   Use when asked whether a rule, a skill or a subagent earns its place, before adding or removing
   one, or when an audit needs refreshing. Make sure to use it whenever a claim about the harness
   needs a count rather than an opinion, even if measurement is never named.
@@ -18,9 +18,9 @@ metadata:
 ## Overview
 
 The harness states rules; this skill measures whether they act. `scripts/harness-audit.sh` produces
-four counts, and the counts are the finding: an always-loaded byte total, an activation count per
-skill, a violation rate before and after a rule's introduction date, and a mutation-detection score
-for `scripts/verify.sh`. Frequency of use is not usefulness: a rule activated once may guard an
+five counts, and the counts are the finding: an always-loaded byte total, how far the chezmoi source
+clone lags `origin/main`, an activation count per skill, a violation rate before and after a rule's
+introduction date, and a mutation-detection score for `scripts/verify.sh`. Frequency of use is not usefulness: a rule activated once may guard an
 irreversible loss, so read the counts against what each component protects, never alone.
 
 ## Usage
@@ -37,17 +37,20 @@ that did not run is reported as not done, never as green.
 
 ## Steps
 
-1. Run the script and read the four sections. It clones the repository into `$HOME/.cache` and never
+1. Run the script and read the five sections. It clones the repository into `$HOME/.cache` and never
    mutates the working tree.
 2. Compare the always-loaded total to the previous run. A section that grew must be justified by a
    rule that changes behaviour on tasks unrelated to its subject; otherwise it belongs in a skill,
    and `agent-instructions` owns that move.
-3. Read every zero-activation skill against its denominator. A skill scoped to this repository is
+3. Read the deployment lag as normal, never as a defect: the chezmoi source is a distinct clone of
+   the working checkout by design (ADR-001), and a merged commit takes effect at the next
+   `chezmoi update`. The count is measured against the last fetch, without one.
+4. Read every zero-activation skill against its denominator. A skill scoped to this repository is
    measured on the sessions in this repository, and a skill created days ago is measured on days.
-4. Read the adherence rates as correlational only. The model and the host prompt changed over the
+5. Read the adherence rates as correlational only. The model and the host prompt changed over the
    same period, so the split proves an association, never a cause.
-5. Treat a missed mutation as a barrier regression: fix `scripts/verify.sh` first, then re-run.
-6. To measure a rule the script does not cover, add a mutation to the `MUT` block rather than
+6. Treat a missed mutation as a barrier regression: fix `scripts/verify.sh` first, then re-run.
+7. To measure a rule the script does not cover, add a mutation to the `MUT` block rather than
    asserting the rule works. A rule with no mutation is an unmeasured rule.
 
 ## Gotchas

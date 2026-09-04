@@ -4,9 +4,10 @@
 # bash et non sh POSIX : ne tourne jamais au bootstrap, et python3 est requis
 # pour lire les transcripts JSONL.
 #
-# Quatre mesures : le coût du contexte toujours chargé, l'activation réelle des
-# skills et des subagents, l'adhérence aux deux règles observables, et le pouvoir
-# de détection de scripts/verify.sh par injection de défauts dans un clone.
+# Cinq mesures : le coût du contexte toujours chargé, le retard de la source de
+# déploiement, l'activation réelle des skills et des subagents, l'adhérence aux
+# deux règles observables, et le pouvoir de détection de scripts/verify.sh par
+# injection de défauts dans un clone.
 #
 # N'imprime jamais un chemin de projet : ils portent des noms de clients (ADR-016).
 # Sort en 1 si la barrière laisse passer un défaut, ou si une mesure n'a pas pu
@@ -40,7 +41,28 @@ for f in harness/AGENTS.md harness/SOUL.md harness/USER.md AGENTS.md; do
 done
 ok "$total octets, ~$((total / 4)) jetons sur chaque tâche de ce dépôt"
 
-# --- 2. activation réelle -----------------------------------------------------
+# --- 2. retard de la source de déploiement ------------------------------------
+head_ "Source de déploiement"
+# La source chezmoi est un clone distinct du dépôt de travail (ADR-001) : un
+# commit fusionné ne prend effet qu'après un chezmoi update. Aucun signal ne le
+# disait, chezmoi status comparant la source à la destination et jamais à la
+# remote. Pas de fetch ici : la mesure reste locale, donc toujours possible, et
+# se lit par rapport à la dernière récupération.
+if ! command -v chezmoi >/dev/null; then
+  ko "chezmoi absent : retard de la source non mesuré"
+else
+  src=$(chezmoi source-path)
+  if [ "$src" = "$PWD" ]; then
+    ok "clone unique : la source de déploiement est ce dépôt"
+  elif ! git -C "$src" rev-parse --verify -q origin/main >/dev/null; then
+    ko "$(basename "$src") : origin/main inconnue, retard non mesuré"
+  else
+    behind=$(git -C "$src" rev-list --count HEAD..origin/main)
+    ok "source en retard de $behind commits sur origin/main à la dernière récupération"
+  fi
+fi
+
+# --- 3. activation réelle -----------------------------------------------------
 head_ "Activation des skills et des subagents"
 if [ ! -d "$PROJECTS" ]; then
   ko "$PROJECTS absent : activation non mesurée"
@@ -89,7 +111,7 @@ PY
   ok "activation mesurée sur les transcripts disponibles"
 fi
 
-# --- 3. adhérence aux règles observables --------------------------------------
+# --- 4. adhérence aux règles observables --------------------------------------
 head_ "Adhérence observable (règles introduites le $SINCE)"
 if [ ! -d "$PROJECTS" ]; then
   ko "$PROJECTS absent : adhérence non mesurée"
@@ -142,7 +164,7 @@ PY
   ok "adhérence mesurée ; corrélationnelle, le modèle a changé sur la même période"
 fi
 
-# --- 4. pouvoir de détection de la barrière -----------------------------------
+# --- 5. pouvoir de détection de la barrière -----------------------------------
 head_ "Pouvoir de détection de scripts/verify.sh"
 tmp=$(mktemp -d "$HOME/.cache/harness-audit.XXXXXX")
 trap 'rm -rf "$tmp"' EXIT
