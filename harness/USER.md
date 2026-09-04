@@ -15,8 +15,9 @@ Aucun rappel de fondamentaux sur ces sujets. Aller au fait.
 ## Contextes
 
 - **Contextes nommés** - employeur, clients, projets professionnels et
-  personnels sont décrits dans `~/.claude/CONTEXT.md`, fragment chiffré : ce
-  dépôt est public et ne porte aucun nom de projet, sauf le sien.
+  personnels sont décrits dans le `CONTEXT.md` du répertoire de configuration de
+  l'agent, fragment chiffré : ce dépôt est public et ne porte aucun nom de
+  projet, sauf le sien.
 - **Forges** - GitHub en pro comme en perso ; Bitbucket uniquement en pro.
   Déduire la forge de `git remote get-url origin`, jamais du profil de la
   machine : les deux coexistent côté pro.

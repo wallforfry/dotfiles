@@ -31,7 +31,8 @@ Report counts, never adjectives. Name the environment you exercised.
    need superseding. Never let a contradiction pass silently.
 5. **Check every consumer of what changed.** A source edited under `harness/` has projections in
    `dot_claude/*.tmpl`, an index line in `README.md`, and sometimes an ADR that quotes it. A skill
-   added or renamed has a row in `dot_claude/skills/README.md`. A file meant for the `pro` profile
+   added or renamed has a row in `dot_config/agent-skills/README.md`. A file meant for the `pro`
+   profile
    has an entry in `.chezmoiignore` and a symlink in `dot_claude_pro/`.
 6. **Say which platforms you exercised.** This repository targets macOS, Linux and Synology DSM. A
    template branching on `.chezmoi.os` or `.profile` was verified on one of them at best; say which,

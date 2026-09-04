@@ -77,8 +77,8 @@ okif "$n templates rendus sur ${#configs[@]} combinaisons"
 
 head_ "Skills"
 n=0
-readme=dot_claude/skills/README.md
-for d in dot_claude/skills/*/; do
+readme=dot_config/agent-skills/README.md
+for d in dot_config/agent-skills/*/; do
   s="$d/SKILL.md"; slug=$(basename "$d")
   [ -f "$s" ] || { ko "$slug : SKILL.md manquant"; continue; }
   fm=$(awk 'NR==1 && $0=="---"{f=1;next} f && $0=="---"{exit} f' "$s")
@@ -142,7 +142,7 @@ done
 listed=$(grep -cE '^\| `[a-z-]+` \|' "$readme")
 [ "$listed" -eq "$n" ] || ko "le tableau du README annonce $listed skills pour $n répertoires"
 for slug in $(grep -oE '^\| `[a-z-]+`' "$readme" | tr -d '|` '); do
-  [ -d "dot_claude/skills/$slug" ] || ko "$slug : ligne du README sans répertoire"
+  [ -d "dot_config/agent-skills/$slug" ] || ko "$slug : ligne du README sans répertoire"
 done
 okif "$n skills, frontmatter et tableau cohérents"
 
@@ -163,6 +163,71 @@ if [ -d dot_claude/agents ] && [ ! -L dot_claude_pro/symlink_agents ] && [ ! -f 
   ko "dot_claude/agents existe sans symlink_agents dans dot_claude_pro : le profil pro ne les verrait pas"
 fi
 okif "$n subagents, frontmatter cohérent et partagé avec le profil pro"
+
+head_ "Projections d'instructions"
+# Un hôte n'en vaut pas un autre : l'import Markdown « @fichier » n'existe que
+# chez Claude, donc une source canonique qui en porte un laisse les autres
+# hôtes sans voix ni préférences. La source reste sans import, et chaque
+# adaptateur charge les trois fichiers avec sa propre syntaxe.
+n=0
+for f in harness/*.md; do
+  imports=$(grep -nE '^@[A-Za-z]' "$f" || true)
+  if [ -n "$imports" ]; then
+    ko "$f : import « @ » propre à un seul hôte dans une source agnostique"
+    printf '%s\n' "$imports" | head -3 | sed 's/^/      /'
+  fi
+  n=$((n + 1))
+done
+for base in AGENTS SOUL USER; do
+  f="dot_claude/$base.md.tmpl"
+  [ -f "$f" ] || { ko "$f absent : projection Claude manquante"; continue; }
+  [ "$(wc -l < "$f" | tr -d ' ')" = 1 ] ||
+    ko "$f : une projection ne porte qu'une ligne d'include"
+  grep -q "include \"harness/$base.md\"" "$f" ||
+    ko "$f : n'inclut pas harness/$base.md"
+  grep -q "@$base.md" dot_claude/CLAUDE.md ||
+    ko "dot_claude/CLAUDE.md : @$base.md absent, Claude ne chargerait pas $base"
+  grep -q "include \"harness/$base.md\"" dot_codex/AGENTS.md.tmpl ||
+    ko "dot_codex/AGENTS.md.tmpl : n'inclut pas harness/$base.md"
+done
+# Les skills ont une seule source déployée, atteinte par un lien par skill.
+# Jamais un lien sur le répertoire entier : ~/.claude/skills porte des skills
+# installées hors de ce dépôt et ~/.codex/skills les skills système de
+# l'application, que chezmoi supprimerait en remplaçant le répertoire par un
+# lien - mesuré en bac à sable, sans invite ni sauvegarde (ADR-021).
+for h in dot_claude dot_codex; do
+  [ -e "$h/symlink_skills" ] &&
+    ko "$h/symlink_skills : un lien sur le répertoire entier détruirait l'état vivant"
+done
+for d in dot_config/agent-skills/*/; do
+  slug=$(basename "$d")
+  for h in dot_claude dot_codex; do
+    l="$h/skills/symlink_$slug"
+    if [ ! -f "$l" ]; then
+      ko "$l absent : $h ne verrait pas la skill $slug"
+    elif [ "$(tr -d '\n' < "$l")" != "../../.config/agent-skills/$slug" ]; then
+      ko "$l : cible hors de la source unique de skills"
+    fi
+  done
+done
+# L'inverse : un lien qui ne correspond plus à aucune skill pend dans le
+# répertoire de l'hôte, et rien ne le signalait.
+for h in dot_claude dot_codex; do
+  for l in "$h"/skills/symlink_*; do
+    [ -f "$l" ] || continue
+    slug=$(basename "$l" | sed 's/^symlink_//')
+    [ -d "dot_config/agent-skills/$slug" ] || ko "$l : lien sans skill correspondante"
+  done
+done
+# Le profil pro passe par ~/.claude, seul répertoire dont il partage la source.
+[ "$(tr -d '\n' < dot_claude_pro/symlink_skills)" = "../.claude/skills" ] ||
+  ko "dot_claude_pro/symlink_skills : cible hors de ~/.claude/skills"
+# L'adaptateur Codex renvoie l'agent vers un CONTEXT.md : sans le lien, il
+# demanderait la lecture d'un fichier absent.
+if grep -q 'CONTEXT.md' dot_codex/AGENTS.md.tmpl && [ ! -f dot_codex/symlink_CONTEXT.md ]; then
+  ko "dot_codex : l'adaptateur renvoie vers CONTEXT.md sans symlink_CONTEXT.md"
+fi
+okif "$n sources canoniques sans import, projections et liens de skills cohérents"
 
 head_ "Workflows"
 # Les logs d'un dépôt public sont lisibles par tous, et un fragment déchiffré
@@ -246,7 +311,7 @@ head_ "État vivant préservé"
 # porte-clés et les sockets de l'agent. Un seul attribut détruirait les deux,
 # et aucun contrôle ne le disait.
 n=0
-for d in dot_claude dot_claude_pro private_dot_gnupg; do
+for d in dot_claude dot_claude_pro dot_codex private_dot_gnupg; do
   [ -d "$d" ] || continue
   n=$((n + 1))
   if [ -n "$(find "$d" -name 'exact_*' -print -quit)" ]; then
@@ -255,7 +320,7 @@ for d in dot_claude dot_claude_pro private_dot_gnupg; do
 done
 # La racine elle-même peut être renommée : exact_dot_claude/ est un répertoire
 # distinct, que la boucle ci-dessus ne visite pas.
-for d in exact_dot_claude exact_dot_claude_pro exact_private_dot_gnupg; do
+for d in exact_dot_claude exact_dot_claude_pro exact_dot_codex exact_private_dot_gnupg; do
   [ -e "$d" ] && ko "$d : racine préfixée exact_, chezmoi supprimerait l'état vivant"
 done
 okif "$n racines d'état vivant, aucun attribut exact_"

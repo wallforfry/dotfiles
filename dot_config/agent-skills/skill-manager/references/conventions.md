@@ -1,6 +1,7 @@
 # Skill Conventions
 
-Source of truth for every skill under `dot_claude/skills/`. It separates the Agent Skills standard
+Source of truth for every skill under `dot_config/agent-skills/`. It separates the Agent Skills
+standard
 from this repository's stricter local rules.
 
 ## 1. Progressive disclosure
@@ -61,7 +62,7 @@ the field means.
 Two categories, because the repository has two. Add a third only when a skill genuinely fits
 neither, and update the four places that name them in the same commit: the `case` in
 `scripts/verify.sh`, which is the authority, then this table, the section order in
-[sync-index.md](sync-index.md), and the Conventions list of `dot_claude/skills/README.md`.
+[sync-index.md](sync-index.md), and the Conventions list of `dot_config/agent-skills/README.md`.
 
 ### Description format
 
@@ -79,7 +80,7 @@ Stay under 400 characters: host skill lists truncate long descriptions well befo
 ## 3. Layout
 
 ```text
-dot_claude/skills/<slug>/
+dot_config/agent-skills/<slug>/
   SKILL.md
   references/   optional detailed guidance
   scripts/      optional executable logic, `executable_` prefixed
@@ -155,7 +156,7 @@ skills, then rerun the same prompts.
 
 ## 9. README index
 
-`dot_claude/skills/README.md` is derived from `name`, the folded `description` and
+`dot_config/agent-skills/README.md` is derived from `name`, the folded `description` and
 `metadata.category`. Never edit a row by hand. See [sync-index.md](sync-index.md) for the generation
 rules.
 

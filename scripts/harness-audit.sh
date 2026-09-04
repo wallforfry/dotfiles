@@ -58,10 +58,10 @@ descs=$(awk 'FNR==1{d=0}
              /^description:/{d=1; n+=length($0)+1; next}
              d && /^[^ \t]/{d=0}
              d {n+=length($0)+1}
-             END{print n+0}' dot_claude/skills/*/SKILL.md dot_claude/agents/*.md)
+             END{print n+0}' dot_config/agent-skills/*/SKILL.md dot_claude/agents/*.md)
 mesure "descriptions (routeur des skills)" "$descs"
 ok "$total octets, ~$((total / 4)) jetons sur chaque tâche de ce dépôt"
-echo "  ~/.claude/CONTEXT.md est chiffré : son coût n'est pas mesurable ici"
+echo "  Le CONTEXT.md de chaque hôte est chiffré : son coût n'est pas mesurable ici"
 
 # --- 2. retard de la source de déploiement ------------------------------------
 head_ "Source de déploiement"
@@ -140,8 +140,8 @@ for f in glob.glob(os.path.join(root, '**', '*.jsonl'), recursive=True):
 if not sessions:
     sys.exit('  aucun transcript lu')
 print(f'  {sessions} sessions, {min(days)} au {max(days)}' if days else f'  {sessions} sessions')
-local = sorted(d for d in os.listdir('dot_claude/skills')
-               if os.path.exists(f'dot_claude/skills/{d}/SKILL.md'))
+local = sorted(d for d in os.listdir('dot_config/agent-skills')
+               if os.path.exists(f'dot_config/agent-skills/{d}/SKILL.md'))
 print('  skills de ce dépôt :')
 for name in local:
     print(f'    {skills.get(name, 0):5d}  {name}')
@@ -196,17 +196,22 @@ else
         detected=$((detected + 1))
       fi
     done <<'MUT'
-name d'une skill différent du répertoire|p='dot_claude/skills/adr/SKILL.md';s=open(p).read();open(p,'w').write(s.replace('name: adr','name: adrx',1))
-skill retirée de l'index|import re;p='dot_claude/skills/README.md';s=open(p).read();open(p,'w').write('\n'.join(l for l in s.split('\n') if not re.match(r'^\| `adr`',l)))
-metadata.category hors de {dev, ops}|p='dot_claude/skills/adr/SKILL.md';s=open(p).read();open(p,'w').write(s.replace('category: ops','category: misc').replace('category: dev','category: misc'))
+name d'une skill différent du répertoire|p='dot_config/agent-skills/adr/SKILL.md';s=open(p).read();open(p,'w').write(s.replace('name: adr','name: adrx',1))
+skill retirée de l'index|import re;p='dot_config/agent-skills/README.md';s=open(p).read();open(p,'w').write('\n'.join(l for l in s.split('\n') if not re.match(r'^\| `adr`',l)))
+metadata.category hors de {dev, ops}|p='dot_config/agent-skills/adr/SKILL.md';s=open(p).read();open(p,'w').write(s.replace('category: ops','category: misc').replace('category: dev','category: misc'))
 erreur de syntaxe shell|p='scripts/verify.sh';s=open(p).read();open(p,'w').write(s+'\nif true; then\n')
 template invalide|open('dot_gitconfig.tmpl','a').write('{{ .absent.champ }}\n')
 ADR présente hors index|import glob,shutil;shutil.copy(glob.glob('docs/adr/001-*.md')[0],'docs/adr/099-fantome.md')
 fragment .age en clair|open('age-key.txt.age','w').write('texte en clair\n')
 chezmoi diff introduit en CI|p='.github/workflows/verify.yml';s=open(p).read();open(p,'w').write(s.replace('chezmoi status','chezmoi diff'))
-skill sans ligne d'index|import os;os.makedirs('dot_claude/skills/fantome',exist_ok=True);open('dot_claude/skills/fantome/SKILL.md','w').write('---\nname: fantome\ndescription: Rien. Use when jamais.\nmetadata:\n  category: dev\n---\n# Fantome\n')
-sous-répertoire de skill hors liste|import os;os.makedirs('dot_claude/skills/adr/evals',exist_ok=True);open('dot_claude/skills/adr/evals/x.json','w').write('{}')
+skill sans ligne d'index|import os;os.makedirs('dot_config/agent-skills/fantome',exist_ok=True);open('dot_config/agent-skills/fantome/SKILL.md','w').write('---\nname: fantome\ndescription: Rien. Use when jamais.\nmetadata:\n  category: dev\n---\n# Fantome\n')
+sous-répertoire de skill hors liste|import os;os.makedirs('dot_config/agent-skills/adr/evals',exist_ok=True);open('dot_config/agent-skills/adr/evals/x.json','w').write('{}')
 attribut exact_ sur l'état vivant|open('dot_claude/exact_zzz','w').write('')
+import @ réintroduit dans une source agnostique|open('harness/AGENTS.md','a').write('@SOUL.md\n')
+hôte privé d'une skill|import os;os.remove('dot_codex/skills/symlink_adr')
+lien de skill vers un arbre étranger|open('dot_claude/skills/symlink_adr','w').write('../../.agents/skills/adr\n')
+lien sur le répertoire de skills entier|open('dot_codex/symlink_skills','w').write('../.config/agent-skills\n')
+harness absent de l'adaptateur Codex|p='dot_codex/AGENTS.md.tmpl';s=open(p).read();open(p,'w').write(s.replace('{{ include "harness/USER.md" }}\n',''))
 MUT
     if [ "$detected" -eq "$count" ]; then
       ok "$detected/$count défauts injectés détectés"

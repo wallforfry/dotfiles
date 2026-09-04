@@ -2,12 +2,13 @@
 
 ## Purpose
 
-Rebuild `dot_claude/skills/README.md` from the skills' frontmatter. The README is a projection,
+Rebuild `dot_config/agent-skills/README.md` from the skills' frontmatter. The README is a projection,
 never a second place where a description lives.
 
 ## Procedure
 
-1. List every immediate directory under `dot_claude/skills/` containing a `SKILL.md`, including one
+1. List every immediate directory under `dot_config/agent-skills/` containing a `SKILL.md`,
+   including one
    not yet tracked by git. Report a directory whose `SKILL.md` is missing.
 2. Read `name`, the complete folded `description` and `metadata.category`.
 3. Normalise the folded description's whitespace to single ASCII spaces.
@@ -27,8 +28,9 @@ frontmatter rather than inventing a section for it: the index must not paper ove
 ```markdown
 # Skills
 
-Source of truth: `dot_claude/skills/` in the dotfiles repository, deployed by chezmoi to
-`~/.claude/skills` and shared with `~/.claude_pro/skills` through a symlink. Edit the source, never
+Source of truth: `dot_config/agent-skills/` in the dotfiles repository, deployed by chezmoi to
+`~/.config/agent-skills` and reached by every host - `~/.claude/skills`, `~/.claude_pro/skills`,
+`~/.codex/skills` - through a symlink. Edit the source, never
 the deployed copy.
 
 ## Conventions
@@ -69,7 +71,7 @@ hand when a skill's provenance changes.
 ## Idempotence check
 
 ```bash
-shasum -a 256 dot_claude/skills/README.md > "${TMPDIR:-/tmp}/skills-index.sha256"
+shasum -a 256 dot_config/agent-skills/README.md > "${TMPDIR:-/tmp}/skills-index.sha256"
 ```
 
 Regenerate, then:
