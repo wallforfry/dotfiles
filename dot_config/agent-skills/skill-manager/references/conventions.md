@@ -154,6 +154,12 @@ identical realistic prompts, run at least three times without it, reproduce a mi
 activation. Keep the prompts and the results, add the smallest rule that distinguishes the sibling
 skills, then rerun the same prompts.
 
+The shared regression corpus is `scripts/skill-routing-cases.tsv`. Each local skill has a positive
+and a negative case; ambiguous cases distinguish close triggers. Run
+`sh scripts/validate-skill-routing.sh` after changing a description or the corpus. The script checks
+the corpus contract, coverage and description size deterministically; replaying model activation on
+each host remains a separate behavioural measurement.
+
 ## 9. README index
 
 `dot_config/agent-skills/README.md` is derived from `name`, the folded `description` and

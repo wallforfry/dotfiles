@@ -142,22 +142,30 @@ chezmoi status
 bash scripts/verify.sh
 ```
 
-Syntaxe des scripts, rendu des templates sur les trois combinaisons de profil,
-cohérence des skills et de l'index des ADR, absence de nom sensible en clair,
-chiffrement des fragments, absence d'attribut `exact_` sur les répertoires
-d'état vivant, et sous-répertoires de skill limités à `references/`, `assets/`
-et `scripts/`. Sort en 1 au premier contrôle rouge.
+Syntaxe des scripts, rendu des templates sur trois combinaisons de profil,
+cohérence et routage des skills, tests de télémétrie, index des ADR, noms
+sensibles dans les contenus, chemins, branches et commits, chiffrement des
+fragments et préservation de l'état vivant. Sort en 1 si un contrôle est rouge.
+
+```bash
+sh scripts/validate-skill-routing.sh
+```
+
+Valide isolément le corpus positif, négatif et ambigu, sa couverture de chaque
+skill et la limite locale de 399 caractères par description. `verify.sh` rejoue
+ce contrôle déterministe ; le comportement des modèles se mesure séparément sur
+chaque hôte.
 
 ```bash
 bash ~/dotfiles/scripts/harness-audit.sh
 ```
 
-Le pendant mesuré, jamais joué en CI : coût du contexte toujours chargé, retard
-de la source de déploiement sur `origin/main`, activation réelle de chaque skill
-et subagent, taux de violation des deux règles observables avant et après leur
-introduction, et pouvoir de détection de `verify.sh` par injection de onze
-défauts dans un clone. Sort en 1 si un défaut passe ou si une mesure n'a pas pu
-être faite.
+Le pendant mesuré, jamais joué en CI : coût fixe et amorti du contexte, retard de
+déploiement, événements Claude et Codex normalisés, adhérence observable et
+matrice `promesse -> contrôle -> attente`. Son clone capture le worktree courant ;
+30 mutants doivent être rejetés, deux anti-mutants acceptés et deux promesses
+comportementales restent identifiées comme observations. Les agrégats de
+transcripts sont mis en cache sans chemin ni contenu brut.
 
 `.github/workflows/verify.yml` rejoue ce script sur `push` vers `main`, sur
 `pull_request` vers `main` et à la demande, puis fait un vrai `chezmoi apply`
@@ -267,11 +275,12 @@ copie à synchroniser. Le répertoire est ignoré hors profil `pro`.
 
 ### Récupération web
 
-La skill `web-fetching` décrit une escalade à trois paliers : fetch intégré,
-Firecrawl auto-hébergé, puis CloakBrowser pour l'anti-bot. `harness/AGENTS.md` n'en
-garde que la règle d'usage, qui vaut pour toute tâche. Les deux derniers sont pilotés par des
-scripts de `~/.local/bin`, tous bâtis sur le même principe - **un conteneur nommé,
-réutilisé par toutes les sessions**.
+`harness/AGENTS.md` garde les invariants de confiance, d'escalade et d'usage du
+navigateur. La skill `web-fetching` porte les paliers, leurs défauts connus et
+leur arrêt. La skill `containerized-mcp` porte la discipline commune aux
+serveurs MCP Docker : **un conteneur nommé par configuration, réutilisé par
+toutes les sessions**. Les paliers lourds sont pilotés par des scripts de
+`~/.local/bin`.
 
 | Script | Rôle | Enregistrement MCP |
 |---|---|---|

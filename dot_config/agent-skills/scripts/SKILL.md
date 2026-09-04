@@ -38,9 +38,9 @@ Two kinds of script live in the repository:
    a missing prerequisite of a later step is fatal.
 5. Never write to `/tmp`: it is mounted `noexec` on DSM, so an extracted binary is unusable there.
    Use `mktemp -d "$HOME/.cache/<name>.XXXXXX"` with a `trap 'rm -rf "$tmp"' EXIT`.
-6. Pin every downloaded version in a variable *and* in the header comment block. The header is what
-   changes the rendered content, which is what makes chezmoi re-run the script - a version bumped
-   only in the variable still changes content, but the header is what makes the diff readable.
+6. Pin every downloaded version once, in an authoritative variable. Add a comment only for an
+   external or non-deducible constraint, such as an upstream incompatibility; the variable already
+   changes the rendered content and makes chezmoi re-run the script.
 7. Detect architecture from `uname -m`, map `x86_64`→`amd64` and `aarch64|arm64`→`arm64`, and exit
    cleanly with a warning on anything else rather than downloading a wrong binary.
 8. Verify: `sh -n <file>` (or `bash -n`) for syntax, `chezmoi execute-template < <file>` to inspect a
@@ -72,4 +72,6 @@ Two kinds of script live in the repository:
 - Never assume a package manager, Homebrew, sudo, or GNU coreutils are present.
 - User-facing lines go to stdout for success and stderr for warnings, in French, matching the
   existing emoji-prefixed style.
+- Comments record only external or non-deducible facts. Shebangs, tool directives and documentation
+  required by tooling are outside this rule.
 - Do not rename a script or change its interface without checking all callers.
