@@ -15,10 +15,14 @@
 
 set -uo pipefail
 
-root=$(git rev-parse --show-toplevel) || {
-  echo "❌  hors d'un dépôt git : aucune mesure possible" >&2
+# La racine vient de l'emplacement du script, jamais du répertoire courant :
+# la skill est lancée depuis n'importe quel dépôt, et un rev-parse sur le cwd
+# mesurerait cet autre dépôt.
+root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P) || exit 1
+if ! git -C "$root" rev-parse --show-toplevel >/dev/null 2>&1; then
+  echo "❌  $root hors d'un dépôt git : aucune mesure possible" >&2
   exit 1
-}
+fi
 cd "$root"
 
 fail=0

@@ -27,8 +27,12 @@ what each component protects, never alone.
 ## Usage
 
 ```bash
-bash scripts/harness-audit.sh
+bash ~/dotfiles/scripts/harness-audit.sh
 ```
+
+The script measures the checkout it ships in, whatever the working directory: it resolves its own
+location and never the current repository, so it is run unchanged from a session opened in any
+project. Name the working checkout, not `chezmoi source-path`: that path is the deployment clone.
 
 Environment: `CLAUDE_PROJECTS` for another transcript directory, `HARNESS_RULES_SINCE` for another
 rule-introduction date (default `2026-08-17`, the day the typography and comment rules landed).
@@ -64,6 +68,12 @@ that did not run is reported as not done, never as green.
   before/after split is the only natural experiment available here, and it is confounded.
 - **Adding a mutation that the barrier was never meant to catch** - the barrier's scope is its
   claim. A mutation outside it belongs to a new check in `verify.sh`, added first.
+- **Naming the script by a relative path** - a session runs in some other project far more often
+  than in this checkout, and `bash scripts/harness-audit.sh` then resolves to nothing or to that
+  project's own script. Name the checkout by an absolute path, as `Usage` does.
+- **Running the copy inside the deployment clone** - `chezmoi source-path` is a distinct clone
+  (ADR-001), so the script measures that tree instead: the deployment lag collapses to "single
+  clone", and every count describes whatever commit the clone last pulled.
 - **Running it on a dirty tree** - the clone follows the current branch, so uncommitted work is
   absent from the mutation section and the counts describe the last commit.
 
