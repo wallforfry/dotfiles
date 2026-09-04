@@ -1,10 +1,10 @@
 ---
 name: agent-instructions
 description: >
-  Maintain coding-agent instructions and their discovery paths. Use when editing AGENTS.md,
-  CLAUDE.md, a harness file, an agent rule or an instruction projection. Make sure to use it
-  whenever agent guidance or its deployment changes, even if the request names only one agent or
-  looks like a wording fix.
+  Maintain the always-loaded agent instruction files and their discovery paths. Use when editing
+  AGENTS.md, CLAUDE.md, a harness file or an instruction projection, or when deciding whether a
+  rule belongs in an always-loaded file at all. Make sure to use it whenever always-loaded guidance
+  or its deployment changes, even if the request looks like a wording fix.
 metadata:
   category: dev
 ---
@@ -22,9 +22,14 @@ copy diverges silently, and the agent reading the stale copy is the one that wil
 
 ## Usage
 
-Use this skill for any change to global or project instructions, to an agent rule file, or to the
-configuration that exposes them. For example: "add a rule about X to AGENTS.md", "why is CLAUDE.md
-not picking this up", "move this section into a skill".
+Use this skill for any change to an always-loaded instruction file or to the configuration that
+exposes it. For example: "add a rule about X to AGENTS.md", "why is CLAUDE.md not picking this up",
+"move this section into a skill".
+
+The boundary with `skill-manager`: this skill decides **whether** a rule belongs in an always-loaded
+file, and owns everything under `harness/`, the projections and the adapters. `skill-manager` owns
+the **inside** of a skill - its frontmatter, its body, its references and the derived index. Moving
+a section out of `harness/AGENTS.md` starts here and finishes there.
 
 In this repository the canonical sources are `harness/AGENTS.md` (technical rules),
 `harness/SOUL.md` (voice) and `harness/USER.md` (user preferences); everything else is a
