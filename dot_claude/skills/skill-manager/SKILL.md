@@ -91,4 +91,3 @@ a skill and the derived index. A section moved out of an always-loaded file arri
 - [references/fix.md](references/fix.md) - correction order and regression handling.
 - [references/cross-check.md](references/cross-check.md) - the read-only inter-skill detectors.
 - [references/sync-index.md](references/sync-index.md) - deterministic README generation.
-- [references/evals.md](references/evals.md) - the activation scenario format, and what it proves.

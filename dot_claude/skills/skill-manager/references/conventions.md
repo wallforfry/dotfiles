@@ -9,7 +9,7 @@ A skill exposes three levels of context:
 
 1. frontmatter `name` and `description`, always loaded for discovery;
 2. `SKILL.md`, loaded on activation and kept under 500 lines;
-3. `references/`, `scripts/`, `assets/`, `evals/`, loaded or executed only when needed.
+3. `references/`, `scripts/` and `assets/`, loaded or executed only when needed.
 
 Keep the procedure and the routing in `SKILL.md`. Move detailed variants, long tables, reusable
 commands and fixtures into a resource directory. The same rule governs the repository's instruction
@@ -84,7 +84,6 @@ dot_claude/skills/<slug>/
   references/   optional detailed guidance
   scripts/      optional executable logic, `executable_` prefixed
   assets/       optional output templates
-  evals/        optional activation scenarios
 ```
 
 Create only the directories the skill actually needs. Never add a chezmoi attribute to `SKILL.md` or
@@ -158,7 +157,7 @@ skills, then rerun the same prompts.
 
 `dot_claude/skills/README.md` is derived from `name`, the folded `description` and
 `metadata.category`. Never edit a row by hand. See [sync-index.md](sync-index.md) for the generation
-rules, and [evals.md](evals.md) for the optional scenario files.
+rules.
 
 ## 10. What the barrier already checks
 

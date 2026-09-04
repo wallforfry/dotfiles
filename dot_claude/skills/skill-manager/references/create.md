@@ -8,7 +8,7 @@ Gather before writing:
 - the concrete explicit and implicit triggers;
 - inputs, outputs and hard constraints;
 - the category, `dev` or `ops`;
-- which of `references/`, `scripts/`, `assets/`, `evals/` the skill actually needs.
+- which of `references/`, `scripts/` and `assets/` the skill actually needs.
 
 Ask one question at a time, and only when the answer changes the skill's behaviour. Do not invent a
 domain rule to fill a section.

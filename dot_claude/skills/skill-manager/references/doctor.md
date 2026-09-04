@@ -48,7 +48,7 @@ Doctor is read-only: it reports findings for a later `fix`.
 
 ## Resources and routing
 
-- only needed `references/`, `scripts/`, `assets/`, `evals/` directories exist, and all are tracked;
+- only needed `references/`, `scripts/` and `assets/` directories exist, and all are tracked;
 - same-topic scoped siblings have explicit conditional routing in `SKILL.md`;
 - identical content is not duplicated across two references;
 - no chezmoi attribute on `SKILL.md` or on a reference; `scripts/` executables carry `executable_`;
@@ -60,11 +60,6 @@ Doctor is read-only: it reports findings for a later `fix`.
 Search the `SKILL.md` body for unescaped `$0` to `$9`, including `${1}`, plus `$@` and `$ARGUMENTS`.
 Executable shell containing a match is FAIL and moves to `scripts/`. A literal token in prose is
 escaped once. Do not scan `references/` or `scripts/`: they are not templated.
-
-## Evals
-
-When `evals/trigger-queries.json` exists, apply the schema in [evals.md](evals.md). An absent eval
-file is not a finding.
 
 ## Report format
 
