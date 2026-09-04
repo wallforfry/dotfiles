@@ -2,16 +2,24 @@ copy_untracked() {
   local source=$1 destination=$2 list=$3 path
   while IFS= read -r -d '' path; do
     mkdir -p -- "$destination/$(dirname "$path")" || return
-    cp -p -- "$source/$path" "$destination/$path" || return
+    cp -Pp -- "$source/$path" "$destination/$path" || return
   done < "$list"
 }
 
-probe_capture_failure() {
+probe_capture_contract() {
   local scratch=$1
   mkdir -p "$scratch/probe-source" "$scratch/probe-destination" || return
   printf 'missing-entry\0' > "$scratch/probe-list" || return
-  ! copy_untracked "$scratch/probe-source" "$scratch/probe-destination" "$scratch/probe-list" \
+  if copy_untracked "$scratch/probe-source" "$scratch/probe-destination" "$scratch/probe-list" \
     >/dev/null 2>&1
+  then
+    return 1
+  fi
+  ln -s target "$scratch/probe-source/link" || return
+  printf 'link\0' > "$scratch/probe-list" || return
+  copy_untracked "$scratch/probe-source" "$scratch/probe-destination" "$scratch/probe-list" || return
+  [ -L "$scratch/probe-destination/link" ] &&
+    [ "$(readlink "$scratch/probe-destination/link")" = target ]
 }
 
 capture_worktree() {

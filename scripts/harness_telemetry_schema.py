@@ -85,7 +85,7 @@ def valid_codex_payload(payload):
     if payload_type not in CODEX_PAYLOAD_TYPES:
         return False
     if payload_type == "message":
-        return isinstance(payload.get("role"), str) and valid_blocks(
+        return payload.get("role") in {"assistant", "developer", "user"} and valid_blocks(
             payload.get("content"), {"input_text", "output_text"}
         )
     if payload_type == "agent_message":

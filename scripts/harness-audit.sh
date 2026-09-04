@@ -149,8 +149,8 @@ trap 'rm -rf "$tmp"' EXIT
 mutation_list="$tmp/sensible.txt"
 marker="harness-audit-$RANDOM-$RANDOM"
 printf '%s\n' "$marker" > "$mutation_list"
-if ! probe_capture_failure "$tmp"; then
-  ko "une entrée impossible à copier n'arrête pas la capture"
+if ! probe_capture_contract "$tmp"; then
+  ko "le contrat de copie du worktree n'est pas respecté"
 elif ! awk -F '\t' 'NF != 5 || $1 == "" || $2 == "" || $3 !~ /^(reject|accept|observe)$/ || $4 == "" { exit 1 }' \
   scripts/harness-mutation-cases.tsv
 then

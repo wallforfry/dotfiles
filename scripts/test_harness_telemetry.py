@@ -200,6 +200,10 @@ class HarnessTelemetryTest(unittest.TestCase):
                 "payload": {"type": "message", "role": "assistant", "content": [{"type": "future"}]},
             },
             {
+                "type": "response_item",
+                "payload": {"type": "message", "role": "future", "content": []},
+            },
+            {
                 "type": "event_msg",
                 "payload": {
                     "type": "item_completed",
@@ -208,7 +212,7 @@ class HarnessTelemetryTest(unittest.TestCase):
             },
         ]
         summary = self.summarize("codex", records)
-        self.assertEqual(summary["unknown_records"]["codex"], 2)
+        self.assertEqual(summary["unknown_records"]["codex"], 3)
         self.assertEqual(summary["blocks"], {})
         self.assertEqual(summary["write_tools"], {})
 
