@@ -39,6 +39,10 @@ collide.
 `<slug>` is kebab-case and equals the directory name. `doctor` without a slug audits every
 directory. `fix` without a slug asks which skill should change rather than guessing.
 
+The boundary with `agent-instructions`: that skill owns the always-loaded files - `harness/`, the
+projections, the adapters - and decides whether a rule belongs in one. This skill owns the inside of
+a skill and the derived index. A section moved out of an always-loaded file arrives here.
+
 ## Steps
 
 1. Identify the operation: `create`, `doctor`, `fix`, `cross-check` or `sync-index`.
@@ -87,4 +91,3 @@ directory. `fix` without a slug asks which skill should change rather than guess
 - [references/fix.md](references/fix.md) - correction order and regression handling.
 - [references/cross-check.md](references/cross-check.md) - the read-only inter-skill detectors.
 - [references/sync-index.md](references/sync-index.md) - deterministic README generation.
-- [references/evals.md](references/evals.md) - the activation scenario format, and what it proves.

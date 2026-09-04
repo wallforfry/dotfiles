@@ -2,7 +2,9 @@
 
 - **Statut** : accepté
 - **Date** : 2026-08
-- **Commits** : `332e9f3` (Firecrawl et escalade), `50130b3` (Scrapling et CloakBrowser), `1f5d8c4`
+- **Commits** : `332e9f3` (Firecrawl et escalade), `50130b3` (Scrapling et CloakBrowser), `1f5d8c4`,
+  `fe6b322` (retrait de `stealthy_fetch`), `92c8386` (déplacement des paliers vers la skill
+  `web-fetching`)
 
 ## Contexte
 
@@ -47,9 +49,10 @@ Rien de tout cela n'est réparable depuis ce dépôt.
 
 ## Décision
 
-Trois paliers, décrits dans `harness/AGENTS.md`, avec une règle d'usage : **ne
-jamais démarrer au-dessus du premier, et n'escalader qu'après un échec constaté**,
-pas sur une intuition.
+Trois paliers, avec une règle d'usage : **ne jamais démarrer au-dessus du premier, et
+n'escalader qu'après un échec constaté**, pas sur une intuition. `harness/AGENTS.md` porte
+la règle d'usage, qui vaut pour toute tâche ; la skill `web-fetching` porte les paliers,
+leurs outils et leurs commandes d'arrêt, qui ne concernent qu'une tâche de récupération.
 
 | Palier | Outil | Pour |
 |---|---|---|
@@ -61,7 +64,7 @@ CloakBrowser n'est pas un serveur MCP : c'est un navigateur exposé en CDP, et S
 en est le client, par son paramètre `cdp_url`.
 
 **`stealthy_fetch` ne s'utilise pas**, pour les raisons établies plus haut ; l'interdiction
-est portée par `harness/AGENTS.md` afin qu'aucune session ne recommence le diagnostic. Les
+est portée par la skill `web-fetching` afin qu'aucune session ne recommence le diagnostic. Les
 outils `get`, `fetch`, `screenshot` et de session de Scrapling fonctionnent, et c'est à ce
 titre qu'il reste enregistré - comme client CDP de CloakBrowser.
 

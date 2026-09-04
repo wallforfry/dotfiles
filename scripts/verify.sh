@@ -24,7 +24,10 @@ render() { # render <config> <fichier>
 }
 
 # --- configurations de rendu, une par combinaison à couvrir -------------------
-tmp=$(mktemp -d "${TMPDIR:-/tmp}/verify.XXXXXX")
+# Jamais sous /tmp : monté noexec sur DSM, et la skill scripts l'interdit à
+# tout script du dépôt, y compris à cette barrière.
+mkdir -p "$HOME/.cache"
+tmp=$(mktemp -d "$HOME/.cache/verify.XXXXXX")
 trap 'rm -rf "$tmp"' EXIT
 # La configuration vivante sert de base : execute-template n'a pas de
 # --promptDefaults, et promptChoiceOnce ne peut pas être forcé depuis un flag.
@@ -125,6 +128,15 @@ for d in dot_claude/skills/*/; do
       printf '      README : %s\n      SKILL  : %s\n' "$cellule" "$attendu"
     fi
   fi
+  # Les sous-répertoires optionnels sont une liste fermée : un nom hors liste
+  # est du contenu qu'aucune convention ne décrit, et que rien ne charge.
+  for sub in "$d"*/; do
+    [ -d "$sub" ] || continue
+    case "$(basename "$sub")" in
+      references|assets|scripts) ;;
+      *) ko "$slug : sous-répertoire « $(basename "$sub") » hors de la liste" ;;
+    esac
+  done
   n=$((n + 1))
 done
 listed=$(grep -cE '^\| `[a-z-]+` \|' "$readme")
@@ -227,6 +239,26 @@ for f in $(git ls-files '*.age'); do
   fi
 done
 okif "$n fragments, tous chiffrés"
+
+head_ "État vivant préservé"
+# exact_ fait supprimer par chezmoi tout ce que la source ne porte pas.
+# ~/.claude tient les sessions, les projets et les plugins ; ~/.gnupg le
+# porte-clés et les sockets de l'agent. Un seul attribut détruirait les deux,
+# et aucun contrôle ne le disait.
+n=0
+for d in dot_claude dot_claude_pro private_dot_gnupg; do
+  [ -d "$d" ] || continue
+  n=$((n + 1))
+  if [ -n "$(find "$d" -name 'exact_*' -print -quit)" ]; then
+    ko "$d : attribut exact_ présent, chezmoi supprimerait l'état vivant"
+  fi
+done
+# La racine elle-même peut être renommée : exact_dot_claude/ est un répertoire
+# distinct, que la boucle ci-dessus ne visite pas.
+for d in exact_dot_claude exact_dot_claude_pro exact_private_dot_gnupg; do
+  [ -e "$d" ] && ko "$d : racine préfixée exact_, chezmoi supprimerait l'état vivant"
+done
+okif "$n racines d'état vivant, aucun attribut exact_"
 
 printf '\n'
 if [ "$fail" -eq 0 ]; then

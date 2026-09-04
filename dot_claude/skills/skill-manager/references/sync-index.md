@@ -34,7 +34,7 @@ the deployed copy.
 ## Conventions
 
 - One skill per directory, each with a `SKILL.md`.
-- Optional subdirectories: `references/`, `assets/`, `scripts/`, `evals/`.
+- Optional subdirectories: `references/`, `assets/` and `scripts/`.
 - Skill content is written in English (see the root `AGENTS.md` language rule).
 - Frontmatter carries `metadata.category`, either `dev` or `ops`.
 - The tables below are derived from frontmatter. Never edit a row by hand: run

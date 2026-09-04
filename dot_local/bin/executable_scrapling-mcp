@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Serveur MCP Scrapling, paliers 3 et 4 de l'escalade de récupération web décrite
-# dans harness/AGENTS.md. bash et non sh POSIX : ne tourne jamais au bootstrap.
+# Serveur MCP Scrapling, client CDP du palier 3 de l'escalade de récupération web décrite
+# dans la skill web-fetching. bash et non sh POSIX : ne tourne jamais au bootstrap.
 #
 #   scrapling-mcp           serveur MCP sur stdio (ce que Claude Code lance)
 #   scrapling-mcp --stop    arrête le conteneur

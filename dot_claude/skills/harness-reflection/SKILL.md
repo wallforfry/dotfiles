@@ -64,9 +64,9 @@ a subagent keeps returning a shape the caller cannot use.
   then encodes the premise. Require a trial that could fail.
 - **Encoding a defect we own** - the workaround becomes permanent policy and the defect becomes
   invisible. Fix the code, or open a ticket and reference it from a `TODO`.
-- **Writing the broad instruction first** - every future task pays its context cost. Prefer the
-  narrowest carrier the trial proves: a skill before an always-loaded rule, a barrier check before
-  a prose rule.
+- **Writing the broad instruction first** - prefer the narrowest carrier the trial proves: a
+  barrier check before a prose rule, a skill before an always-loaded rule. The placement policy
+  itself belongs to `agent-instructions`; do not restate it here.
 - **Proposing a rule that only an agent can enforce** - prose is advisory and the next session may
   read past it. When the check is mechanical, its home is `scripts/verify.sh`.
 - **Reflecting inside the failing session** - the context that produced the failure shares the

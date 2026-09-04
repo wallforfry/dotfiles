@@ -44,7 +44,7 @@ be conditioned on `.profile` or on the OS.
 - `dot_claude/{AGENTS,SOUL,USER}.md.tmpl` are one-line projections - `{{ include "harness/…" }}` -
   and `dot_claude/CLAUDE.md` is the Claude adapter that imports them. Never move content into them.
 - `dot_claude/skills/<slug>/SKILL.md` holds the skills. One skill per directory; optional
-  `references/`, `assets/`, `scripts/`, `evals/` subdirectories. Frontmatter carries
+  `references/`, `assets/` and `scripts/` subdirectories. Frontmatter carries
   `metadata.category` (`dev` or `ops`), from which `dot_claude/skills/README.md` is derived.
 - `dot_claude_pro/` contains only `symlink_` entries pointing into `~/.claude`, so the work
   profile shares one source instead of a second copy. It is ignored outside the `pro` profile.
@@ -81,6 +81,10 @@ frontmatter and its README table, the ADR index, sensitive names in the tree and
 messages, and encryption of every `.age` fragment. It reports counts and exits non-zero on the first
 failing check. Run it before every commit.
 
+A green barrier is not correctness. Before committing or pushing a change whose deployed effect
+matters, delegate the reading of `chezmoi diff` to the `dotfiles-reviewer` subagent: it judges what
+the script cannot decide.
+
 What it cannot decide, verify by hand:
 
 - `chezmoi diff` - the deployed effect of the change. Read it in full; the script says nothing about
@@ -90,6 +94,13 @@ What it cannot decide, verify by hand:
 - Templates using `.profile` must be checked against both values, not just the current machine's.
 - Say which OS you exercised. This repository targets macOS, Linux and Synology DSM; DSM notably
   mounts `/tmp` with `noexec`, which is why `scriptTempDir` is set in `.chezmoi.toml.tmpl`.
+
+`bash scripts/harness-audit.sh` is the measurement counterpart, run by hand and never in CI: the
+always-loaded byte total, how far the chezmoi source clone lags `origin/main`, the real activation
+count of every skill and subagent, the violation rate of the two observable rules before and after
+their introduction, and the mutation-detection score of the barrier itself. It exits non-zero when
+an injected defect slips past `verify.sh` or when a measurement could not be made. The
+`harness-audit` skill carries how to read its counts.
 
 `.github/workflows/verify.yml` runs the barrier on Linux and then a real `chezmoi apply` on
 `ubuntu-latest` and `macos-latest` for both profiles, on push to `main`, on pull requests and on
