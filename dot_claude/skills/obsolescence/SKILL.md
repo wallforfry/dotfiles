@@ -2,10 +2,10 @@
 name: obsolescence
 description: >
   Decide whether an obsolete path is deleted or migrated, and refuse speculative compatibility.
-  Use when removing code, a schema, an endpoint, a flag or a migration, when a compatibility shim
-  or a legacy alias is about to be added, or when a rename must keep the old name working. Make
-  sure to use it whenever a change would leave two ways of doing one thing, even if compatibility
-  is never named.
+  Use when removing or rewriting code, a schema, an endpoint, a flag or an applied migration, when
+  a compatibility shim or a legacy alias is about to be added, or when a rename must keep the old
+  name working. Make sure to use it whenever a change would leave two ways of doing one thing, or
+  would rewrite history someone else has already applied, even if compatibility is never named.
 metadata:
   category: dev
 ---
