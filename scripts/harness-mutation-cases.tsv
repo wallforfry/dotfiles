@@ -23,11 +23,12 @@ routing-contract	scripts/verify/routing.sh	reject	scénario négatif absent	p='s
 routing-budget	scripts/verify/routing.sh	reject	description trop longue	p='dot_config/agent-skills/adr/SKILL.md';s=open(p).read();open(p,'w').write(s.replace('description: >','description: >\n  '+('x'*400),1))
 sensitive-input	scripts/verify/sensitive.sh	reject	liste sensible absente	import os;os.remove(os.environ['HARNESS_AUDIT_LIST'])
 sensitive-content	scripts/verify/sensitive.sh	reject	contenu sensible non suivi	import os;open('ordinary.txt','w').write(os.environ['HARNESS_AUDIT_MARKER']+'\n')
+sensitive-read	scripts/verify/sensitive.sh	reject	fichier non suivi illisible	import os;os.symlink('absent-target','ordinary-link')
 sensitive-path	scripts/verify/sensitive.sh	reject	nom de fichier sensible	import os;open(os.environ['HARNESS_AUDIT_MARKER']+'.txt','w').write('safe\n')
 sensitive-branch	scripts/verify/sensitive.sh	reject	nom de branche sensible	import os,subprocess;subprocess.run(['git','switch','-qc',os.environ['HARNESS_AUDIT_MARKER']],check=True)
 sensitive-commit	scripts/verify/sensitive.sh	reject	message de commit sensible	import os,subprocess;subprocess.run(['git','commit','--allow-empty','-qm',os.environ['HARNESS_AUDIT_MARKER']],check=True)
 sensitive-path	scripts/verify/sensitive.sh	accept	nom de fichier ordinaire	open('harness-audit-ordinary-marker.txt','w').write('safe\n')
 sensitive-branch	scripts/verify/sensitive.sh	accept	nom de branche ordinaire	import subprocess;subprocess.run(['git','switch','-qc','harness-audit-ordinary'],check=True)
-telemetry-contract	scripts/verify/telemetry.sh	reject	format vivant non testé	p='scripts/harness_telemetry_events.py';s=open(p).read();open(p,'w').write(s.replace('"FileChange",','"FileChangeBroken",',1))
+telemetry-contract	scripts/verify/telemetry.sh	reject	format vivant non testé	p='scripts/harness_telemetry_schema.py';s=open(p).read();open(p,'w').write(s.replace('"FileChange",','"FileChangeBroken",',1))
 typography	scripts/harness_telemetry.py	observe	adhérence mesurée	:
 comment-policy	scripts/harness_telemetry.py	observe	adhérence mesurée	:

@@ -3,6 +3,8 @@ import json
 import re
 from typing import Optional
 
+from harness_telemetry_schema import recognized_record
+
 
 CODE_EXTENSIONS = (
     ".c", ".cc", ".cpp", ".cs", ".css", ".cts", ".go", ".h", ".hpp", ".html", ".java",
@@ -112,45 +114,6 @@ def normalized_events(source, record):
         yield from claude_events(record)
     else:
         yield from codex_events(record)
-
-
-CLAUDE_RECORD_TYPES = {
-    "assistant", "atis-latch", "artifact-autoreact-ledger", "artifact-comment-monitor",
-    "attachment", "bridge-session", "custom-title", "frame-link", "last-prompt", "mode",
-    "pr-link", "queue-operation", "relocated", "result", "started", "system", "user",
-    "worktree-state",
-}
-CODEX_RECORD_TYPES = {
-    "compacted", "event_msg", "inter_agent_communication_metadata", "response_item", "session_meta",
-    "token_usage_record", "turn_context", "world_state",
-}
-CODEX_PAYLOAD_TYPES = {
-    "agent_message", "custom_tool_call", "custom_tool_call_output", "function_call",
-    "function_call_output", "item_completed", "message", "reasoning", "task_complete",
-    "task_started", "thread_settings_applied", "token_count", None,
-}
-CODEX_ITEM_TYPES = {
-    "AgentMessage", "CollabAgentToolCall", "CommandExecution", "Extension", "FileChange",
-    "ContextCompaction", "McpToolCall", "Reasoning", "SubAgentActivity", "UserMessage",
-}
-
-
-def recognized_record(source, record):
-    record_type = record.get("type")
-    if source == "claude":
-        return record_type in CLAUDE_RECORD_TYPES
-    if record_type not in CODEX_RECORD_TYPES:
-        return False
-    payload = record.get("payload")
-    if not isinstance(payload, dict):
-        return record_type in {"compacted", "inter_agent_communication_metadata", "world_state"}
-    payload_type = payload.get("type")
-    if payload_type not in CODEX_PAYLOAD_TYPES:
-        return False
-    if payload_type != "item_completed":
-        return True
-    item = payload.get("item")
-    return isinstance(item, dict) and item.get("type") in CODEX_ITEM_TYPES
 
 
 def labelled(payload, *keys):

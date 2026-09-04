@@ -65,8 +65,8 @@ du modèle reste une mesure distincte à rejouer sur chaque hôte.
   de format non reconnu doit rendre la mesure incomplète, jamais silencieusement
   verte.
 - Les mutations restent le poste lent, mais rejouer leurs contrôles ciblés ramène
-  sur macOS une matrice étendue à 29 mutants à 11,18 s et l'audit complet à
-  11,92 s ; la version qui rejouait toute la barrière prenait 46,88 s pour 20 mutants.
+  sur macOS une matrice étendue à 30 mutants à 9,81 s et l'audit complet à
+  10,43 s ; la version qui rejouait toute la barrière prenait 46,88 s pour 20 mutants.
 
 ## Alternatives écartées
 

@@ -193,6 +193,25 @@ class HarnessTelemetryTest(unittest.TestCase):
         self.assertEqual(summary["unknown_records"]["codex"], 1)
         self.assertEqual(summary["invalid_records"]["codex"], 1)
 
+    def test_malformed_known_codex_record_is_not_silently_accepted(self):
+        records = [
+            {
+                "type": "response_item",
+                "payload": {"type": "message", "role": "assistant", "content": [{"type": "future"}]},
+            },
+            {
+                "type": "event_msg",
+                "payload": {
+                    "type": "item_completed",
+                    "item": {"type": "CommandExecution", "command": "git commit"},
+                },
+            },
+        ]
+        summary = self.summarize("codex", records)
+        self.assertEqual(summary["unknown_records"]["codex"], 2)
+        self.assertEqual(summary["blocks"], {})
+        self.assertEqual(summary["write_tools"], {})
+
     def test_codex_recognizes_compaction_records_without_inventing_events(self):
         records = [
             {"type": "compacted"},

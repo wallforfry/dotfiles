@@ -26,7 +26,7 @@ from harness_telemetry_events import (
 from harness_telemetry_report import activated_body_cost, print_report, rate
 
 
-CACHE_VERSION = 7
+CACHE_VERSION = 8
 
 
 def empty_summary(source):

@@ -163,7 +163,7 @@ bash ~/dotfiles/scripts/harness-audit.sh
 Le pendant mesuré, jamais joué en CI : coût fixe et amorti du contexte, retard de
 déploiement, événements Claude et Codex normalisés, adhérence observable et
 matrice `promesse -> contrôle -> attente`. Son clone capture le worktree courant ;
-29 mutants doivent être rejetés, deux anti-mutants acceptés et deux promesses
+30 mutants doivent être rejetés, deux anti-mutants acceptés et deux promesses
 comportementales restent identifiées comme observations. Les agrégats de
 transcripts sont mis en cache sans chemin ni contenu brut.
 

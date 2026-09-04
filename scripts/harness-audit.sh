@@ -38,6 +38,7 @@ if ! git -C "$root" rev-parse --show-toplevel >/dev/null 2>&1; then
   exit 1
 fi
 cd "$root"
+source scripts/harness-audit-capture.sh
 
 fail=0
 ok() { printf '  ✅  %s\n' "$1"; }
@@ -148,29 +149,18 @@ trap 'rm -rf "$tmp"' EXIT
 mutation_list="$tmp/sensible.txt"
 marker="harness-audit-$RANDOM-$RANDOM"
 printf '%s\n' "$marker" > "$mutation_list"
-if ! awk -F '\t' 'NF != 5 || $1 == "" || $2 == "" || $3 !~ /^(reject|accept|observe)$/ || $4 == "" { exit 1 }' \
+if ! probe_capture_failure "$tmp"; then
+  ko "une entrée impossible à copier n'arrête pas la capture"
+elif ! awk -F '\t' 'NF != 5 || $1 == "" || $2 == "" || $3 !~ /^(reject|accept|observe)$/ || $4 == "" { exit 1 }' \
   scripts/harness-mutation-cases.tsv
 then
   ko "matrice de promesses invalide"
 elif ! git clone -q --no-hardlinks "$PWD" "$tmp/rep" 2>/dev/null; then
   ko "clone impossible : détection non mesurée"
 else
-  git diff --binary HEAD > "$tmp/worktree.patch"
-  if [ -s "$tmp/worktree.patch" ]; then
-    git -C "$tmp/rep" apply "$tmp/worktree.patch"
-  fi
-  while IFS= read -r -d '' path; do
-    mkdir -p -- "$tmp/rep/$(dirname "$path")"
-    cp -p -- "$path" "$tmp/rep/$path"
-  done < <(git ls-files -z --others --exclude-standard)
-  git -C "$tmp/rep" config user.name harness-audit
-  git -C "$tmp/rep" config user.email harness-audit@invalid
-  git -C "$tmp/rep" config gc.auto 0
-  git -C "$tmp/rep" config maintenance.auto false
-  git -C "$tmp/rep" add -A
-  git -C "$tmp/rep" commit -qm 'test: capture audit baseline' --allow-empty
-  baseline=$(git -C "$tmp/rep" rev-parse HEAD)
-  if ! (cd "$tmp/rep" && SENSIBLE_LIST="$mutation_list" bash scripts/verify.sh >/dev/null 2>&1); then
+  if ! baseline=$(capture_worktree "$PWD" "$tmp/rep" "$tmp"); then
+    ko "capture du worktree interrompue : détection non mesurable"
+  elif ! (cd "$tmp/rep" && SENSIBLE_LIST="$mutation_list" bash scripts/verify.sh >/dev/null 2>&1); then
     ko "le clone est rouge avant toute mutation : détection non mesurable"
   else
     passed=0
@@ -178,15 +168,22 @@ else
     rejected=0
     accepted=0
     observed=0
+    matrix_ready=1
     while IFS="$(printf '\t')" read -r _ control expectation _ _; do
       if [ "$expectation" != observe ]; then
-        [ -f "$tmp/rep/$control" ] || ko "contrôle absent de la matrice : $control"
+        if [ ! -f "$tmp/rep/$control" ]; then
+          ko "contrôle absent de la matrice : $control"
+          matrix_ready=0
+          break
+        fi
         if [ "$control" != scripts/verify.sh ] && ! grep -Fq "  $control" scripts/verify.sh; then
           ko "contrôle absent de l'orchestrateur : $control"
+          matrix_ready=0
+          break
         fi
       fi
     done < scripts/harness-mutation-cases.tsv
-    while IFS="$(printf '\t')" read -r promise control expectation label code; do
+    while [ "$matrix_ready" -eq 1 ] && IFS="$(printf '\t')" read -r promise control expectation label code; do
       [ -z "$promise" ] && continue
       if [ "$expectation" = observe ]; then
         observed=$((observed + 1))
@@ -194,15 +191,19 @@ else
         continue
       fi
       checked=$((checked + 1))
-      printf '%s\n' "$marker" > "$mutation_list"
-      git -C "$tmp/rep" switch -q --detach "$baseline"
-      git -C "$tmp/rep" restore --source="$baseline" --staged --worktree .
-      git -C "$tmp/rep" clean -qfd
+      if ! printf '%s\n' "$marker" > "$mutation_list" ||
+        ! git -C "$tmp/rep" switch -q --detach "$baseline" ||
+        ! git -C "$tmp/rep" restore --source="$baseline" --staged --worktree . ||
+        ! git -C "$tmp/rep" clean -qfd
+      then
+        ko "restauration du clone interrompue : matrice abandonnée"
+        break
+      fi
       if ! (cd "$tmp/rep" && HARNESS_AUDIT_MARKER="$marker" \
         HARNESS_AUDIT_LIST="$mutation_list" python3 -c "$code")
       then
         ko "mutation inapplicable, à réécrire : $label"
-        continue
+        break
       fi
       if run_control "$tmp/rep" "$control"; then
         result=accept
