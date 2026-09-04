@@ -12,7 +12,7 @@ répertoire, relisible par `git log -- docs/adr/` - donnait deux raisons de le l
 ligne sans limite de temps contre la seule passphrase ; et plusieurs fichiers
 portaient des informations d'employeur, publiables ni en clair ni chiffrées.
 
-Le dépôt est aussi le support de `harness/` et de `dot_claude/skills/`, dont
+Le dépôt est aussi le support de `harness/` et de `dot_config/agent-skills/`, dont
 l'intérêt est nul s'ils restent illisibles. La publication est demandée, et ce que
 le dépôt portait de sensible a été inventorié :
 

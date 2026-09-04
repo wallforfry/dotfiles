@@ -18,7 +18,10 @@ stop. Compaction summarises a transcript and keeps its noise; a handoff restates
 state, so the next session starts small and accurate.
 
 `~/.claude/hooks/agent-handoff` triggers this skill automatically once context usage passes the
-threshold, but it is also useful on demand.
+threshold, but it is also useful on demand. That trigger exists on Claude only: Codex has a `Stop`
+event, but a handler goes live only once an operator approves its content hash by hand, so no
+deployment can arm it (ADR-021 of the dotfiles checkout). Elsewhere, invoke the
+skill yourself when the window gets tight.
 
 ## Usage
 
@@ -58,6 +61,8 @@ No options. The output is a single fenced block for the user to paste into a new
   implying it is complete.
 - **Expecting the hook to fire with no known window** - it needs `CLAUDE_CODE_AUTO_COMPACT_WINDOW` or
   `HANDOFF_TOKEN_THRESHOLD`. Invoke the skill manually when neither is set.
+- **Waiting for the hook on another host** - no host but Claude arms it. Waiting there means
+  compacting instead of handing off.
 - **Writing the block in English out of habit** - the section labels above are English because this
   file is; the block itself follows the conversation's language.
 

@@ -25,7 +25,8 @@ where a new file goes from where it must land.
 | `dot_local/bin/` | executables deployed to `~/.local/bin`, `executable_` and extensionless |
 | `private_dot_ssh/` | deployed to `~/.ssh` with restricted permissions |
 | `private_dot_gnupg/` | `gpg-agent.conf` only, deployed to `~/.gnupg` with restricted permissions |
-| `harness/` | agent instructions, agnostic of any single agent - not deployed as such |
+| `harness/` | canonical agent instructions, agnostic of any single agent - not deployed as such |
+| `dot_config/agent-skills/` | the skills, host-agnostic, one symlink per skill per host |
 | `scripts/` | one-shot maintenance scripts, not deployed |
 | `docs/`, `README.md` | documentation, not deployed |
 
@@ -41,16 +42,27 @@ be conditioned on `.profile` or on the OS.
 
 - `harness/AGENTS.md`, `harness/SOUL.md` and `harness/USER.md` are the canonical instruction
   sources: technical rules, agent voice, user preferences respectively. Edit these.
+  They carry no host-specific syntax: the Claude `@file` import belongs to an adapter, never to a
+  canonical source, because no other host expands it.
 - `dot_claude/{AGENTS,SOUL,USER}.md.tmpl` are one-line projections - `{{ include "harness/…" }}` -
-  and `dot_claude/CLAUDE.md` is the Claude adapter that imports them. Never move content into them.
-- `dot_claude/skills/<slug>/SKILL.md` holds the skills. One skill per directory; optional
-  `references/`, `assets/` and `scripts/` subdirectories. Frontmatter carries
-  `metadata.category` (`dev` or `ops`), from which `dot_claude/skills/README.md` is derived.
+  and `dot_claude/CLAUDE.md` is the Claude adapter that imports the three. Never move content into
+  them.
+- `dot_codex/AGENTS.md.tmpl` is the Codex adapter: it inlines the same three sources into
+  `~/.codex/AGENTS.md`, Codex's global instruction file, since Codex expands no import
+  ([ADR-021](docs/adr/021-codex-second-hote.md)).
+- `dot_config/agent-skills/<slug>/SKILL.md` holds the skills, host-agnostic. One skill per
+  directory; optional `references/`, `assets/` and `scripts/` subdirectories. Frontmatter carries
+  `metadata.category` (`dev` or `ops`), from which `dot_config/agent-skills/README.md` is derived.
+  Each host reaches that one tree through **one symlink per skill** -
+  `dot_{claude,codex}/skills/symlink_<slug>`. Never a symlink over the whole directory:
+  `~/.claude/skills` and `~/.codex/skills` hold skills installed outside this repository,
+  which chezmoi would delete along with the directory it replaced.
 - `dot_claude_pro/` contains only `symlink_` entries pointing into `~/.claude`, so the work
   profile shares one source instead of a second copy. It is ignored outside the `pro` profile.
-- **Never add the `exact_` attribute to `dot_claude/` or `private_dot_gnupg/`.** `~/.claude` holds
-  live state - sessions, projects, plugins - and `~/.gnupg` holds the keyring and agent sockets.
-  chezmoi would delete whatever the source does not carry.
+- **Never add the `exact_` attribute to `dot_claude/`, `dot_codex/` or `private_dot_gnupg/`.**
+  `~/.claude` holds live state - sessions, projects, plugins - `~/.codex` holds its databases and
+  `auth.json`, and `~/.gnupg` holds the keyring and agent sockets. chezmoi would delete whatever the
+  source does not carry.
 
 ## Architecture Decisions
 

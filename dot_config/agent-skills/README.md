@@ -1,7 +1,8 @@
 # Skills
 
-Source of truth: `dot_claude/skills/` in the dotfiles repository, deployed by chezmoi to
-`~/.claude/skills` and shared with `~/.claude_pro/skills` through a symlink. Edit the source, never
+Source of truth: `dot_config/agent-skills/` in the dotfiles repository, deployed by chezmoi to
+`~/.config/agent-skills` and reached by every host - `~/.claude/skills`, `~/.claude_pro/skills`,
+`~/.codex/skills` - through a symlink. Edit the source, never
 the deployed copy.
 
 ## Conventions

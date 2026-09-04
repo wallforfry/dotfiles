@@ -6,7 +6,7 @@ description: >
   passing one. Make sure to use it whenever a SKILL.md, a frontmatter field or the skills index is
   edited, even if the request names only a typo.
 compatibility: >
-  The dotfiles repository checkout, since every path is relative to `dot_claude/skills/`, and
+  The dotfiles repository checkout, since every path is relative to `dot_config/agent-skills/`, and
   `bash scripts/verify.sh` for the mechanical part of the audit.
 metadata:
   category: ops
@@ -16,8 +16,10 @@ metadata:
 
 ## Overview
 
-`dot_claude/skills/` is the only skill collection of this repository; chezmoi deploys it to
-`~/.claude/skills` and the `pro` profile shares it through `dot_claude_pro/symlink_skills`. A skill
+`dot_config/agent-skills/` is the only skill collection of this repository; chezmoi deploys it to
+`~/.config/agent-skills`, which every host reaches through one symlink per skill under
+`dot_claude/skills/` and `dot_codex/skills/`. Adding a skill therefore adds two symlink
+entries, which `scripts/verify.sh` requires. A skill
 therefore needs no registration step, and editing a deployed copy is always a mistake.
 
 Five operations: scaffold a skill, audit one or all of them, apply a justified change, report
@@ -56,8 +58,10 @@ a skill and the derived index. A section moved out of an always-loaded file arri
 
 ## Gotchas
 
-- **Editing the deployed copy** - `~/.claude/skills/<slug>/SKILL.md` is a chezmoi destination, and
-  the next `chezmoi apply` silently reverts it. Edit `dot_claude/skills/<slug>/` in the checkout.
+- **Editing the deployed copy** - `~/.config/agent-skills/<slug>/SKILL.md` is a chezmoi destination,
+  and
+  the next `chezmoi apply` silently reverts it. Edit `dot_config/agent-skills/<slug>/` in the
+  checkout.
 - **Adding a chezmoi attribute to a skill file** - `executable_`, `private_` and their siblings are
   interpreted by chezmoi and rename the destination. Skill files carry no attribute; only
   `scripts/` entries may need `executable_`.

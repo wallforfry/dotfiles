@@ -1,2 +1,4 @@
 @AGENTS.md
+@SOUL.md
+@USER.md
 @CONTEXT.md

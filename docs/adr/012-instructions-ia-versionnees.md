@@ -35,15 +35,20 @@ par la fonction `include` de chezmoi, et `dot_claude/CLAUDE.md` l'adaptateur Cla
 qui les importe. `dot_claude_pro/` ne contient que des liens relatifs vers
 `~/.claude`.
 
-Les skills vivent sous `dot_claude/skills/<slug>/SKILL.md`. Ce qui est
-inconditionnel va dans `harness/AGENTS.md`, toujours chargé ; ce qui est une
-procédure conditionnelle va dans une skill, chargée au besoin.
+Les skills vivent sous `dot_claude/skills/<slug>/SKILL.md`. Ce qui est inconditionnel va
+dans `harness/AGENTS.md`, toujours chargé ; ce qui est une procédure conditionnelle va
+dans une skill, chargée au besoin.
+**Amendement** : le chemin des skills n'est plus celui-ci. Elles vivent sous
+`dot_config/agent-skills/<slug>/SKILL.md`, agnostique de l'hôte, et chaque hôte les
+atteint par un lien par skill - voir [ADR-021](021-codex-second-hote.md), qui amende
+aussi la charge des trois sources, passée de la source canonique à l'adaptateur.
 
 ## Conséquences
 
 - Une instruction s'écrit une fois et vaut pour les deux répertoires de
   configuration, sans synchronisation.
-- Ajouter un agent (Codex, Cursor) coûte une projection, pas une copie.
+- Ajouter un agent (Codex, Cursor) coûte une projection, pas une copie. Vérifié à
+  l'ajout de Codex, au prix des corrections d'ADR-021.
 - Deux endroits à ne pas confondre : éditer une projection au lieu de la source
   produit un changement qu'un `chezmoi apply` écrasera. Le rappel est dans
   `AGENTS.md`.

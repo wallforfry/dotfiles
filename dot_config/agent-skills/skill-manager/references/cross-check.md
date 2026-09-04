@@ -1,6 +1,7 @@
 # Cross-Check Skills
 
-`/skill-manager cross-check` analyses `dot_claude/skills/` as a whole and reports what only shows up
+`/skill-manager cross-check` analyses `dot_config/agent-skills/` as a whole and reports what only
+shows up
 between skills. It is **read-only**: it produces a report and stops. Run `doctor` first - a skill
 with a malformed description or no `Constraints` section poisons D1 and D4 with noise.
 
@@ -94,7 +95,7 @@ reference and is skipped entirely.
 ## Report
 
 ```text
-# Cross-Check Report - dot_claude/skills/
+# Cross-Check Report - dot_config/agent-skills/
 
 Analysed: <N> skills | Detectors: D1 D2 D3 D4 D5 D6
 
@@ -118,7 +119,8 @@ Close by asking which findings should be fixed, and by which `fix` operation.
 ## Constraints
 
 - Never modify a file during cross-check; refuse an inline fix and point at `fix <slug>`.
-- Never read outside `dot_claude/skills/` for a detector; if an outside read seems necessary, finish
+- Never read outside `dot_config/agent-skills/` for a detector; if an outside read seems necessary,
+  finish
   the report first and ask.
 - Never report the absence of an activation router as a finding.
 - Never present D1, D2 or D6 similarity scores as proof; they are indicators, and the files decide.

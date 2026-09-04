@@ -244,11 +244,20 @@ les importe. **Éditer `harness/`, jamais les projections.**
 vérification, secrets) ; `CLAUDE.md` s'y réduit à un `@AGENTS.md`. Aucun des
 deux n'est déployé.
 
+`dot_codex/AGENTS.md.tmpl` est l'adaptateur Codex : il inline les trois mêmes
+sources dans `~/.codex/AGENTS.md`, fichier d'instructions globales de Codex, qui
+n'expanse aucun import (ADR-021). Les sources canoniques ne portent donc plus la
+syntaxe `@fichier`, propre à Claude ; c'est l'adaptateur qui charge les trois.
+
 ### Skills
 
-`dot_claude/skills/<slug>/SKILL.md`, une skill par répertoire, déployées dans
-`~/.claude/skills` - voir `dot_claude/skills/README.md` pour l'index et
-l'origine des skills reprises d'un dépôt tiers.
+`dot_config/agent-skills/<slug>/SKILL.md`, une skill par répertoire, déployées
+dans `~/.config/agent-skills` - un arbre unique, agnostique de l'hôte, que
+`~/.claude/skills` et `~/.codex/skills` atteignent par un lien par skill, jamais par un
+lien sur le répertoire : ces deux répertoires portent aussi des skills installées hors de
+ce dépôt, qu'un lien sur le répertoire supprimerait (ADR-021). Voir
+`dot_config/agent-skills/README.md` pour l'index et l'origine des skills
+reprises d'un dépôt tiers.
 
 ### Profil pro
 

@@ -1,10 +1,8 @@
 # Global AI Instructions
 
-Deployed to every agent's user scope. Voice and values live in `@SOUL.md`, user preferences in
-`@USER.md`; this file holds only technical rules that apply to every project.
-
-@SOUL.md
-@USER.md
+Deployed to every agent's user scope. Voice and values live in `SOUL.md`, user preferences in
+`USER.md`; this file holds only technical rules that apply to every project. Loading all three is
+the host adapter's job, because no two hosts discover them the same way.
 
 ## Critical Analysis (ALWAYS)
 

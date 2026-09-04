@@ -17,14 +17,17 @@ domain rule to fill a section.
 
 1. Read `conventions.md` completely.
 2. Normalise the slug and check it against the `name` constraint.
-3. Confirm `dot_claude/skills/<slug>/` does not exist. Never overwrite it.
+3. Confirm `dot_config/agent-skills/<slug>/` does not exist. Never overwrite it.
 4. Create the directory and only the resource subdirectories the inputs established.
 5. Write `SKILL.md` from the template below.
 6. Add `license`, `compatibility` or `allowed-tools` only when there is a real value to put in them.
 7. Put executable shell with positional placeholders in `scripts/`, prefixed `executable_`.
 8. Route scoped sibling references from `## Steps` when behaviour differs.
-9. Run `sync-index`, then `bash scripts/verify.sh`, then `doctor <slug>`.
-10. Read `chezmoi diff` for the new files: it is the only proof of where they land.
+9. Add the host links, one per host, each holding `../../.config/agent-skills/<slug>`:
+   `dot_claude/skills/symlink_<slug>` and `dot_codex/skills/symlink_<slug>`. Without them the
+   skill exists and no agent sees it. On a rename or a deletion, move or remove both.
+10. Run `sync-index`, then `bash scripts/verify.sh`, then `doctor <slug>`.
+11. Read `chezmoi diff` for the new files: it is the only proof of where they land.
 
 ## Minimal template
 

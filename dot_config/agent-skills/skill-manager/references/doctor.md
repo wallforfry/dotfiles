@@ -2,7 +2,7 @@
 
 ## Scope
 
-- `/skill-manager doctor` audits every directory under `dot_claude/skills/`.
+- `/skill-manager doctor` audits every directory under `dot_config/agent-skills/`.
 - `/skill-manager doctor <slug>` audits one skill.
 - `README.md` is not a skill directory.
 

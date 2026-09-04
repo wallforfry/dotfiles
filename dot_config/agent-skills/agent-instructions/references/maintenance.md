@@ -10,10 +10,12 @@
 | Projection | `dot_claude/{AGENTS,SOUL,USER}.md.tmpl` | one line each: `{{ include "harness/..." }}` |
 | Adapter | `dot_claude/CLAUDE.md` | Claude entry point, imports the three projections |
 | Encrypted | `dot_claude/encrypted_private_CONTEXT.md.age` | named contexts, `pro` profile only |
+| Adapter | `dot_codex/AGENTS.md.tmpl` | Codex entry point, inlines the three sources |
 | Projection | `dot_claude_pro/symlink_*` | the `pro` profile pointing at `~/.claude` |
+| Projection | `dot_{claude,codex}/skills/symlink_<slug>` | one link per skill, per host |
 | Repository | `AGENTS.md` at the root | rules specific to this repository |
 | Adapter | `CLAUDE.md` at the root | one line pointing at `AGENTS.md` |
-| Conditional | `dot_claude/skills/<slug>/SKILL.md` | procedures loaded on demand |
+| Conditional | `dot_config/agent-skills/<slug>/SKILL.md` | procedures loaded on demand |
 
 `harness/` is listed in `.chezmoiignore`: it is a source read by templates, never deployed as such.
 The three canonical files are the ones an agent loads on every task, in every project - which is
@@ -42,7 +44,7 @@ same commit:
 - the projections: `dot_claude/*.md.tmpl`, and `dot_claude_pro/symlink_*` for the `pro` profile;
 - the adapters: `dot_claude/CLAUDE.md`, the root `CLAUDE.md`;
 - `.chezmoiignore`, when a new source must stay undeployed, or a fragment is `pro`-only;
-- the indexes: `dot_claude/skills/README.md`, `docs/adr/README.md`;
+- the indexes: `dot_config/agent-skills/README.md`, `docs/adr/README.md`;
 - the barrier: `scripts/verify.sh`, which must cover the new shape as well as the old;
 - the documentation: `README.md`, `docs/`, and the ADR that records the decision if one does.
 
