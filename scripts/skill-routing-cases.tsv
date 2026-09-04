@@ -1,0 +1,32 @@
+id	kind	expected	excluded	prompt
+adr-positive	positive	adr	-	Record why this project will use events instead of direct calls.
+agent-instructions-positive	positive	agent-instructions	-	Move this conditional rule out of the global AGENTS.md file.
+containerized-mcp-positive	positive	containerized-mcp	-	Register this Docker image as an MCP server without leaking a container per session.
+do-nothing-script-positive	positive	do-nothing-script	-	Turn this partly manual release checklist into an operator-driven script.
+handoff-positive	positive	handoff	-	The context window is nearly full; prepare a fresh session to continue the work.
+harness-audit-positive	positive	harness-audit	-	Measure the harness token cost and real skill activation counts.
+harness-reflection-positive	positive	harness-reflection	-	The same agent failure happened again after the previous recovery; make the harness learn from it.
+merge-verdict-positive	positive	merge-verdict	-	Review this open pull request and decide whether it is safe to merge.
+neovim-positive	positive	neovim	-	Disable this LazyVim plugin and update its keymaps.
+obsolescence-positive	positive	obsolescence	-	Remove this endpoint and decide whether its legacy alias must survive.
+scripts-positive	positive	scripts	-	Add portable error handling to this executable shell helper.
+skill-manager-positive	positive	skill-manager	-	Fix this skill description and rebuild the skills index.
+web-fetching-positive	positive	web-fetching	-	Fetch these twenty pages and return their rendered bodies.
+adr-negative	negative	-	adr	Implement the already recorded architecture decision without changing its rationale.
+agent-instructions-negative	negative	-	agent-instructions	Correct a typo in the application README.
+containerized-mcp-negative	negative	-	containerized-mcp	Run an ordinary one-shot Docker build container.
+do-nothing-script-negative	negative	-	do-nothing-script	Automate this deterministic formatting command with no operator steps.
+handoff-negative	negative	-	handoff	Summarize the task that has already finished.
+harness-audit-negative	negative	-	harness-audit	Give an opinion about whether this prompt feels concise.
+harness-reflection-negative	negative	-	harness-reflection	Diagnose this failure that has occurred only once.
+merge-verdict-negative	negative	-	merge-verdict	Review my uncommitted local diff without making a merge decision.
+neovim-negative	negative	-	neovim	Change the Visual Studio Code theme settings.
+obsolescence-negative	negative	-	obsolescence	Add a brand-new endpoint with no predecessor or compatibility path.
+scripts-negative	negative	-	scripts	Edit this TypeScript utility function.
+skill-manager-negative	negative	-	skill-manager	Use the existing PDF skill to inspect a document without changing the skill.
+web-fetching-negative	negative	-	web-fetching	Fill and submit the logged-in form already open in the browser.
+fetch-mcp-docs-ambiguous	ambiguous	web-fetching	containerized-mcp	Fetch the Docker MCP server documentation page; do not configure the server.
+register-from-pasted-docs-ambiguous	ambiguous	containerized-mcp	web-fetching	Using the documentation pasted below, register this containerized MCP server locally.
+global-rule-ambiguous	ambiguous	agent-instructions	skill-manager	Shorten the always-loaded AGENTS.md rule without editing any skill.
+skill-rule-ambiguous	ambiguous	skill-manager	agent-instructions	Shorten this skill frontmatter description without changing global instructions.
+interactive-page-ambiguous	ambiguous	-	web-fetching	Click the button in the authenticated browser tab; no page retrieval is needed.

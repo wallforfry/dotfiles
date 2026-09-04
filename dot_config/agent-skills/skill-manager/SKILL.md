@@ -52,8 +52,9 @@ a skill and the derived index. A section moved out of an always-loaded file arri
 3. Read the operation's own reference below and follow it exactly.
 4. Run `bash scripts/verify.sh` and treat its Skills section as the mechanical floor: a red barrier
    is a FAIL no judgement overrides.
-5. For `cross-check`, present the report and stop. Every write goes through a later `fix`.
-6. After `create`, `fix`, a rename or a deletion, run `sync-index` and require that a second run
+5. After a routing description or corpus change, run `sh scripts/validate-skill-routing.sh`.
+6. For `cross-check`, present the report and stop. Every write goes through a later `fix`.
+7. After `create`, `fix`, a rename or a deletion, run `sync-index` and require that a second run
    changes no byte.
 
 ## Gotchas
@@ -84,6 +85,8 @@ a skill and the derived index. A section moved out of an always-loaded file arri
 - Never modify more than one skill in one `fix` operation.
 - Never claim an audit green while `scripts/verify.sh` is red.
 - Never add an activation router without repeated behavioural evidence.
+- Keep routing cases in `scripts/skill-routing-cases.tsv`; do not duplicate expected activation in
+  a second router.
 - Write every skill and reference in English, per the repository's language rule.
 
 ## References

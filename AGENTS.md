@@ -40,38 +40,21 @@ be conditioned on `.profile` or on the OS.
 
 ## Agent Configuration
 
-- `harness/AGENTS.md`, `harness/SOUL.md` and `harness/USER.md` are the canonical instruction
-  sources: technical rules, agent voice, user preferences respectively. Edit these.
-  They carry no host-specific syntax: the Claude `@file` import belongs to an adapter, never to a
-  canonical source, because no other host expands it.
-- `dot_claude/{AGENTS,SOUL,USER}.md.tmpl` are one-line projections - `{{ include "harness/…" }}` -
-  and `dot_claude/CLAUDE.md` is the Claude adapter that imports the three. Never move content into
-  them.
-- `dot_codex/AGENTS.md.tmpl` is the Codex adapter: it inlines the same three sources into
-  `~/.codex/AGENTS.md`, Codex's global instruction file, since Codex expands no import
-  ([ADR-021](docs/adr/021-codex-second-hote.md)).
-- `dot_config/agent-skills/<slug>/SKILL.md` holds the skills, host-agnostic. One skill per
-  directory; optional `references/`, `assets/` and `scripts/` subdirectories. Frontmatter carries
-  `metadata.category` (`dev` or `ops`), from which `dot_config/agent-skills/README.md` is derived.
-  Each host reaches that one tree through **one symlink per skill** -
-  `dot_{claude,codex}/skills/symlink_<slug>`. Never a symlink over the whole directory:
-  `~/.claude/skills` and `~/.codex/skills` hold skills installed outside this repository,
-  which chezmoi would delete along with the directory it replaced.
-- `dot_claude_pro/` contains only `symlink_` entries pointing into `~/.claude`, so the work
-  profile shares one source instead of a second copy. It is ignored outside the `pro` profile.
-- **Never add the `exact_` attribute to `dot_claude/`, `dot_codex/` or `private_dot_gnupg/`.**
-  `~/.claude` holds live state - sessions, projects, plugins - `~/.codex` holds its databases and
-  `auth.json`, and `~/.gnupg` holds the keyring and agent sockets. chezmoi would delete whatever the
-  source does not carry.
+- Use `agent-instructions` for `harness/`, adapters, projections and placement decisions; use
+  `skill-manager` for anything under `dot_config/agent-skills/`. Their references are the complete
+  maintenance map and conventions.
+- The canonical instruction sources are `harness/{AGENTS,SOUL,USER}.md`; adapters and projections
+  carry host syntax only. Skills have one host-agnostic source and one symlink per host, never a
+  symlink over an entire host skill directory, which also contains externally managed state.
+- **Never add `exact_` to `dot_claude/`, `dot_codex/` or `private_dot_gnupg/`:** their destinations
+  contain live state that chezmoi would delete.
 
 ## Architecture Decisions
 
-- `docs/adr/` records the structural decisions of this repository, indexed in `docs/adr/README.md`.
-  Only decisions still in force are recorded.
-- Never contradict an ADR silently. Either follow it, or state the conflict, then deliver what was
-  asked along with the ADR that would need superseding.
-- Routine changes - adding a tool to the install script, moving a pinned version, editing a skill -
-  need no ADR. `docs/adr/README.md` carries the test, and the `adr` skill the procedure.
+- `docs/adr/` records decisions still in force. Never contradict one silently: follow it, or expose
+  the conflict and the ADR to supersede.
+- `docs/adr/README.md` decides when a record is needed; the `adr` skill owns the procedure. Routine
+  tool, pinned-version and skill edits need none.
 
 ## Language
 
@@ -89,9 +72,9 @@ be conditioned on `.profile` or on the OS.
 Verify locally before delivering: CI repeats the same barrier, it does not replace it, and it only
 reports once the change is pushed. **`bash scripts/verify.sh` is the
 mechanical barrier**: shell syntax and template rendering across three profile combinations, skill
-frontmatter and its README table, the ADR index, sensitive names in the tree and in unpushed commit
-messages, and encryption of every `.age` fragment. It reports counts and exits non-zero on the first
-failing check. Run it before every commit.
+frontmatter and routing, telemetry, the ADR index, sensitive names in contents and published names,
+and encryption of every `.age` fragment. It reports counts and exits non-zero when a check fails.
+Run it before every commit.
 
 A green barrier is not correctness. Before committing or pushing a change whose deployed effect
 matters, delegate the reading of `chezmoi diff` to the `dotfiles-reviewer` subagent: it judges what
@@ -108,10 +91,10 @@ What it cannot decide, verify by hand:
   mounts `/tmp` with `noexec`, which is why `scriptTempDir` is set in `.chezmoi.toml.tmpl`.
 
 `bash ~/dotfiles/scripts/harness-audit.sh` is the measurement counterpart, run by hand and never in
-CI: the always-loaded byte total, how far the chezmoi source clone lags `origin/main`, the real
-activation count of every skill and subagent, the violation rate of the two observable rules before
-and after their introduction, and the mutation-detection score of the barrier itself. It exits
-non-zero when an injected defect slips past `verify.sh` or when a measurement could not be made. The
+CI: the always-loaded byte total, how far the chezmoi source clone lags `origin/main`, the real activation
+count of every observable skill and subagent, the violation rate of the two observable rules before
+and after their introduction, and a promise-to-control matrix with mutants and anti-mutants. It
+exits non-zero when `verify.sh` violates an expectation or a measurement could not be made. The
 `harness-audit` skill carries how to read its counts.
 
 `.github/workflows/verify.yml` runs the barrier on Linux and then a real `chezmoi apply` on

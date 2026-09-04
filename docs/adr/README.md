@@ -120,3 +120,4 @@ cas la citation est explicite.
 | [019](019-poste-graphique-et-apps-macos.md) | Applications macOS derrière une donnée `gui`, posées dans `~/Applications` | 2026-09 |
 | [020](020-verification-en-ci.md) | Barrière rejouée en CI, clé `age` en secret | 2026-09 |
 | [021](021-codex-second-hote.md) | Codex second hôte, skills hors de `dot_claude/` | 2026-09 |
+| [022](022-telemetrie-harness-multi-hote.md) | Télémétrie du harness multi-hôte | 2026-09 |

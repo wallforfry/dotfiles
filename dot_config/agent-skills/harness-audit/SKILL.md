@@ -1,14 +1,12 @@
 ---
 name: harness-audit
 description: >
-  Re-measure the harness: context cost, deployment lag, real skill and subagent activation,
-  adherence to the two observable rules, and what the verification barrier actually detects.
-  Use when asked whether a rule, a skill or a subagent earns its place, before adding or removing
-  one, or when an audit needs refreshing. Make sure to use it whenever a claim about the harness
-  needs a count rather than an opinion, even if measurement is never named.
+  Measure harness cost, deployment lag, activation, adherence, and mutation detection. Use when
+  auditing whether a rule, skill or subagent earns its place, or before adding or removing one.
+  Make sure to use it whenever a harness claim needs a count, even if measurement is never named.
 compatibility: >
-  The dotfiles repository checkout, `python3`, and the agent transcripts under
-  `~/.claude/projects` (override with `CLAUDE_PROJECTS`).
+  The dotfiles checkout, `python3`, and Claude or Codex JSONL transcripts. Override their roots with
+  `CLAUDE_PROJECTS` and `CODEX_SESSIONS`.
 metadata:
   category: ops
 ---
@@ -17,12 +15,10 @@ metadata:
 
 ## Overview
 
-The harness states rules; this skill measures whether they act. `scripts/harness-audit.sh` produces
-five counts, and the counts are the finding: an always-loaded byte total, how far the chezmoi source
-clone lags `origin/main`, an activation count per skill, a violation rate before and after a rule's
-introduction date, and a mutation-detection score for `scripts/verify.sh`. Frequency of use is
-not usefulness: a rule activated once may guard an irreversible loss, so read the counts against
-what each component protects, never alone.
+The harness states rules; this skill measures whether they act. `scripts/harness-audit.sh` reports
+fixed and amortized context cost, deployment lag, host-normalized activation and adherence, then a
+promise-to-control matrix for `scripts/verify.sh`. Frequency of use is not usefulness: a rule
+activated once may guard an irreversible loss, so read counts against what each component protects.
 
 ## Usage
 
@@ -34,16 +30,17 @@ The script measures the checkout it ships in, whatever the working directory: it
 location and never the current repository, so it is run unchanged from a session opened in any
 project. Name the working checkout, not `chezmoi source-path`: that path is the deployment clone.
 
-Environment: `CLAUDE_PROJECTS` for another transcript directory, `HARNESS_RULES_SINCE` for another
-rule-introduction date (default `2026-08-17`, the day the typography and comment rules landed).
+Environment: `CLAUDE_PROJECTS` and `CODEX_SESSIONS` select transcript roots;
+`HARNESS_RULES_SINCE` selects the rule-introduction date. Aggregates are cached under
+`~/.cache/harness-audit`; neither paths nor transcript content are stored.
 
 Exit 1 means a mutation slipped past the barrier, or a measurement could not be made. A measurement
 that did not run is reported as not done, never as green.
 
 ## Steps
 
-1. Run the script and read the five sections. It clones the repository into `$HOME/.cache` and never
-   mutates the working tree.
+1. Run the script and read the five measurements. It copies the current tracked and untracked state
+   into a clone under `$HOME/.cache` and never mutates the working tree.
 2. Compare the always-loaded total to the previous run. A section that grew must be justified by a
    rule that changes behaviour on tasks unrelated to its subject; otherwise it belongs in a skill,
    and `agent-instructions` owns that move.
@@ -54,9 +51,10 @@ that did not run is reported as not done, never as green.
    measured on the sessions in this repository, and a skill created days ago is measured on days.
 5. Read the adherence rates as correlational only. The model and the host prompt changed over the
    same period, so the split proves an association, never a cause.
-6. Treat a missed mutation as a barrier regression: fix `scripts/verify.sh` first, then re-run.
-7. To measure a rule the script does not cover, add a mutation to the `MUT` block rather than
-   asserting the rule works. A rule with no mutation is an unmeasured rule.
+6. Treat a mutant accepted or an anti-mutant rejected as a barrier regression: fix `verify.sh`, then
+   re-run.
+7. Map every promise to a rejecting mutant, an accepting anti-mutant, or an explicit observation.
+   A promise absent from the matrix is unmeasured.
 
 ## Gotchas
 
@@ -74,13 +72,16 @@ that did not run is reported as not done, never as green.
 - **Running the copy inside the deployment clone** - `chezmoi source-path` is a distinct clone
   (ADR-001), so the script measures that tree instead: the deployment lag collapses to "single
   clone", and every count describes whatever commit the clone last pulled.
-- **Running it on a dirty tree** - the clone follows the current branch, so uncommitted work is
-  absent from the mutation section and the counts describe the last commit.
+- **Dropping a dirty tree from the capture** - the audit validates the current tracked and untracked
+  state. Any failed patch or copy makes the measurement unavailable instead of falling back to HEAD.
+- **Treating a missing host signal as zero** - Codex transcripts expose no explicit skill event.
+  Report activation as unknown for that host instead of inventing zero activations.
 
 ## Constraints
 
 - Never print or paste a transcript or project path into a file, a log or a commit message.
 - Never mutate the working tree; every mutation happens in the clone under `$HOME/.cache`.
 - Never report a measurement that did not run as passing.
+- Never store raw transcript content or paths in the cache; persist aggregate counters and hashes.
 - Never claim a rule works from its wording; cite the count, or say the rule is unmeasured.
 - Never remove a component on an activation count alone, without naming what it protects.
