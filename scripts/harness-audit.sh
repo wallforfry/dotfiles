@@ -201,21 +201,11 @@ else
   else
     detected=0
     count=0
-    # Sur le fd 3 : sur stdin, git, python3 et verify.sh consomment le heredoc
-    # et sautent des mutations, ce qui rendait le compte non reproductible.
-    while IFS='|' read -r label code <&3; do
-      [ -z "$label" ] && continue
-      count=$((count + 1))
-      # Une mutation qui ne s'applique plus - chaîne cherchée disparue - serait
-      # rapportée « non détectée », donc attribuée à la barrière.
-      if ! (cd "$tmp/rep" && git checkout -q -- . && git clean -qfd && python3 -c "$code"); then
-        ko "mutation inapplicable, à réécrire : $label"
-      elif (cd "$tmp/rep" && bash scripts/verify.sh >/dev/null 2>&1); then
-        ko "mutation non détectée : $label"
-      else
-        detected=$((detected + 1))
-      fi
-    done 3<<'MUT'
+    # La liste passe par un fichier, jamais par stdin : les commandes de la
+    # boucle - git, python3, verify.sh - y lisent aussi, et une mutation
+    # avalée serait rapportée comme un compte plus court, donc comme une
+    # barrière plus faible. Le compte attendu est relu du même fichier.
+    cat >"$tmp/mutations" <<'MUT'
 name d'une skill différent du répertoire|p='dot_config/agent-skills/adr/SKILL.md';s=open(p).read();open(p,'w').write(s.replace('name: adr','name: adrx',1))
 skill retirée de l'index|import re;p='dot_config/agent-skills/README.md';s=open(p).read();open(p,'w').write('\n'.join(l for l in s.split('\n') if not re.match(r'^\| `adr`',l)))
 metadata.category hors de {dev, ops}|p='dot_config/agent-skills/adr/SKILL.md';s=open(p).read();open(p,'w').write(s.replace('category: ops','category: misc').replace('category: dev','category: misc'))
@@ -233,6 +223,23 @@ lien de skill vers un arbre étranger|open('dot_claude/skills/symlink_adr','w').
 lien sur le répertoire de skills entier|open('dot_codex/symlink_skills','w').write('../.config/agent-skills\n')
 harness absent de l'adaptateur Codex|p='dot_codex/AGENTS.md.tmpl';s=open(p).read();open(p,'w').write(s.replace('{{ include "harness/USER.md" }}\n',''))
 MUT
+    attendu=$(grep -c '|' "$tmp/mutations")
+    while IFS='|' read -r label code; do
+      [ -z "$label" ] && continue
+      count=$((count + 1))
+      # Une mutation qui ne s'applique plus - chaîne cherchée disparue - serait
+      # rapportée « non détectée », donc attribuée à la barrière.
+      if ! (cd "$tmp/rep" && git checkout -q -- . && git clean -qfd && python3 -c "$code"); then
+        ko "mutation inapplicable, à réécrire : $label"
+      elif (cd "$tmp/rep" && bash scripts/verify.sh >/dev/null 2>&1); then
+        ko "mutation non détectée : $label"
+      else
+        detected=$((detected + 1))
+      fi
+    done <"$tmp/mutations"
+    if [ "$count" -ne "$attendu" ]; then
+      ko "$count mutations lues sur $attendu : liste tronquée, détection non mesurée"
+    fi
     if [ "$detected" -eq "$count" ]; then
       ok "$detected/$count défauts injectés détectés"
     else
