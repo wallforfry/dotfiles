@@ -149,7 +149,7 @@ d'état vivant, et sous-répertoires de skill limités à `references/`, `assets
 et `scripts/`. Sort en 1 au premier contrôle rouge.
 
 ```bash
-bash scripts/harness-audit.sh
+bash ~/dotfiles/scripts/harness-audit.sh
 ```
 
 Le pendant mesuré, jamais joué en CI : coût du contexte toujours chargé, retard

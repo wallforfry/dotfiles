@@ -107,11 +107,11 @@ What it cannot decide, verify by hand:
 - Say which OS you exercised. This repository targets macOS, Linux and Synology DSM; DSM notably
   mounts `/tmp` with `noexec`, which is why `scriptTempDir` is set in `.chezmoi.toml.tmpl`.
 
-`bash scripts/harness-audit.sh` is the measurement counterpart, run by hand and never in CI: the
-always-loaded byte total, how far the chezmoi source clone lags `origin/main`, the real activation
-count of every skill and subagent, the violation rate of the two observable rules before and after
-their introduction, and the mutation-detection score of the barrier itself. It exits non-zero when
-an injected defect slips past `verify.sh` or when a measurement could not be made. The
+`bash ~/dotfiles/scripts/harness-audit.sh` is the measurement counterpart, run by hand and never in
+CI: the always-loaded byte total, how far the chezmoi source clone lags `origin/main`, the real
+activation count of every skill and subagent, the violation rate of the two observable rules before
+and after their introduction, and the mutation-detection score of the barrier itself. It exits
+non-zero when an injected defect slips past `verify.sh` or when a measurement could not be made. The
 `harness-audit` skill carries how to read its counts.
 
 `.github/workflows/verify.yml` runs the barrier on Linux and then a real `chezmoi apply` on
