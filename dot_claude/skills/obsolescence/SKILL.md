@@ -54,8 +54,9 @@ deprecated-but-kept signature.
 - **Assuming the old shape has users** - the assumption is cheap to state and expensive to keep.
   Check the callers, the published contract and the recorded answer from step 1 before paying for a
   migration nobody needs.
-- **A rename that keeps the old name working** - two names for one thing means the next reader picks
-  whichever they find first, and both have to be maintained until someone proves the old one is dead.
+- **A rename that keeps the old name working** - two names for one thing means the next reader
+  picks whichever they find first, and both have to be maintained until someone proves the old one
+  is dead.
 - **Consolidating a migration baseline inside a feature branch** - the reset it requires lands on
   everyone else's development database as a surprise. It is its own coordinated change.
 - **Trading a correctness property for a smaller diff** - dropping a constraint or a transaction to

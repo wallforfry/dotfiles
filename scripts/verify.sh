@@ -134,7 +134,7 @@ for d in dot_claude/skills/*/; do
     [ -d "$sub" ] || continue
     case "$(basename "$sub")" in
       references|assets|scripts) ;;
-      *) ko "$slug : sous-répertoire « $(basename "$sub") » hors de {references, assets, scripts}" ;;
+      *) ko "$slug : sous-répertoire « $(basename "$sub") » hors de la liste" ;;
     esac
   done
   n=$((n + 1))

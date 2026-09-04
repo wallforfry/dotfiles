@@ -3,7 +3,8 @@
 - **Statut** : accepté
 - **Date** : 2026-08
 - **Commits** : `332e9f3` (Firecrawl et escalade), `50130b3` (Scrapling et CloakBrowser), `1f5d8c4`,
-  `fe6b322` (retrait de `stealthy_fetch`), et le déplacement des paliers vers la skill `web-fetching`
+  `fe6b322` (retrait de `stealthy_fetch`), `92c8386` (déplacement des paliers vers la skill
+  `web-fetching`)
 
 ## Contexte
 

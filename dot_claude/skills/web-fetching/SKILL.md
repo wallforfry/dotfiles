@@ -5,7 +5,8 @@ description: >
   what the retrieval started. Use when a fetch returns a shell instead of content, when a page is
   behind an anti-bot protection, or when a crawl or batch is needed. Make sure to use it whenever
   a heavier retrieval tool is about to be started, even if no tier is named.
-compatibility: Requires `docker`, plus `firecrawl-mcp`, `scrapling-mcp` and `cloak` from `~/.local/bin`.
+compatibility: >
+  Requires `docker`, plus `firecrawl-mcp`, `scrapling-mcp` and `cloak` from `~/.local/bin`.
 metadata:
   category: ops
 ---

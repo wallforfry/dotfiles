@@ -20,8 +20,9 @@ metadata:
 The harness states rules; this skill measures whether they act. `scripts/harness-audit.sh` produces
 five counts, and the counts are the finding: an always-loaded byte total, how far the chezmoi source
 clone lags `origin/main`, an activation count per skill, a violation rate before and after a rule's
-introduction date, and a mutation-detection score for `scripts/verify.sh`. Frequency of use is not usefulness: a rule activated once may guard an
-irreversible loss, so read the counts against what each component protects, never alone.
+introduction date, and a mutation-detection score for `scripts/verify.sh`. Frequency of use is
+not usefulness: a rule activated once may guard an irreversible loss, so read the counts against
+what each component protects, never alone.
 
 ## Usage
 

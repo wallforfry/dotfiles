@@ -163,7 +163,8 @@ PY
 then
   ko "lecture des transcripts interrompue : activation et adhérence non mesurées"
 else
-  ok "mesuré sur les transcripts disponibles ; l'adhérence est corrélationnelle, le modèle a changé sur la même période"
+  ok "mesuré sur les transcripts disponibles"
+  echo "  l'adhérence est corrélationnelle : le modèle a changé sur la même période"
 fi
 
 # --- 4. pouvoir de détection de la barrière -----------------------------------
