@@ -187,7 +187,9 @@ else
   else
     detected=0
     count=0
-    while IFS='|' read -r label code; do
+    # Sur le fd 3 : sur stdin, git, python3 et verify.sh consomment le heredoc
+    # et sautent des mutations, ce qui rendait le compte non reproductible.
+    while IFS='|' read -r label code <&3; do
       [ -z "$label" ] && continue
       count=$((count + 1))
       # Une mutation qui ne s'applique plus - chaîne cherchée disparue - serait
@@ -199,7 +201,7 @@ else
       else
         detected=$((detected + 1))
       fi
-    done <<'MUT'
+    done 3<<'MUT'
 name d'une skill différent du répertoire|p='dot_config/agent-skills/adr/SKILL.md';s=open(p).read();open(p,'w').write(s.replace('name: adr','name: adrx',1))
 skill retirée de l'index|import re;p='dot_config/agent-skills/README.md';s=open(p).read();open(p,'w').write('\n'.join(l for l in s.split('\n') if not re.match(r'^\| `adr`',l)))
 metadata.category hors de {dev, ops}|p='dot_config/agent-skills/adr/SKILL.md';s=open(p).read();open(p,'w').write(s.replace('category: ops','category: misc').replace('category: dev','category: misc'))
