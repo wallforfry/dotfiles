@@ -80,8 +80,6 @@ main "$@"
   the operator continue on a broken state.
 - **Skipping the shared `wait_for_enter` helper** - inlining `read` in each step makes it impossible to
   add later behaviour (logging, a `--yes` non-interactive mode) in one place.
-- **Reading a secret in the script** - instruct the operator to fetch it and export it, or read it
-  from the environment. Never a literal, never a log line echoing it back.
 
 ## Constraints
 
@@ -90,4 +88,4 @@ main "$@"
 - Never mix manual instructions and automated work in the same step.
 - Automate incrementally; keep step names and ordering stable so the runbook stays recognisable.
 - Bash scripts in this repository must also follow the `scripts` skill.
-- Do not store secrets in the script.
+- Do not store secrets in the script; the `scripts` skill carries the rule and its correction.
