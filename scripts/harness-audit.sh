@@ -18,7 +18,21 @@ set -uo pipefail
 # La racine vient de l'emplacement du script, jamais du répertoire courant :
 # la skill est lancée depuis n'importe quel dépôt, et un rev-parse sur le cwd
 # mesurerait cet autre dépôt.
-root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P) || exit 1
+src=${BASH_SOURCE[0]:-}
+if [ -z "$src" ]; then
+  echo "❌  emplacement du script inconnu : lancer bash <chemin>/harness-audit.sh" >&2
+  exit 1
+fi
+# pwd -P résout les répertoires, jamais le fichier final : sans cette boucle, un
+# lanceur en lien symbolique donne le parent du lien, donc un autre dépôt.
+while [ -L "$src" ]; do
+  cible=$(readlink "$src")
+  case $cible in
+    /*) src=$cible ;;
+    *) src=$(dirname -- "$src")/$cible ;;
+  esac
+done
+root=$(cd -- "$(dirname -- "$src")/.." && pwd -P) || exit 1
 if ! git -C "$root" rev-parse --show-toplevel >/dev/null 2>&1; then
   echo "❌  $root hors d'un dépôt git : aucune mesure possible" >&2
   exit 1
