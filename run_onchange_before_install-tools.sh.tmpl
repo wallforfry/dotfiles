@@ -110,6 +110,37 @@ bun_link_x() {
   fi
 }
 
+# « bun upgrade » ajoute un bloc de complétion à la fin de ~/.zshrc quand il n'y
+# trouve pas le chemin de _bun sous forme absolue - mesuré sur bun 1.4.1 et
+# 1.4.2. Or ce fichier est une cible gérée par chezmoi, et le laisser divergent
+# arrête tout apply non interactif sur une demande d'arbitrage impossible :
+# « could not open a new TTY », donc planificateur DSM bloqué. Le bloc est
+# retiré, la ligne équivalente étant déjà déployée en $HOME. Appelé à chaque
+# passage et non après le seul upgrade : une machine déjà divergente doit se
+# réparer même quand bun y est déjà au-dessus du plancher.
+#
+# Le motif n'exige un chemin absolu que sur la ligne source, pour ne pas
+# confondre le doublon avec la ligne gérée, qui passe par $HOME.
+bun_strip_completions() {
+  z="$HOME/.zshrc"
+  if [ ! -f "$z" ] || ! grep -q '^# bun completions$' "$z"; then
+    return 0
+  fi
+
+  t=$(mktemp "$HOME/.cache/zshrc.XXXXXX") || return 0
+  # Deux étapes : retirer les deux lignes du bloc, puis les lignes vides
+  # devenues finales - celles de l'intérieur du fichier sont conservées.
+  if sed -E '/^# bun completions$/d; /^\[ -s "\/.*\/_bun" \] && source "\/.*\/_bun"$/d' "$z" |
+     awk '{ l[NR] = $0 } END { n = NR; while (n > 0 && l[n] == "") n--; for (i = 1; i <= n; i++) print l[i] }' > "$t" &&
+     [ -s "$t" ]; then
+    cat "$t" > "$z"
+    echo "🧹  bloc de complétion ajouté par bun retiré de ~/.zshrc" >&2
+  else
+    echo "⚠️   bloc de complétion de bun laissé dans ~/.zshrc : le prochain apply non interactif s'y arrêtera." >&2
+  fi
+  rm -f "$t"
+}
+
 # Met à jour sur place l'installation trouvée, seule voie qui atteigne celle que
 # le PATH de l'utilisateur privilégie.
 bun_upgrade() {
@@ -138,6 +169,7 @@ if command -v brew >/dev/null; then
     fi
   done
 
+  bun_strip_completions
   bun_prune_dead
   bun=$(bun_path)
   if [ -n "$bun" ]; then
@@ -341,6 +373,7 @@ if ! command -v nvim >/dev/null; then
   fi
 fi
 
+bun_strip_completions
 bun_prune_dead
 bun=$(bun_path)
 if [ -n "$bun" ]; then
