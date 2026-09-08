@@ -145,7 +145,17 @@ if command -v brew >/dev/null; then
       bun_upgrade "$bun"
     fi
   elif brew install bun; then
-    echo "🥟  bun $(bun --version) installé"
+    # La formule core suit l'amont, mais rien ne garantit qu'elle soit au-dessus
+    # du plancher : sans cette revérification, une formule en retard passerait
+    # pour un succès.
+    bun=$(bun_path)
+    if [ -z "$bun" ]; then
+      echo "⚠️   bun non résolu après « brew install bun »" >&2
+    elif version_lt "$("$bun" --version 2>/dev/null)" "$BUN_MIN"; then
+      bun_upgrade "$bun"
+    else
+      echo "🥟  bun $("$bun" --version) installé"
+    fi
   else
     echo "⚠️   bun non installé" >&2
   fi
