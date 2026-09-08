@@ -1,6 +1,7 @@
 id	kind	expected	excluded	prompt
 adr-positive	positive	adr	-	Record why this project will use events instead of direct calls.
 agent-instructions-positive	positive	agent-instructions	-	Move this conditional rule out of the global AGENTS.md file.
+business-issue-positive	positive	business-issue	-	Investigate this persona and turn its next business scenario into an executable ticket in our tracker.
 containerized-mcp-positive	positive	containerized-mcp	-	Register this Docker image as an MCP server without leaking a container per session.
 do-nothing-script-positive	positive	do-nothing-script	-	Turn this partly manual release checklist into an operator-driven script.
 handoff-positive	positive	handoff	-	The context window is nearly full; prepare a fresh session to continue the work.
@@ -14,6 +15,7 @@ skill-manager-positive	positive	skill-manager	-	Fix this skill description and r
 web-fetching-positive	positive	web-fetching	-	Fetch these twenty pages and return their rendered bodies.
 adr-negative	negative	-	adr	Implement the already recorded architecture decision without changing its rationale.
 agent-instructions-negative	negative	-	agent-instructions	Correct a typo in the application README.
+business-issue-negative	negative	-	business-issue	Implement this already specified issue without changing its scope or acceptance criteria.
 containerized-mcp-negative	negative	-	containerized-mcp	Run an ordinary one-shot Docker build container.
 do-nothing-script-negative	negative	-	do-nothing-script	Automate this deterministic formatting command with no operator steps.
 handoff-negative	negative	-	handoff	Summarize the task that has already finished.
@@ -30,3 +32,5 @@ register-from-pasted-docs-ambiguous	ambiguous	containerized-mcp	web-fetching	Usi
 global-rule-ambiguous	ambiguous	agent-instructions	skill-manager	Shorten the always-loaded AGENTS.md rule without editing any skill.
 skill-rule-ambiguous	ambiguous	skill-manager	agent-instructions	Shorten this skill frontmatter description without changing global instructions.
 interactive-page-ambiguous	ambiguous	-	web-fetching	Click the button in the authenticated browser tab; no page retrieval is needed.
+business-project-draft-ambiguous	ambiguous	business-issue	merge-verdict	Prepare a GitHub Projects draft item from this workflow; do not review a PR or publish anything.
+business-card-status-ambiguous	ambiguous	-	business-issue	Move this existing card to In Progress without changing its description.

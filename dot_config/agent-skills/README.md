@@ -20,6 +20,7 @@ the deployed copy.
 | --- | --- |
 | `adr` | Write, amend or supersede an architecture decision record. |
 | `agent-instructions` | Maintain the always-loaded agent instruction files and their discovery paths. |
+| `business-issue` | Investigate business needs and turn them into executable issues across trackers. |
 | `merge-verdict` | Deliver a merge verdict on an open pull request, yours or another author's. |
 | `obsolescence` | Decide whether obsolete code or data is deleted or migrated. |
 
