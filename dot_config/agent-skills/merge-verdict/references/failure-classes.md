@@ -7,7 +7,9 @@ answer is a sentence about *this* diff. Record one of three outcomes per class.
 - **holds because `<evidence>`** - name the constraint, the transaction, the schema, the test.
 - **broken by `<mechanism>`** - an ordered sequence of steps that ends with a violated invariant.
 
-Only the third outcome can become a blocking finding, and only when the mechanism is written out.
+Only the third outcome can become a blocking finding from this sweep, and only when the mechanism
+is written out. The contract ledger prevails over these classifications: a non-excluded promised
+requirement lacking implementation or evidence blocks even when no failure class applies.
 "This looks racy" is not a mechanism; "request A snapshots at T1, request B writes at T2, A commits at
 T3 and B's row is absent from the successor" is.
 
@@ -85,15 +87,17 @@ the code that changed.
 
 ## 7. Deferred functionality
 
-**Ask:** is the absent regulatory or business control declared as an explicit contract - what is
-missing, why it is acceptable now, and the condition that lifts it - or is it silently omitted?
+**Ask:** does the linked contract promise the absent regulatory or business control, and is any
+claimed exclusion backed by an explicit authoritative scope decision?
 
-**Broken when:** a control the domain requires is simply not there, and the PR says nothing. The gap
-then becomes invisible: it survives review, ships, and gets discovered by the party the control
-protected.
+**Broken when:** a promised control is missing, even when the PR documents a deferral and lift
+condition. The promised refusal or protection is unavailable on the reviewed head; merely declaring
+the gap does not deliver it.
 
-**Lift:** the contract is written down in the code and in the PR, with its lift condition. Silence is
-the defect; a stated deferral with a named condition is a reservation.
+**Lift:** implement the promised outcome and reproduce its required evidence, or obtain an explicit
+authoritative exclusion. In the latter case, retain the ledger row as `excluded` with the decision
+link; only that row is exempt from implementation and evidence. A stated deferral alone remains
+blocking. Other defects in the changed behaviour remain subject to review.
 
 ## 8. Parsing versus assertion
 
@@ -137,7 +141,10 @@ boundary: when broken, they block. Classes 6, 8 and 10 are usually reservations 
 a concrete consumer's retry path depends on the changed code, class 8 when the degraded value reaches
 a person or a legal act, and class 10 when the claim is legal, evidentiary or contractual.
 
-Findings outside these ten classes are legitimate but non-blocking by default: report at most three of
+The contract ledger takes precedence over the classifications above; neither a reservation nor a
+not-applicable class can downgrade a missing non-excluded promise or its evidence.
+
+Other findings outside these ten classes are legitimate but non-blocking by default: report at most three of
 them, one line each, labelled non-blocking, or drop them. The cap is what stops the sweep from turning
 into a second review that competes with the verdict - rank them by whether they would change a
 reviewer's decision and keep the top three. If the verdict runs past about thirty lines, that is the

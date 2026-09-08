@@ -1,12 +1,12 @@
 # Verdict cases
 
-Three behavioural cases. Each names what is reviewed, the verdict it must reach, and the criteria
+Four behavioural cases. Each names what is reviewed, the verdict it must reach, and the criteria
 that decide pass or fail. Cases A and B target different forges so both command sets in
 `references/forges.md` get exercised.
 
 Run A and B against real pull requests: a case that never touched a forge proves nothing about a
 skill whose first phase is anchoring. A scratch repository is fine - the domain does not matter, the
-shape of the diff does. Case C deliberately isolates the phase 5 ledger and makes no claim about
+shape of the diff does. Cases C and D isolate the contract and ledger rules and make no claim about
 forge behaviour.
 
 ## Case A - changes required (Bitbucket)
@@ -84,6 +84,38 @@ test-first RED and no faulty variant for any of the four.
 - Either approval verdict, because the aggregate barrier is green.
 - A summary paragraph that drops one or more rows.
 - A passing regression test described as a negative witness with no observed failing counterpart.
+
+## Case D - linked requirement missing from the diff
+
+**Evidence package.** A linked issue promises AC-1: submitting a valid booking preserves its data,
+and AC-2: submitting an unauthorized booking is refused without changing its state. The PR implements
+only AC-1, with reproduced positive evidence and a negative witness on the exact head. Its aggregate
+barrier passes. AC-2 has no implementation or behaviour-level evidence and is absent from the diff;
+the ticket nevertheless has both criteria checked and a completed status.
+
+**Expected verdict:** _changes required_.
+
+**Pass criteria**
+
+- The ledger contains separate AC-1 and AC-2 rows with their issue source links.
+- AC-1 retains its implementation and reproduced positive and negative evidence.
+- AC-2 records implementation and both evidence cells as `absent`, despite the completed ticket.
+- The blocker names the missing refusal and state preservation; implementing AC-2 and reproducing
+  its positive evidence and negative witness on the reviewed head are the lift criteria.
+
+**Fail signals**
+
+- Either approval verdict because all changed behaviour is proven or the barrier passes.
+- Omitting AC-2 because the diff contains no related code.
+- Using the ticket, its checked criteria or its status as proof of implementation or acceptance.
+- Moving the promised refusal to a non-blocking reservation or merely documenting its absence.
+
+**Discriminating control.** Remove AC-2 from the promised scope through an explicit authoritative
+scope decision linked from the issue, rather than a reviewer assumption. With only AC-1 promised,
+its complete evidence and no other blocker, the missing AC-2 alone must no longer block approval;
+the ledger retains AC-2 with result `excluded`, its identifier and that decision's source link, and
+`not required - excluded` in implementation and evidence cells. AC-1 still requires its full proof;
+a documented deferral without an authoritative exclusion must keep AC-2 `absent` and block.
 
 ## Execution record
 
