@@ -14,13 +14,14 @@ publishing an incomplete verdict. This file is English; the verdict itself follo
 the parent PR when the branch is stacked. Then the CI state, open tasks and conflicts, or "none
 observed".>
 
-<Changed-behaviour ledger - REQUIRED as soon as the diff changes an observable behaviour. One row per
-behaviour, in the order they were inventoried in phase 2. Never a prose summary, and never shortened to
-keep the verdict small.
+<Contract and behaviour ledger - REQUIRED when a linked issue promises requirements or the diff
+changes an observable behaviour. One row per issue requirement or additional changed behaviour,
+including promises absent from the diff, in the order inventoried in phase 2. Never a prose summary,
+and never shortened to keep the verdict small.
 
-| Behaviour | Positive evidence on this head | Negative witness | Result |
-| --- | --- | --- | --- |
-| <what an outside caller can observe> | <the test or run reproduced here> | <the observed RED, or the faulty variant that failed> | held / absent |
+| Requirement / behaviour | Contract source | Implementation on this head | Positive evidence on this head | Negative witness | Result |
+| --- | --- | --- | --- | --- | --- |
+| <criterion ID and observable outcome> | <issue criterion link, or PR/diff source> | <verified location or absent> | <the test or run reproduced here> | <the observed RED, or the faulty variant that failed> | held / absent / excluded |
 >
 
 <Blocking paragraph - one clause per blocker: the mechanism, then the invariant it breaks. Close with
@@ -46,9 +47,16 @@ When the verdict blocks and the forge carries no native blocking state - Bitbuck
 GitHub - the same line says that this comment is the only thing holding the merge.>
 ```
 
-A row is complete only when both evidence columns were reproduced during this review. Evidence the
-author supplied but that was not reproduced is written as theirs, in the barrier paragraph, and leaves
-the row `absent`. One `absent` row forbids both approval verdicts.
+A non-excluded row is complete only when its implementation was verified on this head and both evidence columns
+were reproduced during this review. The source column identifies an obligation, never proof of
+fulfillment: ticket prose, status and checked criteria cannot fill implementation or evidence cells.
+Evidence the author supplied but that was not reproduced is written as theirs, in the barrier paragraph,
+and leaves the row `absent`. One `absent` row forbids both approval verdicts.
+
+For a requirement explicitly excluded by an authoritative scope decision, retain its identifier and
+row, cite that decision in the source column, use result `excluded`, and write
+`not required - excluded` in its implementation and evidence cells. Only this row is exempt; exclusion
+is a scope decision, never proof of fulfillment or permission to ignore changed behaviour.
 
 ## Filled example
 
@@ -64,16 +72,16 @@ immediately spends a sentence dismantling its own green.
 Review of PR #1042 on a1b2c3d4e5f6, stacked base feat/ledger-read-side@9f8e7d6c5b4a. Pipeline #318
 green, no task and no conflict observed.
 
-| Behaviour | Positive evidence on this head | Negative witness | Result |
-| --- | --- | --- | --- |
-| Closing a ledger creates exactly one successor | 7/7 close unit tests green | absent - no faulty variant run | absent |
-| A concurrent write is carried into the successor | absent | absent | absent |
+| Requirement / behaviour | Contract source | Implementation on this head | Positive evidence on this head | Negative witness | Result |
+| --- | --- | --- | --- | --- | --- |
+| Closing a ledger creates exactly one successor | ISSUE-158/AC-1 | closing transaction | 7/7 close unit tests green | absent - no faulty variant run | absent |
+| A concurrent write is carried into the successor | ISSUE-158/AC-2 | absent | absent | absent | absent |
 
 Blockers: the snapshot and the controls both run before the closing transaction, so a concurrent write
 can vanish from the successor; two simultaneous closes can create two successors, because the retry never
 re-reads the winning result and the uniqueness constraints that would refuse the second one do not exist.
-Lift: concurrent tests against PostgreSQL, an explicit contract for the deferred controls and for tenant
-authorization, then a rebase once the parent PR merges.
+Lift: implement atomic closure and concurrent-write preservation, reproduce their positive tests and
+negative witnesses against PostgreSQL, then rebase once the parent PR merges.
 
 Authenticated local validation on this exact head: lint green (18/18 builds, 0 errors, the 145-warning
 threshold respected), typecheck green on both touched packages, 7/7 close unit tests green. Those tests
@@ -90,7 +98,11 @@ Do not approve or merge this head.
 ## Self-check before publishing
 
 - The marker is the first line, and its SHA is the head you actually checked out.
-- The ledger carries one row per behaviour inventoried in phase 2, none merged away.
+- The ledger carries every linked issue criterion, even absent from the diff, and every additional
+  changed behaviour inventoried in phase 2; each has a source, none are merged away.
+- No non-excluded promised requirement lacks implementation or reproduced evidence in an approval verdict.
+- Every `excluded` row retains its identifier and authoritative decision link; only that row is exempt.
+- Ticket content and status appear only as contractual input, never as fulfillment evidence.
 - No approval verdict ships with an `absent` cell.
 - Evidence the author supplied is attributed to them, never counted as reproduced.
 - Every clause in the blocking paragraph names a sequence of steps, not a quality judgement.

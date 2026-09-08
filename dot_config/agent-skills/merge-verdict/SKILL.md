@@ -52,23 +52,36 @@ first, unless the request explicitly says to post directly.
    diff that will land. A review not anchored on a named SHA is invalid.
 
 2. **Understand before judging.** Read the PR description, the design documents and ADRs it cites, and
-   the whole diff. The attachments are part of the description: a screenshot or an uploaded log is
+   the whole diff. Read the linked issue and its authoritative parent requirements, including acceptance
+   criteria and approved scope decisions; preserve their identifiers and source links. The ticket is
+   contractual input, never evidence that the head implements or satisfies it. If a linked contract
+   cannot be read or its scope is unresolved, record that gap and block approval until resolved.
+   The attachments are part of the description: a screenshot or an uploaded log is
    evidence the author supplied, and the forge returns it as raw markup that a text pass slides over.
    Open every one, in the comments too. Restate the invariant the code claims to hold, in one
    sentence. Producing a blocking finding before the flow is traced end to end is forbidden: the
    mechanism is what makes a finding blocking, and you cannot name a mechanism you have not followed.
 
-   Then inventory every externally observable behaviour the diff adds, removes or changes, and open
-   the ledger: one row per behaviour, with its positive evidence on the exact head, its negative
-   witness, and its result. A negative witness is an executed test-first RED, or a controlled faulty
+   Then inventory every requirement promised by the linked issue, including those absent from the
+   diff, plus every externally observable behaviour the diff adds, removes or changes. Open the
+   ledger: one row per requirement or additional behaviour, with its contract source, implementation
+   on the exact head, positive evidence, negative witness, and result. Map overlapping diff behaviour
+   to the requirement row without dropping any criterion. Do not infer delivery from ticket status,
+   checkboxes or prose, or treat an omission from the diff as an exclusion from the promised scope.
+   A negative witness is an executed test-first RED, or a controlled faulty
    variant derived from the exact head and shown to fail when the behaviour is broken; restore and
    verify the head before running its positive barrier. A passing regression test with no observed
    failing counterpart is positive evidence only, and a green aggregate barrier is evidence for no
    individual row. Missing evidence is recorded as `absent`, never inferred.
+   An explicit authoritative scope decision may exclude a requirement: retain its row and identifier,
+   link that decision, and set its result to `excluded`. Only that row is exempt from implementation
+   and evidence; mark those cells `not required - excluded`. A stated deferral or reviewer assumption
+   is not an exclusion, and exclusion never waives defects in behaviour the head actually changes.
 
 3. **Sweep the failure classes.** Put all ten questions in `references/failure-classes.md` to the diff.
    Record, per class, one of: not applicable, holds because `<evidence>`, or broken by `<mechanism>`.
-   Only the third form can become a blocker. When the head under review was written in this session,
+   Only the third form produces a blocker from this sweep; the contract ledger takes precedence
+   independently. When the head under review was written in this session,
    delegate the sweep to a fresh read-only context scoped to the diff: the context that produced the
    diff shares the blind spot that produced the defect, and records `holds` for the class it has just
    broken. When no fresh context is available - a host that spawns no subagent, or a session whose
@@ -98,8 +111,10 @@ first, unless the request explicitly says to post directly.
 
 5. **Return a verdict.** Exactly one of _changes required_, _approved with reservations_, _approved_.
    Write it in the order defined by `assets/verdict-template.md`, with the complete ledger before the
-   blocking paragraph: one row per inventoried behaviour, never a prose summary of the rows. Both
-   approval verdicts require every row to hold reproduced positive evidence on the exact head and a
+   blocking paragraph: one row per inventoried requirement or additional behaviour, never a prose
+   summary of the rows. A non-excluded promised requirement without implementation or evidence blocks; name the
+   missing outcome and the implementation and evidence needed to lift it. Both approval verdicts
+   require every non-excluded row to hold an implementation, reproduced positive evidence on the exact head and a
    reproduced negative witness, with no contradictory result; otherwise the verdict is _changes
    required_ and the missing evidence is the lift criterion.
    Each other blocking finding carries its named mechanism and its lift criterion - what must become true
@@ -135,8 +150,9 @@ first, unless the request explicitly says to post directly.
   tracker noise without tracking a defect.
 - **"Approved with reservations" used to avoid a disagreement** - that state is a claim that the
   consequence is bounded. If you cannot state the bound, the verdict is _changes required_.
-- **A missing feature reported as an omission** - an absent regulatory or business control is either a
-  declared contract (what, why, lift condition) or a blocker. Silence is the defect, not the absence.
+- **A ticket requirement absent from the diff disappears from review** - a correct partial change
+  can still miss the promised outcome. Inventory the linked contract before the diff and block every
+  unimplemented or unproven promise; documenting the omission does not fulfill it.
 - **The author's evidence read as absent** - a screenshot of the output comes back from the forge as
   an `<img>` tag inside the body, and a text pass slides over it. The verdict then announces that
   nothing was observed and makes the merge conditional on steps the author has already run and
@@ -159,8 +175,10 @@ first, unless the request explicitly says to post directly.
 - Never publish a blocking finding without a named failure mechanism and a lift criterion.
 - Never block on style, naming or structure preference; label it non-blocking.
 - Never open a review that is not anchored on a head SHA.
-- Never issue either approval verdict unless every changed observable behaviour carries reproduced
-  positive evidence on the exact head and a reproduced negative witness.
+- Never issue either approval verdict unless every non-excluded promised issue requirement, including those
+  absent from the diff, and every additional changed observable behaviour has an implementation,
+  reproduced positive evidence on the exact head and a reproduced negative witness.
+- Never treat the linked ticket, its status or its acceptance checkboxes as implementation evidence.
 - Never infer behaviour-level evidence from an aggregate green barrier.
 - Never call a passing test a negative witness without an observed failure when the behaviour is
   broken.
@@ -180,5 +198,5 @@ first, unless the request explicitly says to post directly.
   to put to the diff. Read in phase 3.
 - [assets/verdict-template.md](assets/verdict-template.md) - the verdict skeleton with its required
   slots, ledger included. Filled in phase 5, published in phase 6.
-- [references/cases.md](references/cases.md) - three behavioural cases with their expected verdicts,
+- [references/cases.md](references/cases.md) - four behavioural cases with their expected verdicts,
   and the record of what they have never validated.
