@@ -10,6 +10,8 @@
 # FD_VERSION: 10.5.0
 # DUF_VERSION: 0.9.1
 # UV_VERSION: 0.12.8
+# BUN_VERSION: 1.4.2
+# BUN_MIN: 1.4.0
 #
 # age      : déchiffre ~/.secrets. Indispensable - l'implémentation intégrée à
 #            chezmoi ne gère pas les passphrases et échoue sur
@@ -22,6 +24,11 @@
 # fd       : recherche de fichiers, attendue par telescope à côté de ripgrep.
 # duf      : .zshrc en fait l'alias de df quand il est présent.
 # uv       : lance scrapling-mcp, déployé dans ~/.local/bin.
+# bun      : runtime de l'outillage agentique. Deux constantes, de sens
+#            distinct : BUN_MIN est le plancher exigé, BUN_VERSION la version
+#            téléchargée quand rien n'est en place. « bun upgrade » et brew
+#            posent le dernier amont, donc BUN_VERSION n'est pas un épinglage
+#            au sens des autres outils - seul le plancher est garanti.
 #
 # Le bloc darwin ajoute ce qui n'a de sens que sur macOS : thefuck (alias posé
 # par .zshrc), pinentry-mac (saisie du PIN de la YubiKey, ADR-010), ykman,
@@ -41,7 +48,67 @@ NVIM_VERSION=0.12.5
 FD_VERSION=10.5.0
 DUF_VERSION=0.9.1
 UV_VERSION=0.12.8
+BUN_VERSION=1.4.2
+BUN_MIN=1.4.0
 BIN="$HOME/bin"
+
+# Vrai quand $1 est strictement antérieur à $2, en « majeur.mineur.correctif ».
+# Un composant absent ou non numérique compte pour 0, donc une sortie illisible
+# est traitée comme antérieure - jamais comme suffisante.
+version_lt() {
+  i=1
+  while [ "$i" -le 3 ]; do
+    x=$(printf '%s' "$1" | cut -d. -f"$i")
+    y=$(printf '%s' "$2" | cut -d. -f"$i")
+    case "$x" in '' | *[!0-9]*) x=0 ;; esac
+    case "$y" in '' | *[!0-9]*) y=0 ;; esac
+    if [ "$x" -lt "$y" ]; then return 0; fi
+    if [ "$x" -gt "$y" ]; then return 1; fi
+    i=$((i + 1))
+  done
+  return 1
+}
+
+# Le bun que résoudra un shell de l'utilisateur, et non celui que résout ce
+# script : .zprofile met ~/.bun/bin devant ~/bin et devant Homebrew, alors que
+# chezmoi lance ce script sous sh sans lire .zprofile. Sans ce chemin explicite,
+# un apply non interactif poserait un bun neuf derrière un bun ancien qui
+# continuerait de gagner, et l'annoncerait installé.
+bun_path() {
+  if [ -x "$HOME/.bun/bin/bun" ]; then
+    printf '%s' "$HOME/.bun/bin/bun"
+  else
+    command -v bun 2>/dev/null || true
+  fi
+}
+
+# Le binaire s'exécute-t-il vraiment ? Une édition inadaptée à la machine
+# s'installe sans erreur et meurt à l'appel : glibc trop ancienne sur DSM,
+# instruction illégale sur un CPU sans AVX2. Sans ce test, le script annonce
+# une installation réussie pour un binaire mort.
+bun_runs() {
+  "$1" --version >/dev/null 2>&1
+}
+
+# bunx est le même binaire sous un autre nom, et c'est lui que les amonts
+# documentent. brew et l'installeur officiel le posent ; « bun upgrade » ne le
+# crée pas s'il manquait déjà.
+bun_link_x() {
+  if [ ! -e "${1%/bun}/bunx" ]; then
+    ln -sf "$1" "${1%/bun}/bunx"
+  fi
+}
+
+# Met à jour sur place l'installation trouvée, seule voie qui atteigne celle que
+# le PATH de l'utilisateur privilégie.
+bun_upgrade() {
+  if "$1" upgrade >/dev/null 2>&1 && bun_runs "$1"; then
+    bun_link_x "$1"
+    echo "🥟  bun mis à jour en $("$1" --version)"
+  else
+    echo "⚠️   bun $("$1" --version 2>/dev/null) conservé : la mise à jour a échoué, et l'outillage exigeant >= $BUN_MIN ne tournera pas." >&2
+  fi
+}
 
 {{ if eq .chezmoi.os "darwin" -}}
 if command -v brew >/dev/null; then
@@ -59,6 +126,17 @@ if command -v brew >/dev/null; then
       brew install "${f%:*}" || echo "⚠️   ${f%:*} non installé" >&2
     fi
   done
+
+  bun=$(bun_path)
+  if [ -n "$bun" ]; then
+    if version_lt "$("$bun" --version 2>/dev/null)" "$BUN_MIN"; then
+      bun_upgrade "$bun"
+    fi
+  elif brew install bun; then
+    echo "🥟  bun $(bun --version) installé"
+  else
+    echo "⚠️   bun non installé" >&2
+  fi
 
 {{ if eq .profile "pro" }}
   # bkt vient d'un tap tiers, dont Homebrew exige désormais la confiance :
@@ -131,10 +209,10 @@ fi
 # Machines sans gestionnaire de paquets (NAS Synology, conteneurs) : binaires
 # statiques dans ~/bin, mis dans le PATH par .zshenv.
 case "$(uname -m)" in
-  # Trois nomenclatures, une par amont : « amd64 » (age, gh, jq), le triplet
-  # Rust (ripgrep, fd, uv), « x86_64 » (duf, neovim).
-  x86_64)          arch=amd64; musl=x86_64-unknown-linux-musl;  uarch=x86_64 ;;
-  aarch64|arm64)   arch=arm64; musl=aarch64-unknown-linux-musl; uarch=arm64 ;;
+  # Quatre nomenclatures, une par amont : « amd64 » (age, gh, jq), le triplet
+  # Rust (ripgrep, fd, uv), « x86_64 » (duf, neovim), « x64 » (bun).
+  x86_64)          arch=amd64; musl=x86_64-unknown-linux-musl;  uarch=x86_64; barch=x64 ;;
+  aarch64|arm64)   arch=arm64; musl=aarch64-unknown-linux-musl; uarch=arm64; barch=aarch64 ;;
   *) echo "⚠️   architecture $(uname -m) non gérée, installation manuelle requise" >&2
      exit 0 ;;
 esac
@@ -238,5 +316,46 @@ if ! command -v nvim >/dev/null; then
     echo "📝  neovim $NVIM_VERSION installé dans ~/.local/nvim"
   else
     echo "⚠️   neovim non installé : ~/.config/nvim reste inerte" >&2
+  fi
+fi
+
+bun=$(bun_path)
+if [ -n "$bun" ]; then
+  if version_lt "$("$bun" --version 2>/dev/null)" "$BUN_MIN"; then
+    bun_upgrade "$bun"
+  fi
+elif ! command -v unzip >/dev/null; then
+  # Seul amont de cette liste à ne publier que des zip.
+  echo "⚠️   bun non installé : ses archives amont sont des zip et unzip manque." >&2
+else
+  variant="bun-linux-${barch}"
+  # Un binaire lié à la glibc ne s'exécute pas sur une libc musl - le cas de
+  # neovim juste au-dessus, que bun évite en publiant les deux éditions.
+  if ls /lib/ld-musl-* >/dev/null 2>&1; then
+    variant="${variant}-musl"
+  fi
+  # L'édition ordinaire exige AVX2, absent des processeurs d'entrée de gamme
+  # des NAS. /proc/cpuinfo illisible retient « baseline », qui tourne partout.
+  # L'ordre musl puis baseline est celui de l'amont : « x64-baseline-musl »
+  # n'existe pas.
+  if [ "$barch" = x64 ] && ! grep -qw avx2 /proc/cpuinfo 2>/dev/null; then
+    variant="${variant}-baseline"
+  fi
+
+  if fetch "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/${variant}.zip" "$tmp/bun.zip" &&
+     unzip -qo "$tmp/bun.zip" -d "$tmp/bun" && [ -f "$tmp/bun/$variant/bun" ]; then
+    mv "$tmp/bun/$variant/bun" "$BIN/bun"
+    chmod +x "$BIN/bun"
+    if bun_runs "$BIN/bun"; then
+      bun_link_x "$BIN/bun"
+      echo "🥟  bun $BUN_VERSION installé dans ~/bin"
+    else
+      # Aucune édition publiée ne convient à cette machine : la retirer plutôt
+      # que de laisser un bun qui échoue à chaque appel.
+      rm -f "$BIN/bun"
+      echo "⚠️   bun retiré : l'édition $variant ne s'exécute pas ici (glibc ou jeu d'instructions)." >&2
+    fi
+  else
+    echo "⚠️   bun non installé : édition $variant indisponible ou archive inattendue." >&2
   fi
 fi
