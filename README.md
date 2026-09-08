@@ -88,8 +88,10 @@ derrière un `bun` ancien qui continuerait de gagner. Une version insuffisante
 est donc mise à jour sur place plutôt que réinstallée ailleurs. Le garde de
 `.zprofile` porte sur ce même binaire, et non sur `~/.bun/_bun` comme
 auparavant - ce fichier n'est qu'une complétion posée par l'installeur
-officiel, absente d'une installation par Homebrew ou par archive, qui laissait
-donc `bun` hors du `PATH` tout en étant présent.
+officiel, absente d'une pose par archive, qui laissait donc `bun` hors du
+`PATH` tout en étant présent. Homebrew n'est pas concerné : il n'écrit jamais
+dans `~/.bun`. Un binaire de `~/bin` qui ne s'exécute plus y est retiré avant
+tout autre contrôle.
 
 Hors macOS, l'édition téléchargée suit la libc (`musl` détectée par
 `/lib/ld-musl-*`) et le jeu d'instructions (`baseline` sans AVX2) ; l'archive

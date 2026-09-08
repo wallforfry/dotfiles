@@ -82,6 +82,17 @@ bun_path() {
   fi
 }
 
+# Retire un bun de ~/bin qui ne s'exécute plus. Ce répertoire appartient au
+# script, et le contrôle d'exécution a lieu désormais avant le mv : sans ce
+# nettoyage, une édition inadaptée posée par un apply antérieur y resterait
+# indéfiniment, bun_upgrade échouant sur elle à chaque passage.
+bun_prune_dead() {
+  if [ -e "$BIN/bun" ] && ! bun_runs "$BIN/bun"; then
+    rm -f "$BIN/bun" "$BIN/bunx"
+    echo "⚠️   bun de ~/bin retiré : il ne s'exécutait plus." >&2
+  fi
+}
+
 # Le binaire s'exécute-t-il vraiment ? Une édition inadaptée à la machine
 # s'installe sans erreur et meurt à l'appel : glibc trop ancienne sur DSM,
 # instruction illégale sur un CPU sans AVX2. Sans ce test, le script annonce
@@ -127,6 +138,7 @@ if command -v brew >/dev/null; then
     fi
   done
 
+  bun_prune_dead
   bun=$(bun_path)
   if [ -n "$bun" ]; then
     if version_lt "$("$bun" --version 2>/dev/null)" "$BUN_MIN"; then
@@ -319,6 +331,7 @@ if ! command -v nvim >/dev/null; then
   fi
 fi
 
+bun_prune_dead
 bun=$(bun_path)
 if [ -n "$bun" ]; then
   if version_lt "$("$bun" --version 2>/dev/null)" "$BUN_MIN"; then
