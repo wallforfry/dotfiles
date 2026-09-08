@@ -55,6 +55,7 @@ apply où le script a changé :
 | `fd` | recherche de fichiers | telescope retombe sur `find` |
 | `duf` | affichage disque | `.zshrc` n'aliase pas `df` |
 | `uv` | lance `scrapling-mcp` | le MCP scrapling ne démarre pas |
+| `bun` | runtime de l'outillage agentique | `bun` et `bunx` indisponibles |
 
 Sur macOS il passe par Homebrew, et y ajoute `thefuck` (aliasé par `.zshrc`),
 `pinentry-mac` (saisie du PIN de la YubiKey,
@@ -72,6 +73,32 @@ du `PATH` - `.zshenv` et pas `.zprofile`, pour que les shells non interactifs
 (`ssh nas '...'`, planificateur DSM) les trouvent aussi. Les versions sont
 épinglées en tête du script ; les modifier suffit à déclencher une
 réinstallation.
+
+`bun` fait exception à deux règles du script. D'abord au garde
+« `command -v` » : sa version *est* la capacité, l'outillage exigeant
+`>= BUN_MIN`, donc le script la compare. Ensuite à l'épinglage : `bun upgrade`
+et Homebrew posent le dernier amont, si bien que `BUN_VERSION` ne vaut que pour
+la branche des binaires téléchargés - seul le plancher `BUN_MIN` est garanti
+partout.
+
+Le garde regarde `~/.bun/bin/bun` avant le `PATH`, parce que `.zprofile` place
+ce répertoire devant `~/bin` et devant Homebrew alors que le script tourne sous
+`sh` sans le lire : un apply non interactif poserait sinon un `bun` neuf
+derrière un `bun` ancien qui continuerait de gagner. Une version insuffisante
+est donc mise à jour sur place plutôt que réinstallée ailleurs. Le garde de
+`.zprofile` porte sur ce même binaire, et non sur `~/.bun/_bun` comme
+auparavant - ce fichier n'est qu'une complétion posée par l'installeur
+officiel, absente d'une pose par archive, qui laissait donc `bun` hors du
+`PATH` tout en étant présent. Homebrew n'est pas concerné : il n'écrit jamais
+dans `~/.bun`. Un binaire de `~/bin` qui ne s'exécute plus y est retiré avant
+tout autre contrôle.
+
+Hors macOS, l'édition téléchargée suit la libc (`musl` détectée par
+`/lib/ld-musl-*`) et le jeu d'instructions (`baseline` sans AVX2) ; l'archive
+amont étant un zip, `unzip` est requis. Comme aucune détection ne couvre la
+version de la glibc, le binaire est appelé une fois dans le répertoire
+temporaire, avant d'être déplacé : une édition inadaptée est ainsi écartée sans
+avoir écrasé un `bun` qui fonctionnait.
 
 `nvim` fait exception au « un binaire dans `~/bin` » : il lui faut son
 `VIMRUNTIME` à côté, donc l'archive amont va dans `~/.local/nvim` et `~/bin`
