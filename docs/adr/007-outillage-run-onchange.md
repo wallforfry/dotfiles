@@ -41,10 +41,14 @@ réexécution.
 
 - Une machine neuve devient utilisable en un `chezmoi init --apply`.
 - Un `chezmoi apply` peut télécharger depuis le réseau. Le script reste
-  idempotent : chaque effet est gardé par un `command -v`.
+  idempotent : chaque effet est gardé par un `command -v`. Exception, `bun` :
+  l'outillage agentique exige un plancher de version, que la seule présence de la
+  commande ne prouve pas - son garde compare donc la version installée.
 - Les binaires posés dans `~/bin` ne sont pas mis à jour par le script tant que sa
   version épinglée ne bouge pas. C'est voulu, mais cela veut dire qu'un `age`
-  ancien peut survivre longtemps.
+  ancien peut survivre longtemps. Exception, `bun` : une version sous le plancher
+  est mise à jour par `bun upgrade`, qui prend le dernier amont, si bien que sa
+  version épinglée ne vaut que pour la première pose.
 - La règle « jamais fatal » a un revers : une installation ratée ne se remarque
   qu'en lisant les avertissements de l'apply.
 - `.zshenv` étant lu par tout shell zsh, y compris non interactif, il ne doit
