@@ -344,16 +344,16 @@ else
 
   if fetch "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/${variant}.zip" "$tmp/bun.zip" &&
      unzip -qo "$tmp/bun.zip" -d "$tmp/bun" && [ -f "$tmp/bun/$variant/bun" ]; then
-    mv "$tmp/bun/$variant/bun" "$BIN/bun"
-    chmod +x "$BIN/bun"
-    if bun_runs "$BIN/bun"; then
+    # Éprouvé dans $tmp, avant le mv : aucune détection ne couvre la version de
+    # la glibc, donc une édition inadaptée doit être écartée sans avoir écrasé
+    # un bun qui fonctionnait - un apply ultérieur le supprimerait sinon.
+    chmod +x "$tmp/bun/$variant/bun"
+    if bun_runs "$tmp/bun/$variant/bun"; then
+      mv "$tmp/bun/$variant/bun" "$BIN/bun"
       bun_link_x "$BIN/bun"
       echo "🥟  bun $BUN_VERSION installé dans ~/bin"
     else
-      # Aucune édition publiée ne convient à cette machine : la retirer plutôt
-      # que de laisser un bun qui échoue à chaque appel.
-      rm -f "$BIN/bun"
-      echo "⚠️   bun retiré : l'édition $variant ne s'exécute pas ici (glibc ou jeu d'instructions)." >&2
+      echo "⚠️   bun non installé : l'édition $variant ne s'exécute pas ici (glibc ou jeu d'instructions)." >&2
     fi
   else
     echo "⚠️   bun non installé : édition $variant indisponible ou archive inattendue." >&2

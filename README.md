@@ -85,13 +85,18 @@ Le garde regarde `~/.bun/bin/bun` avant le `PATH`, parce que `.zprofile` place
 ce répertoire devant `~/bin` et devant Homebrew alors que le script tourne sous
 `sh` sans le lire : un apply non interactif poserait sinon un `bun` neuf
 derrière un `bun` ancien qui continuerait de gagner. Une version insuffisante
-est donc mise à jour sur place plutôt que réinstallée ailleurs.
+est donc mise à jour sur place plutôt que réinstallée ailleurs. Le garde de
+`.zprofile` porte sur ce même binaire, et non sur `~/.bun/_bun` comme
+auparavant - ce fichier n'est qu'une complétion posée par l'installeur
+officiel, absente d'une installation par Homebrew ou par archive, qui laissait
+donc `bun` hors du `PATH` tout en étant présent.
 
 Hors macOS, l'édition téléchargée suit la libc (`musl` détectée par
 `/lib/ld-musl-*`) et le jeu d'instructions (`baseline` sans AVX2) ; l'archive
 amont étant un zip, `unzip` est requis. Comme aucune détection ne couvre la
-version de la glibc, le binaire posé est appelé une fois : s'il ne s'exécute
-pas, il est retiré et l'absence est nommée.
+version de la glibc, le binaire est appelé une fois dans le répertoire
+temporaire, avant d'être déplacé : une édition inadaptée est ainsi écartée sans
+avoir écrasé un `bun` qui fonctionnait.
 
 `nvim` fait exception au « un binaire dans `~/bin` » : il lui faut son
 `VIMRUNTIME` à côté, donc l'archive amont va dans `~/.local/nvim` et `~/bin`
