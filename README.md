@@ -95,7 +95,15 @@ tout autre contrôle.
 
 Hors macOS, l'édition téléchargée suit la libc (`musl` détectée par
 `/lib/ld-musl-*`) et le jeu d'instructions (`baseline` sans AVX2) ; l'archive
-amont étant un zip, `unzip` est requis. Comme aucune détection ne couvre la
+amont étant un zip, `unzip` est requis. `bun upgrade` ajoute de lui-même un bloc de complétion à la fin de `~/.zshrc`
+quand il n'y trouve pas le chemin de `_bun` sous forme absolue. Ce fichier
+étant une cible gérée, la divergence arrêtait tout apply non interactif sur une
+demande d'arbitrage sans TTY - planificateur DSM compris. Le script retire donc
+ce bloc à chaque passage, y compris sur une machine déjà divergente. Si l'apply
+s'est déjà arrêté sur ce fichier, `chezmoi apply --force ~/.zshrc` rétablit la
+version gérée : le contenu écarté n'est que ce doublon.
+
+Comme aucune détection ne couvre la
 version de la glibc, le binaire est appelé une fois dans le répertoire
 temporaire, avant d'être déplacé : une édition inadaptée est ainsi écartée sans
 avoir écrasé un `bun` qui fonctionnait.

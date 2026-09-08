@@ -64,9 +64,9 @@ if [[ -s "$HOME/.deno/env" ]]; then
 fi
 
 # Bun. Le garde porte sur le binaire, et non sur _bun, qui n'est que le fichier
-# de complétion posé par l'installeur officiel : une installation faite par brew
-# ou par archive n'en a pas, et ce répertoire restait alors hors du PATH alors
-# que bun était là.
+# de complétion posé par l'installeur officiel : une installation par archive
+# n'en a pas, et ce répertoire reste alors hors du PATH alors que bun est là.
+# Homebrew n'est pas concerné, il n'écrit jamais dans ~/.bun.
 if [[ -x "$HOME/.bun/bin/bun" ]]; then
   export BUN_INSTALL="$HOME/.bun"
   export PATH="$BUN_INSTALL/bin:$PATH"
