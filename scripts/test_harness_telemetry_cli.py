@@ -5,6 +5,7 @@ import importlib.util
 import io
 import json
 import pathlib
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -56,6 +57,27 @@ class HarnessTelemetryCliTest(unittest.TestCase):
             self.assertNotIn(str(root), stderr)
         self.assertEqual(status, 3)
         self.assertIn("lecture interrompue", stderr)
+
+    def test_shell_wrapper_translates_telemetry_statuses(self):
+        script = MODULE_PATH.with_name("harness-telemetry-status.sh")
+        messages = {
+            status: subprocess.run(
+                ["bash", "-c", 'source "$1"; telemetry_failure_message "$2"', "_", str(script), str(status)],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout
+            for status in (2, 3)
+        }
+        self.assertEqual(
+            messages[2],
+            "dérive de format des transcripts : activation et adhérence non mesurées\n",
+        )
+        self.assertEqual(
+            messages[3],
+            "lecture des transcripts interrompue : activation et adhérence non mesurées\n",
+        )
+        self.assertNotEqual(messages[2], messages[3])
 
 
 if __name__ == "__main__":

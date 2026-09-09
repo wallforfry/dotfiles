@@ -174,7 +174,13 @@ class HarnessTelemetryTest(unittest.TestCase):
     def test_zero_denominator_is_unknown(self):
         self.assertEqual(MODULE.rate(0, 0), "inconnu")
 
-    def test_cache_rejects_another_version_or_period(self):
+    def test_cache_rejects_another_version(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory, "cache.json")
+            path.write_text(json.dumps({"version": MODULE.CACHE_VERSION - 1, "since": "x", "files": {"a": {}}}), encoding="utf-8")
+            self.assertEqual(MODULE.load_cache(path, "x"), {})
+
+    def test_cache_rejects_another_period(self):
         with tempfile.TemporaryDirectory() as directory:
             path = pathlib.Path(directory, "cache.json")
             path.write_text(json.dumps({"version": MODULE.CACHE_VERSION, "since": "x", "files": {"a": {}}}), encoding="utf-8")

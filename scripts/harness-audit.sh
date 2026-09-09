@@ -39,6 +39,7 @@ if ! git -C "$root" rev-parse --show-toplevel >/dev/null 2>&1; then
 fi
 cd "$root"
 source scripts/harness-audit-capture.sh
+source scripts/harness-telemetry-status.sh
 
 fail=0
 ok() { printf '  ✅  %s\n' "$1"; }
@@ -137,13 +138,7 @@ then
   echo "  l'adhérence est corrélationnelle : le modèle a changé sur la même période"
 else
   status=$?
-  if [ "$status" -eq 2 ]; then
-    ko "dérive de format des transcripts : activation et adhérence non mesurées"
-  elif [ "$status" -eq 3 ]; then
-    ko "lecture des transcripts interrompue : activation et adhérence non mesurées"
-  else
-    ko "échec de la télémétrie : activation et adhérence non mesurées"
-  fi
+  ko "$(telemetry_failure_message "$status")"
 fi
 duration "$section_started"
 
