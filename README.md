@@ -15,7 +15,8 @@ passphrase qui déverrouille la clé `age` de la machine, réclamée une fois pa
 `run_before_unlock-age-key.sh.tmpl` et plus jamais ensuite
 ([ADR-018](docs/adr/018-chiffrement-par-paire-de-cles.md)). Au passage, un
 script `run_onchange` installe les outils manquants - voir
-[Outillage](#outillage).
+[Outillage](#outillage) - puis compile le CLI Go `~/bin/dotfiles` qui porte
+l'audit, la vérification et les lanceurs déployés.
 
 Sur une machine neuve, `age` n'est pas encore là au moment où la clé devrait
 être déverrouillée : le script le signale sans échouer, et un second
@@ -56,6 +57,7 @@ apply où le script a changé :
 | `duf` | affichage disque | `.zshrc` n'aliase pas `df` |
 | `uv` | lance `scrapling-mcp` | le MCP scrapling ne démarre pas |
 | `bun` | runtime de l'outillage agentique | `bun` et `bunx` indisponibles |
+| `go` | compile le CLI `dotfiles` après le bootstrap | vérification, audit et lanceurs indisponibles |
 
 Sur macOS il passe par Homebrew, et y ajoute `thefuck` (aliasé par `.zshrc`),
 `pinentry-mac` (saisie du PIN de la YubiKey,
@@ -73,6 +75,13 @@ du `PATH` - `.zshenv` et pas `.zprofile`, pour que les shells non interactifs
 (`ssh nas '...'`, planificateur DSM) les trouvent aussi. Les versions sont
 épinglées en tête du script ; les modifier suffit à déclencher une
 réinstallation.
+
+Go vient de Homebrew sur macOS. Ailleurs, son archive officielle est épinglée,
+vérifiée par SHA-256 puis extraite dans `~/.local/go`; `.zshenv` ajoute ce
+répertoire au `PATH`. Le hook `run_onchange_after_build-dotfiles.sh.tmpl`
+compile ensuite un binaire sans CGO dans `~/bin`. Ces trois étapes restent en
+`sh` POSIX parce qu'elles s'exécutent avant que le CLI existe
+([ADR-023](docs/adr/023-outillage-applicatif-en-go.md)).
 
 `bun` fait exception à deux règles du script. D'abord au garde
 « `command -v` » : sa version *est* la capacité, l'outillage exigeant
@@ -174,42 +183,42 @@ chezmoi status
 ### Vérifier avant de pousser
 
 ```bash
-bash scripts/verify.sh
+go run ./cmd/dotfiles verify
 ```
 
-Syntaxe des scripts, rendu des templates sur trois combinaisons de profil,
+Tests, analyse statique et 4 builds Go, syntaxe du bootstrap, rendu des templates sur trois combinaisons de profil,
 cohérence et routage des skills, tests de télémétrie, index des ADR, noms
 sensibles dans les contenus, chemins, branches et commits, chiffrement des
 fragments et préservation de l'état vivant. Sort en 1 si un contrôle est rouge.
 
 ```bash
-sh scripts/validate-skill-routing.sh
+go run ./cmd/dotfiles validate-skill-routing
 ```
 
 Valide isolément le corpus positif, négatif et ambigu, sa couverture de chaque
-skill et la limite locale de 399 caractères par description. `verify.sh` rejoue
+skill et la limite locale de 399 caractères par description. `dotfiles verify` rejoue
 ce contrôle déterministe ; le comportement des modèles se mesure séparément sur
 chaque hôte.
 
 ```bash
-bash ~/dotfiles/scripts/harness-audit.sh
+dotfiles harness-audit --repository "$HOME/dotfiles"
 ```
 
 Le pendant mesuré, jamais joué en CI : coût fixe et amorti du contexte, retard de
 déploiement, événements Claude et Codex normalisés, adhérence observable et
 matrice `promesse -> contrôle -> attente`. Son clone capture le worktree courant ;
-30 mutants doivent être rejetés, deux anti-mutants acceptés et deux promesses
+47 mutants doivent être rejetés, deux anti-mutants acceptés et deux promesses
 comportementales restent identifiées comme observations. Les agrégats de
 transcripts sont mis en cache sans chemin ni contenu brut.
 
-`.github/workflows/verify.yml` rejoue ce script sur `push` vers `main`, sur
+`.github/workflows/verify.yml` rejoue la barrière sur `push` vers `main`, sur
 `pull_request` vers `main` et à la demande, puis fait un vrai `chezmoi apply`
 sur `ubuntu-latest` et `macos-latest`, pour les deux profils. Il exige un secret
 `AGE_KEY` portant la clé privée `age` : sans elle, l'action de préparation sort
 en 1 avant tout contrôle, plutôt que de laisser passer une barrière amputée.
 
 Aucune commande de ce workflow n'écrit le contenu rendu d'une cible : les logs
-d'un dépôt public en publieraient le clair. `verify.sh` le vérifie. DSM n'a pas
+d'un dépôt public en publieraient le clair. `dotfiles verify` le vérifie. DSM n'a pas
 de runner et reste vérifié à la main
 ([ADR-020](docs/adr/020-verification-en-ci.md)).
 
@@ -314,8 +323,8 @@ copie à synchroniser. Le répertoire est ignoré hors profil `pro`.
 navigateur. La skill `web-fetching` porte les paliers, leurs défauts connus et
 leur arrêt. La skill `containerized-mcp` porte la discipline commune aux
 serveurs MCP Docker : **un conteneur nommé par configuration, réutilisé par
-toutes les sessions**. Les paliers lourds sont pilotés par des scripts de
-`~/.local/bin`.
+toutes les sessions**. Les paliers lourds sont pilotés par des noms stables dans
+`~/.local/bin`, tous liés au CLI Go `~/bin/dotfiles`.
 
 | Script | Rôle | Enregistrement MCP |
 |---|---|---|
@@ -351,7 +360,7 @@ authentification.
 
 `~/.cursor/mcp.json` n'est **pas** versionné - il contient des mots de passe et des
 jetons en clair. C'est pourtant lui qui enregistre `postgres-mcp` ; la bascule vers
-le script à conteneur nommé y est faite à la main.
+la commande à conteneur nommé y est faite à la main.
 
 ### Ce qui n'est pas versionné
 
@@ -360,12 +369,12 @@ absolus écrits par des installeurs tiers, l'état des plugins, une `statusLine`
 et des hooks venus d'ailleurs. Le déployer l'écraserait.
 
 Le hook `Stop` `agent-handoff` y est en revanche **enregistré
-automatiquement** par `run_onchange_after_register-claude-hooks.sh.tmpl`, qui
-fusionne cette seule entrée dans le fichier vivant et laisse le reste intact.
+automatiquement** par le CLI après sa construction. Il fusionne cette seule
+entrée dans le fichier vivant et laisse le reste intact.
 L'idempotence porte sur le chemin du hook, pas sur sa position : Claude Code
 réordonne les entrées et d'autres outils en insèrent. Une sauvegarde
-`settings.json.bak` est déposée avant toute écriture, et un rendu jq invalide
-laisse le fichier inchangé.
+`settings.json.bak` est déposée avant toute écriture, et un JSON invalide laisse
+le fichier inchangé.
 
 Ne jamais ajouter l'attribut `exact_` à `dot_claude/` : `~/.claude` contient
 l'état vivant des sessions, que chezmoi supprimerait.

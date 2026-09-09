@@ -4,7 +4,7 @@ description: >
   Run Docker-delivered MCP servers through reusable named containers. Use when registering,
   configuring or repairing a containerized MCP command. Make sure to use it whenever an MCP setup
   would invoke `docker run` per client session, even if container lifecycle is never named.
-compatibility: Requires Docker and a POSIX shell for wrapper implementations.
+compatibility: Requires Docker and the dotfiles Go CLI built by chezmoi.
 metadata:
   category: ops
 ---
@@ -20,8 +20,8 @@ container per distinct configuration on demand, then attaches each MCP session w
 ## Usage
 
 Use this skill when adding or changing an MCP server distributed as a Docker image, reviewing an MCP
-registration command, or diagnosing duplicate and abandoned MCP containers. The wrapper itself is a
-portable shell script, so use the `scripts` skill for its implementation details.
+registration command, or diagnosing duplicate and abandoned MCP containers. Lifecycle policy lives
+in `internal/commands`; deployed command names are symlinks to the single `dotfiles` binary.
 
 ## Steps
 
@@ -29,12 +29,13 @@ portable shell script, so use the `scripts` skill for its implementation details
    stop operation and status operation.
 2. Derive a stable container name from the configuration without embedding credentials. Different
    configurations get different containers; concurrent sessions for one configuration share one.
-3. Write a wrapper that tries `docker start`, creates the named detached container only when absent,
-   then retries `docker start` if creation lost a race to another session. Attach the MCP stdio
-   process with `docker exec --interactive` only after one of those paths succeeds.
+3. Extend the cohesive Go command that tries `docker start`, creates the named detached container
+   only when absent, then retries `docker start` if creation lost a race to another session. Attach
+   the MCP stdio process with `docker exec --interactive` only after one of those paths succeeds.
 4. Pass credentials through the wrapper's environment and then the container environment. Never put
    them in the registered command, container name, arguments, logs or repository.
-5. Register the wrapper path as the MCP command. Never register `docker run -i --rm <image>`.
+5. Add a chezmoi symlink for the stable command name and register that path as the MCP command. Never
+   register `docker run -i --rm <image>`.
 6. Exercise two consecutive client sessions and confirm they reuse one container. Exercise explicit
    status and stop operations, then inspect the client handshake.
 
@@ -58,4 +59,4 @@ portable shell script, so use the `scripts` skill for its implementation details
 - Preserve the `docker start`, `docker run`, second `docker start` sequence that closes creation races.
 - Keep credentials in the environment, never in command lines, names or logs.
 - Provide deterministic status and stop operations for every wrapper-owned container.
-- Keep lifecycle policy in the wrapper rather than duplicating it in each client registration.
+- Keep lifecycle policy in the Go command rather than duplicating it in each client registration.

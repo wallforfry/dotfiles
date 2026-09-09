@@ -22,12 +22,12 @@ where a new file goes from where it must land.
 | --- | --- |
 | `dot_<name>` | deployed to `~/.<name>` |
 | `dot_config/` | deployed to `~/.config/` |
-| `dot_local/bin/` | executables deployed to `~/.local/bin`, `executable_` and extensionless |
+| `dot_local/bin/` | commands deployed to `~/.local/bin`, usually symlinks to `~/bin/dotfiles` |
 | `private_dot_ssh/` | deployed to `~/.ssh` with restricted permissions |
 | `private_dot_gnupg/` | `gpg-agent.conf` only, deployed to `~/.gnupg` with restricted permissions |
 | `harness/` | canonical agent instructions, agnostic of any single agent - not deployed as such |
 | `dot_config/agent-skills/` | the skills, host-agnostic, one symlink per skill per host |
-| `scripts/` | one-shot maintenance scripts, not deployed |
+| `cmd/`, `internal/` | Go CLI source and tests, not deployed; built into `~/bin/dotfiles` |
 | `docs/`, `README.md` | documentation, not deployed |
 
 Attributes carry meaning and are not decoration: `private_` restricts permissions, `encrypted_`
@@ -70,10 +70,11 @@ be conditioned on `.profile` or on the OS.
 ## Verification
 
 Verify locally before delivering: CI repeats the same barrier, it does not replace it, and it only
-reports once the change is pushed. **`bash scripts/verify.sh` is the
-mechanical barrier**: shell syntax and template rendering across three profile combinations, skill
-frontmatter and routing, telemetry, the ADR index, sensitive names in contents and published names,
-and encryption of every `.age` fragment. It reports counts and exits non-zero when a check fails.
+reports once the change is pushed. **`go run ./cmd/dotfiles verify` is the
+mechanical barrier**: Go tests, analysis and cross-builds, bootstrap shell syntax, template rendering
+across three profile combinations, skill frontmatter and routing, telemetry, the ADR index,
+sensitive names in contents and published names, and encryption of every `.age` fragment. It
+reports counts and exits non-zero when a check fails.
 Run it before every commit.
 
 A green barrier is not correctness. Before committing or pushing a change whose deployed effect
@@ -90,11 +91,11 @@ What it cannot decide, verify by hand:
 - Say which OS you exercised. This repository targets macOS, Linux and Synology DSM; DSM notably
   mounts `/tmp` with `noexec`, which is why `scriptTempDir` is set in `.chezmoi.toml.tmpl`.
 
-`bash ~/dotfiles/scripts/harness-audit.sh` is the measurement counterpart, run by hand and never in
+`dotfiles harness-audit --repository "$HOME/dotfiles"` is the measurement counterpart, run by hand and never in
 CI: the always-loaded byte total, how far the chezmoi source clone lags `origin/main`, the real activation
 count of every observable skill and subagent, the violation rate of the two observable rules before
 and after their introduction, and a promise-to-control matrix with mutants and anti-mutants. It
-exits non-zero when `verify.sh` violates an expectation or a measurement could not be made. The
+exits non-zero when `dotfiles verify` violates an expectation or a measurement could not be made. The
 `harness-audit` skill carries how to read its counts.
 
 `.github/workflows/verify.yml` runs the barrier on Linux and then a real `chezmoi apply` on
@@ -104,7 +105,7 @@ covers DSM, which has no runner: a DSM-specific change stays a manual check.
 
 **No command added there may write a target's rendered content.** `apply --verbose` and
 `chezmoi diff` emit a unified diff of what they write, which on a public runner publishes the
-cleartext of every `age` fragment. `verify.sh` refuses both in `.github/`; read the deployed effect
+cleartext of every `age` fragment. `dotfiles verify` refuses both in `.github/`; read the deployed effect
 with `chezmoi status`, which prints paths only.
 
 ## Secrets
@@ -120,7 +121,7 @@ with `chezmoi status`, which prints paths only.
 - What is sensitive and still needed at deploy time is encrypted with `age`: `~/.secrets`,
   `~/.ssh/config.d/nas.conf`, `~/.config/zsh/pro.zsh`, `~/.config/zsh/pro.zprofile`,
   `~/.config/git/pro.gitconfig`, `~/.claude/CONTEXT.md`, `~/.config/dotfiles/sensible.txt` - the
-  list of names `scripts/verify.sh` forbids, which is itself the data to protect. Add one with
+  list of names `dotfiles verify` forbids, which is itself the data to protect. Add one with
   `chezmoi add --encrypt <path>`, which the operator runs: it needs the passphrase, so an agent
   cannot.
 - Public files load those fragments without naming what is in them - a `[ -f … ] && source …`, a git

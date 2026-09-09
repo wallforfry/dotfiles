@@ -5,8 +5,8 @@ description: >
   auditing whether a rule, skill or subagent earns its place, or before adding or removing one.
   Make sure to use it whenever a harness claim needs a count, even if measurement is never named.
 compatibility: >
-  The dotfiles checkout, `python3`, and Claude or Codex JSONL transcripts. Override their roots with
-  `CLAUDE_PROJECTS` and `CODEX_SESSIONS`.
+  The dotfiles checkout, its installed Go CLI, and Claude or Codex JSONL transcripts. Override their
+  roots with `CLAUDE_PROJECTS` and `CODEX_SESSIONS`.
 metadata:
   category: ops
 ---
@@ -15,20 +15,19 @@ metadata:
 
 ## Overview
 
-The harness states rules; this skill measures whether they act. `scripts/harness-audit.sh` reports
+The harness states rules; this skill measures whether they act. `dotfiles harness-audit` reports
 fixed and amortized context cost, deployment lag, host-normalized activation and adherence, then a
-promise-to-control matrix for `scripts/verify.sh`. Frequency of use is not usefulness: a rule
+promise-to-control matrix for `dotfiles verify`. Frequency of use is not usefulness: a rule
 activated once may guard an irreversible loss, so read counts against what each component protects.
 
 ## Usage
 
 ```bash
-bash ~/dotfiles/scripts/harness-audit.sh
+dotfiles harness-audit --repository "$HOME/dotfiles"
 ```
 
-The script measures the checkout it ships in, whatever the working directory: it resolves its own
-location and never the current repository, so it is run unchanged from a session opened in any
-project. Name the working checkout, not `chezmoi source-path`: that path is the deployment clone.
+The command measures the checkout passed through `--repository`, whatever the working directory.
+Name the working checkout, not `chezmoi source-path`: that path is the deployment clone.
 
 Environment: `CLAUDE_PROJECTS` and `CODEX_SESSIONS` select transcript roots;
 `HARNESS_RULES_SINCE` selects the rule-introduction date. Aggregates are cached under
@@ -39,7 +38,7 @@ that did not run is reported as not done, never as green.
 
 ## Steps
 
-1. Run the script and read the five measurements. It copies the current tracked and untracked state
+1. Run the command and read the five measurements. It copies the current tracked and untracked state
    into a clone under `$HOME/.cache` and never mutates the working tree.
 2. Compare the always-loaded total to the previous run. A section that grew must be justified by a
    rule that changes behaviour on tasks unrelated to its subject; otherwise it belongs in a skill,
@@ -51,7 +50,7 @@ that did not run is reported as not done, never as green.
    measured on the sessions in this repository, and a skill created days ago is measured on days.
 5. Read the adherence rates as correlational only. The model and the host prompt changed over the
    same period, so the split proves an association, never a cause.
-6. Treat a mutant accepted or an anti-mutant rejected as a barrier regression: fix `verify.sh`, then
+6. Treat a mutant accepted or an anti-mutant rejected as a barrier regression: fix `dotfiles verify`, then
    re-run.
 7. Map every promise to a rejecting mutant, an accepting anti-mutant, or an explicit observation.
    A promise absent from the matrix is unmeasured.
@@ -66,9 +65,8 @@ that did not run is reported as not done, never as green.
   before/after split is the only natural experiment available here, and it is confounded.
 - **Adding a mutation that the barrier was never meant to catch** - the barrier's scope is its
   claim. A mutation outside it belongs to a new check in `verify.sh`, added first.
-- **Naming the script by a relative path** - a session runs in some other project far more often
-  than in this checkout, and `bash scripts/harness-audit.sh` then resolves to nothing or to that
-  project's own script. Name the checkout by an absolute path, as `Usage` does.
+- **Omitting the repository path** - a session runs in some other project far more often than in
+  this checkout. Pass the working checkout by an absolute path, as `Usage` does.
 - **Running the copy inside the deployment clone** - `chezmoi source-path` is a distinct clone
   (ADR-001), so the script measures that tree instead: the deployment lag collapses to "single
   clone", and every count describes whatever commit the clone last pulled.

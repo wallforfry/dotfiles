@@ -34,7 +34,7 @@ the deployed copy.
 | `harness-audit` | Measure harness cost, deployment lag, activation, adherence, and mutation detection. |
 | `harness-reflection` | Turn a repeated agent failure into one evidence-backed harness change. |
 | `neovim` | Maintain the dotfiles repository's Neovim and LazyVim configuration. |
-| `scripts` | Create and maintain portable shell scripts in the dotfiles repository. |
+| `scripts` | Create and maintain portable bootstrap shell in the dotfiles repository. |
 | `skill-manager` | Manage the skills of the dotfiles repository: create, doctor, fix, cross-check, and rebuild their README index. |
 | `web-fetching` | Retrieve web pages or search results safely through escalating fetch tiers. |
 

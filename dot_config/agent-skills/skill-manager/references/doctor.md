@@ -10,7 +10,7 @@ Doctor is read-only: it reports findings for a later `fix`.
 
 ## Status model
 
-- **FAIL** - a standard rule or a mandatory local convention fails, or `scripts/verify.sh` is red on
+- **FAIL** - a standard rule or a mandatory local convention fails, or `dotfiles verify` is red on
   this skill.
 - **WARN** - a qualitative, non-blocking weakness.
 - **PASS** - no FAIL and no WARN.
@@ -20,7 +20,7 @@ Doctor is read-only: it reports findings for a later `fix`.
 
 1. Read `conventions.md` completely.
 2. Enumerate the requested directories.
-3. Run `bash scripts/verify.sh` once for the whole run and attribute its Skills findings per skill.
+3. Run `go run ./cmd/dotfiles verify` once for the whole run and attribute its Skills findings per skill.
 4. Apply the checks below to each skill.
 5. Produce one report per skill, then a summary table.
 6. Propose the exact correction for every finding, and modify nothing.

@@ -44,7 +44,7 @@ policy.
 4. Enumerate every consumer of that source - importer, template, installer, index, verification
    barrier - and update each in the same commit.
 5. Verify the deployed effect: `chezmoi diff` for the destination, `chezmoi execute-template` for a
-   template read in isolation, `bash scripts/verify.sh` for the barrier.
+   template read in isolation, `go run ./cmd/dotfiles verify` for the barrier.
 6. State which profiles you exercised. A rule reached through `.profile` has two renderings, and the
    machine you are on only proves one.
 

@@ -48,7 +48,7 @@ Only `name` and `description` are required by the standard. This repository addi
 
 `disable-model-invocation`, `user-invocable`, `argument-hint`, `model`, `paths`, `hooks` and a
 top-level `category` are host-specific or non-standard. Do not add one: this collection is written
-for Claude Code but kept portable, and `scripts/verify.sh` reads `metadata.category` and nothing
+for Claude Code but kept portable, and `internal/verify` reads `metadata.category` and nothing
 else. Do not move an unknown field under `metadata` on your own either; ask, since it changes what
 the field means.
 
@@ -61,7 +61,7 @@ the field means.
 
 Two categories, because the repository has two. Add a third only when a skill genuinely fits
 neither, and update the four places that name them in the same commit: the `case` in
-`scripts/verify.sh`, which is the authority, then this table, the section order in
+`internal/verify`, which is the authority, then this table, the section order in
 [sync-index.md](sync-index.md), and the Conventions list of `dot_config/agent-skills/README.md`.
 
 ### Description format
@@ -154,9 +154,9 @@ identical realistic prompts, run at least three times without it, reproduce a mi
 activation. Keep the prompts and the results, add the smallest rule that distinguishes the sibling
 skills, then rerun the same prompts.
 
-The shared regression corpus is `scripts/skill-routing-cases.tsv`. Each local skill has a positive
+The shared regression corpus is `internal/verify/testdata/skill-routing-cases.tsv`. Each local skill has a positive
 and a negative case; ambiguous cases distinguish close triggers. Run
-`sh scripts/validate-skill-routing.sh` after changing a description or the corpus. The script checks
+`go run ./cmd/dotfiles validate-skill-routing` after changing a description or the corpus. The command checks
 the corpus contract, coverage and description size deterministically; replaying model activation on
 each host remains a separate behavioural measurement.
 
@@ -168,7 +168,7 @@ rules.
 
 ## 10. What the barrier already checks
 
-`scripts/verify.sh`, Skills section, is the mechanical floor:
+`dotfiles verify`, Skills section, is the mechanical floor:
 
 - `SKILL.md` exists and its `name` equals the directory;
 - a `description` exists and contains `Use when`;

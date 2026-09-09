@@ -75,7 +75,7 @@ authentification et n'écoute donc que sur `127.0.0.1`.
 l'interaction : cliquer, remplir, attendre un rendu. Le ranger dans l'escalade
 laisserait croire qu'on s'y replie quand un fetch échoue.
 
-Chaque palier est livré par un script de `~/.local/bin` adossé à un conteneur nommé
+Chaque palier est livré par une commande de `~/.local/bin` adossée à un conteneur nommé
 ([ADR-015](015-mcp-en-conteneurs-nommes.md)).
 
 ## Conséquences
@@ -97,7 +97,7 @@ Chaque palier est livré par un script de `~/.local/bin` adossé à un conteneur
   **Faux sur Linux**, où il faudrait un réseau docker commun et `http://cloak:9222`.
 - Les paliers 2 et 3 exigent docker, donc ne sont pas disponibles sur les cibles qui
   n'en ont pas - le NAS notamment ([ADR-008](008-dsm-cible-de-premier-rang.md)). Les
-  scripts sortent en 69 plutôt que d'échouer obscurément.
+  commandes sortent en 69 plutôt que d'échouer obscurément.
 - Le nom du pilote CloakBrowser est `cloak` et non `cloakbrowser` : le paquet npm de
   ce nom est installé et son shim Volta précède `~/.local/bin` dans le `PATH`.
 - **Les trois paliers sont exercés**, chacun sur `example.com` : Firecrawl rend 180

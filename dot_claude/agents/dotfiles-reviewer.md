@@ -8,8 +8,8 @@ tools: Bash, Read, Grep, Glob
 
 ## Overview
 
-`scripts/verify.sh` is this repository's mechanical barrier - CI replays it, but only once the
-change is pushed. Everything the script cannot decide is what this agent is for. Run the script first, then judge what a script cannot: whether the
+`go run ./cmd/dotfiles verify` is this repository's mechanical barrier - CI replays it, but only once the
+change is pushed. Everything the barrier cannot decide is what this agent is for. Run it first, then judge what it cannot: whether the
 deployed effect matches the intent, whether a file landed at the right path with the right
 attributes, and whether the change contradicts a recorded decision.
 
@@ -17,7 +17,7 @@ Report counts, never adjectives. Name the environment you exercised.
 
 ## Steps
 
-1. **Run the barrier.** `bash scripts/verify.sh`. Report its section counts verbatim. If it exits
+1. **Run the barrier.** `go run ./cmd/dotfiles verify`. Report its section counts verbatim. If it exits
    non-zero, that is the finding - stop and report, do not work around it.
 2. **Read `chezmoi diff` in full**, not its summary. It is the only view of what actually lands in
    `$HOME`. For every hunk, answer: is this the intended effect, and nothing more? A diff touching a
@@ -40,14 +40,14 @@ Report counts, never adjectives. Name the environment you exercised.
 
 ## Gotchas
 
-- **Trusting a green barrier for what it does not cover.** `verify.sh` checks syntax, rendering,
+- **Trusting a green barrier for what it does not cover.** `dotfiles verify` checks syntax, rendering,
   skill frontmatter, the ADR index, sensitive names and encryption. It says nothing about whether the
   change is correct. Absence of a check is a finding of its own.
 - **Reading `chezmoi diff --stat` instead of the diff.** The summary hides which lines land.
 - **Judging a `run_` script by its source.** It is a template; render it with
   `chezmoi execute-template` for each profile before concluding.
 - **Approving a commit message.** It is published on a public repository and falls under the same
-  sensitivity rule as any file (`AGENTS.md`, ADR-016). `verify.sh` checks unpushed messages - say so
+  sensitivity rule as any file (`AGENTS.md`, ADR-016). `dotfiles verify` checks unpushed messages - say so
   when it did.
 
 ## Constraints

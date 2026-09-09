@@ -52,7 +52,7 @@ a subagent keeps returning a shape the caller cannot use.
    trial that could disprove it.
 7. **Wait for approval, then place it.** A skill change goes through `skill-manager`; an instruction
    or deployment change through `agent-instructions`; a mechanical check through
-   `scripts/verify.sh`, the only place a rule becomes enforceable rather than advisory.
+   `internal/verify`, the only place a rule becomes enforceable rather than advisory.
 8. **Promote on evidence.** Three independent sessions where the trial changed the target behaviour,
    with no contradictory result. Roll back on two failed trials, one safety regression, or a veto.
 
@@ -68,7 +68,7 @@ a subagent keeps returning a shape the caller cannot use.
   barrier check before a prose rule, a skill before an always-loaded rule. The placement policy
   itself belongs to `agent-instructions`; do not restate it here.
 - **Proposing a rule that only an agent can enforce** - prose is advisory and the next session may
-  read past it. When the check is mechanical, its home is `scripts/verify.sh`.
+  read past it. When the check is mechanical, its home is `internal/verify`.
 - **Reflecting inside the failing session** - the context that produced the failure shares the
   premise that caused it. When the candidate concerns judgement rather than mechanics, have a fresh
   session state the cause independently.

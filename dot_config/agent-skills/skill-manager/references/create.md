@@ -26,7 +26,7 @@ domain rule to fill a section.
 9. Add the host links, one per host, each holding `../../.config/agent-skills/<slug>`:
    `dot_claude/skills/symlink_<slug>` and `dot_codex/skills/symlink_<slug>`. Without them the
    skill exists and no agent sees it. On a rename or a deletion, move or remove both.
-10. Run `sync-index`, then `bash scripts/verify.sh`, then `doctor <slug>`.
+10. Run `sync-index`, then `go run ./cmd/dotfiles verify`, then `doctor <slug>`.
 11. Read `chezmoi diff` for the new files: it is the only proof of where they land.
 
 ## Minimal template
@@ -72,7 +72,7 @@ metadata:
 
 ## Completion
 
-Creation is complete when `doctor <slug>` passes, `scripts/verify.sh` is green, the skill is indexed
+Creation is complete when `doctor <slug>` passes, `dotfiles verify` is green, the skill is indexed
 under its category, a second `sync-index` changes no byte, and `chezmoi diff` shows the expected
 destination.
 

@@ -7,7 +7,7 @@ description: >
   edited, even if the request names only a typo.
 compatibility: >
   The dotfiles repository checkout, since every path is relative to `dot_config/agent-skills/`, and
-  `bash scripts/verify.sh` for the mechanical part of the audit.
+  its Go toolchain for the mechanical part of the audit.
 metadata:
   category: ops
 ---
@@ -19,11 +19,11 @@ metadata:
 `dot_config/agent-skills/` is the only skill collection of this repository; chezmoi deploys it to
 `~/.config/agent-skills`, which every host reaches through one symlink per skill under
 `dot_claude/skills/` and `dot_codex/skills/`. Adding a skill therefore adds two symlink
-entries, which `scripts/verify.sh` requires. A skill
+entries, which `dotfiles verify` requires. A skill
 therefore needs no registration step, and editing a deployed copy is always a mistake.
 
 Five operations: scaffold a skill, audit one or all of them, apply a justified change, report
-inter-skill inconsistencies, and rebuild the derived README index. `scripts/verify.sh` already
+inter-skill inconsistencies, and rebuild the derived README index. `dotfiles verify` already
 decides the mechanical part - frontmatter `name`, category, index membership. This skill covers what
 a script cannot decide: whether a description routes, whether a body is complete, whether two skills
 collide.
@@ -50,9 +50,9 @@ a skill and the derived index. A section moved out of an always-loaded file arri
 1. Identify the operation: `create`, `doctor`, `fix`, `cross-check` or `sync-index`.
 2. Read [references/conventions.md](references/conventions.md) completely, before any write.
 3. Read the operation's own reference below and follow it exactly.
-4. Run `bash scripts/verify.sh` and treat its Skills section as the mechanical floor: a red barrier
+4. Run `go run ./cmd/dotfiles verify` and treat its Skills section as the mechanical floor: a red barrier
    is a FAIL no judgement overrides.
-5. After a routing description or corpus change, run `sh scripts/validate-skill-routing.sh`.
+5. After a routing description or corpus change, run `go run ./cmd/dotfiles validate-skill-routing`.
 6. For `cross-check`, present the report and stop. Every write goes through a later `fix`.
 7. After `create`, `fix`, a rename or a deletion, run `sync-index` and require that a second run
    changes no byte.
@@ -83,9 +83,9 @@ a skill and the derived index. A section moved out of an always-loaded file arri
 - Never modify a file during `doctor` or `cross-check`.
 - Never edit a README table row by hand; regenerate it with `sync-index`.
 - Never modify more than one skill in one `fix` operation.
-- Never claim an audit green while `scripts/verify.sh` is red.
+- Never claim an audit green while `dotfiles verify` is red.
 - Never add an activation router without repeated behavioural evidence.
-- Keep routing cases in `scripts/skill-routing-cases.tsv`; do not duplicate expected activation in
+- Keep routing cases in `internal/verify/testdata/skill-routing-cases.tsv`; do not duplicate expected activation in
   a second router.
 - Write every skill and reference in English, per the repository's language rule.
 
