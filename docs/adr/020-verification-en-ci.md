@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-09
-- **Commits** : `2e03b13` (workflow et action composite)
+- **Commits** : `2e03b13` (workflow et action composite), `305dcad` (configuration non interactive), `968afef` (confidentialité des logs), `c0a1388` (bootstrap simulé)
 
 ## Contexte
 
@@ -75,13 +75,16 @@ déployé.
 - Linux et macOS sont vérifiés à chaque poussée, sur les deux profils. C'est le
   gain principal : le rendu des fragments `pro` n'était jusqu'ici jamais exercé
   depuis une machine `perso`.
-- **DSM reste hors couverture** : aucun runner. La règle « nommer
-  l'environnement » continue de s'appliquer, et un changement qui touche DSM
-  reste une vérification manuelle.
+- **DSM reste sans runner.** La barrière simule sous `/bin/sh` un Linux sans
+  gestionnaire de paquets sur `x86_64` et `aarch64`, avec réseau indisponible et
+  temporaires sous `$HOME/.cache`. Elle exerce les branches de dégradation qui
+  protègent DSM, mais ni son noyau ni son environnement réel : un changement
+  spécifique à DSM reste une vérification manuelle.
 - La clé privée `age` vit dans un secret GitHub. Elle ouvre tous les fragments
   d'un dépôt public : la compromettre équivaut à les publier. En conséquence,
-  aucun `pull_request_target`, aucune action tierce, et `actions/checkout` seul
-  y a accès.
+  aucun `pull_request_target` et aucune action tierce ne la reçoit. Seule
+  l'action composite locale `setup-chezmoi`, dont le code appartient à ce dépôt,
+  reçoit `AGE_KEY`; `actions/checkout` n'y a pas accès.
 - **Le canal des logs est aussi dangereux que l'exfiltration de la clé**, et
   moins visible : la première version de ce workflow portait `--verbose` sur
   `apply`, et le run
@@ -92,9 +95,11 @@ déployé.
   critère.
 - **Une PR de fork sortira rouge**, faute de secret. Assumé sur un dépôt à un
   auteur : mieux vaut un rouge lisible qu'un vert obtenu en sautant le contrôle.
-- Le job `depot` ne teste pas l'amorçage d'une machine : `--exclude=scripts`
-  écarte l'installation d'outils, `--exclude=externals` le téléchargement
-  d'oh-my-zsh. L'ADR-007 « dégradation, jamais échec » reste vérifiée à la main.
+- Le job `depot` ne teste pas l'amorçage réel d'une machine :
+  `--exclude=scripts` écarte l'installation d'outils, `--exclude=externals` le
+  téléchargement d'oh-my-zsh. La barrière couvre le scénario hermétique sans
+  gestionnaire; les téléchargements réussis et l'environnement DSM restent
+  vérifiés à la main.
 - Deux versions épinglées de plus à suivre : celle de `chezmoi` dans l'action,
   celle de `actions/checkout`.
 

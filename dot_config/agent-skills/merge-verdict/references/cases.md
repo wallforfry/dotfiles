@@ -119,9 +119,16 @@ a documented deferral without an authoritative exclusion must keep AC-2 `absent`
 
 ## Execution record
 
-**None of these cases has been run in this repository.** The cases state what the skill is supposed
-to do; nothing here is evidence that it does. Anyone claiming otherwise is doing exactly what phase 4
-exists to prevent - reading an intention as a measurement.
+Cases C and D were run on 2026-09-09 with Codex in separate fresh, read-only subagents. Case C
+returned _changes required_, kept four ledger rows, recorded all four negative witnesses as
+`absent`, and made those witnesses the lift criteria. Case D returned _changes required_ while AC-2
+was promised but absent; its discriminating control retained AC-2 as `excluded`, filled its three
+evidence cells with `not required - excluded`, and returned _approved_. All observed verdicts
+matched the cases.
+
+These runs exercised only the contract inventory, ledger and verdict logic. They had no PR, head
+SHA, forge, authenticated barrier or publication step, so they are not evidence for anchoring,
+barrier execution or forge behaviour. Cases A and B remain unrun.
 
 One run has happened that is not a case. On four self-authored pull requests of this repository,
 phases 1 to 5 only, publication not reached: three verdicts of _approved_ or _approved with
@@ -138,6 +145,6 @@ This file is committed to a public repository; the work it was exercised on is n
 
 ## Declared gaps
 
-Until a run says otherwise, nothing validates: the idempotent update of the marker, the
-duplicate-verdict guard, publication on either forge, `gh pr review --request-changes` as a native
-blocking state, or a flat _approved_ verdict.
+Nothing yet validates the idempotent update of the marker, the duplicate-verdict guard, publication
+on either forge, `gh pr review --request-changes` as a native blocking state, or a flat _approved_
+verdict on a real pull request.

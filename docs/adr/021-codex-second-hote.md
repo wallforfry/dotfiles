@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-09
-- **Commits** : à compléter au commit qui porte ce fichier
+- **Commits** : `0790aea` (second hôte et projections)
 
 ## Contexte
 
@@ -82,9 +82,11 @@ vivant mesuré ci-dessus.
   construction : `spawn_agent` refuse de se déclencher sauf si un `AGENTS.md` ou une skill
   demande explicitement la délégation, ce que cette règle fait. La supprimer y
   désactiverait les sous-agents, pas seulement l'incitation à s'en servir.
-- **Ce que Codex fait de ces fichiers n'est pas exercé.** Que `~/.codex/AGENTS.md` soit
-  bien chargé et qu'un `~/.codex/skills/<slug>` lien soit bien suivi se déduit du binaire,
-  pas d'une session observée. La première session Codex est la vérification qui manque.
+- Les sessions Codex sont désormais observées par l'audit, et une session réelle
+  charge `~/.codex/AGENTS.md` ainsi que les skills atteintes par leurs liens. Le
+  chargement effectif n'est donc plus seulement déduit du binaire. Codex n'émet
+  toutefois aucun événement explicite d'activation de skill : cette mesure reste
+  `inconnu`, conformément à l'[ADR-022](022-telemetrie-harness-multi-hote.md).
 
 ## Alternatives écartées
 
