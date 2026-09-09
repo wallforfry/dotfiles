@@ -38,6 +38,10 @@ func action(kind, path string) mutationStep {
 }
 
 func mutationCases() []mutationCase {
+	return append(repositoryMutationCases(), telemetryMutationCases()...)
+}
+
+func repositoryMutationCases() []mutationCase {
 	reject := "reject"
 	return []mutationCase{
 		{"skill-identity", verify.ControlSkills, reject, "name différent du répertoire", []mutationStep{replace("dot_config/agent-skills/adr/SKILL.md", "name: adr", "name: adrx")}},
@@ -75,6 +79,12 @@ func mutationCases() []mutationCase {
 		{"sensitive-commit", verify.ControlSensitive, reject, "message de commit sensible", []mutationStep{action("commit", "$MARKER")}},
 		{"sensitive-path", verify.ControlSensitive, "accept", "nom de fichier ordinaire", []mutationStep{write("harness-audit-ordinary-marker.txt", "safe\n")}},
 		{"sensitive-branch", verify.ControlSensitive, "accept", "nom de branche ordinaire", []mutationStep{action("branch", "harness-audit-ordinary")}},
+	}
+}
+
+func telemetryMutationCases() []mutationCase {
+	reject := "reject"
+	return []mutationCase{
 		{"telemetry-contract", verify.ControlTelemetry, reject, "format vivant non testé", []mutationStep{replace("internal/telemetry/schema.go", "\"FileChange\",", "\"FileChangeBroken\",")}},
 		{"telemetry-contract", verify.ControlTelemetry, reject, "format vocal Codex non testé", []mutationStep{replace("internal/telemetry/schema.go", "\"realtime_item\",", "\"realtime_item_broken\",")}},
 		{"telemetry-turn-passive", verify.ControlTelemetry, reject, "turn_aborted produit un événement", []mutationStep{replace("internal/telemetry/events.go", "case \"transcript_segment\":\n\t\treturn []event{{source: \"codex\", kind: \"text\", timestamp: record[\"timestamp\"], role: payload[\"role\"], text: payload[\"text\"]}}", "case \"transcript_segment\":\n\t\treturn []event{{source: \"codex\", kind: \"text\", timestamp: record[\"timestamp\"], role: payload[\"role\"], text: payload[\"text\"]}}\n\tcase \"turn_aborted\":\n\t\treturn []event{{source: \"codex\", kind: \"tool\", name: \"spawn_agent\"}}")}},

@@ -112,7 +112,7 @@ func TestZeroDenominatorIsUnknown(t *testing.T) {
 
 func TestCacheRejectsAnotherVersion(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "cache.json")
-	content := `{"version":13,"since":"x","files":{}}`
+	content := `{"version":13,"since":"x","files":{"one":{"digest":"d","source":"codex","summary":{}}}}`
 	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}

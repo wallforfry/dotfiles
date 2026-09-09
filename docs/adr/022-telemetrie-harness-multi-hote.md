@@ -81,7 +81,8 @@ du modèle reste une mesure distincte à rejouer sur chaque hôte.
 - Une évolution de schéma invalide le cache agrégé. Le premier audit relit alors
   tous les transcripts; les suivants retrouvent le chemin amorti.
 - Les mutations restent le poste lent. Après la migration vers Go, rejouer leurs
-  contrôles ciblés évite de rejouer la barrière complète pour chaque cas.
+  contrôles ciblés mesure 43 mutants en 22,31 s et l'audit complet avec cache
+  chaud en 24,17 s sur macOS.
 
 ## Alternatives écartées
 

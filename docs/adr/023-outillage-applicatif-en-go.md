@@ -2,19 +2,19 @@
 
 - **Statut** : accepté
 - **Date** : 2026-09
-- **Commits** : `e55bf3a`
+- **Commits** : `71cf7b9`
 
 ## Contexte
 
-Le dépôt comptait 26 scripts ou composants shell pour 1 926 lignes et cinq
-modules Python pour 869 lignes. Trois catégories y cohabitaient : le bootstrap
+Le dépôt comptait 28 scripts ou composants shell pour 2 016 lignes et sept
+modules Python pour 1 153 lignes. Trois catégories y cohabitaient : le bootstrap
 `chezmoi`, des lanceurs de processus déployés, et une barrière de vérification
 avec télémétrie et injection de défauts. Les deux dernières portent des modèles
 de données, des invariants et des tests ; leur répartition entre shell, `awk`,
 `jq` et Python rendait leurs contrats implicites et multipliait les chemins
 d'erreur.
 
-La télémétrie Python disposait de 10 tests et parcourait 390 760 enregistrements
+La télémétrie Python disposait de 20 tests et parcourait 390 760 enregistrements
 en 1,3 seconde avec son cache chaud lors de la mesure précédant cette décision.
 La vitesse seule ne justifiait donc pas une réécriture. Le besoin est une source
 unique de vérité pour les types, les erreurs, les commandes et les contrôles,
@@ -70,8 +70,8 @@ construit le CLI pour les quatre cibles avant d'exécuter ses contrôles de dép
 - La barrière locale nécessite désormais Go. La CI et chaque poste doivent donc
   nommer et exercer cette dépendance avant de publier un résultat vert.
 - La matrice de mutations reste dominée par les sous-processus. Ses contrôles
-  ciblés mesurent 30 mutants en 15,09 secondes sur macOS ; une barrière complète
-  par cas prenait 109,66 secondes et n'est pas conservée.
+  ciblés mesurent 43 mutants en 22,31 secondes sur macOS ; l'audit complet avec
+  cache chaud prend 24,17 secondes.
 - DSM reste sans runner CI. Les builds Linux `arm64` et `amd64` prouvent la
   compilation, pas l'exécution sur son noyau et sa libc ; un changement du
   bootstrap y reste une vérification manuelle.
