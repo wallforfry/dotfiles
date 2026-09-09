@@ -29,7 +29,7 @@ func captureWorktree(source, repository, scratch string) (string, error) {
 	if err := copyUntracked(source, repository, bytes.Split(bytes.TrimSuffix(paths, []byte{0}), []byte{0})); err != nil {
 		return "", err
 	}
-	commands := [][]string{{"config", "user.name", "harness-audit"}, {"config", "user.email", "harness-audit@invalid"}, {"config", "gc.auto", "0"}, {"config", "maintenance.auto", "false"}, {"add", "-A"}, {"commit", "-qm", "test: capture audit baseline", "--allow-empty"}}
+	commands := [][]string{{"config", "user.name", "harness-audit"}, {"config", "user.email", "harness-audit@invalid"}, {"config", "gc.auto", "0"}, {"config", "maintenance.auto", "false"}, {"add", "-A"}, {"-c", "core.hooksPath=/dev/null", "commit", "--no-gpg-sign", "-qm", "test: capture audit baseline", "--allow-empty"}}
 	for _, arguments := range commands {
 		if _, err := gitOutput(repository, arguments...); err != nil {
 			return "", err

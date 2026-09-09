@@ -180,14 +180,16 @@ if command -v brew >/dev/null; then
     go_current=$(go version 2>/dev/null | awk '{ sub(/^go/, "", $3); print $3 }')
   fi
   if version_lt "$go_current" "$GO_MIN"; then
-    brew upgrade go >/dev/null 2>&1 || true
-    hash -r
-    go_current=
-    if command -v go >/dev/null; then
-      go_current=$(go version 2>/dev/null | awk '{ sub(/^go/, "", $3); print $3 }')
+    if brew list --versions go >/dev/null 2>&1; then
+      brew upgrade go >/dev/null 2>&1 || true
+    else
+      brew install go >/dev/null 2>&1 || true
     fi
+    hash -r
+    go_bin=$(brew --prefix go 2>/dev/null)/bin/go || go_bin=
+    go_current=$("$go_bin" version 2>/dev/null | awk '{ sub(/^go/, "", $3); print $3 }') || go_current=
     if version_lt "$go_current" "$GO_MIN"; then
-      echo "⚠️   Go $go_current conservé : le CLI dotfiles exige >= $GO_MIN" >&2
+      echo "⚠️   Go compatible absent : le CLI dotfiles exige >= $GO_MIN" >&2
     fi
   fi
 

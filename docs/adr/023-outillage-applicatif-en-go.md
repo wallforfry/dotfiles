@@ -70,8 +70,8 @@ construit le CLI pour les quatre cibles avant d'exécuter ses contrôles de dép
 - La barrière locale nécessite désormais Go. La CI et chaque poste doivent donc
   nommer et exercer cette dépendance avant de publier un résultat vert.
 - La matrice de mutations reste dominée par les sous-processus. Ses contrôles
-  ciblés mesurent 43 mutants en 22,31 secondes sur macOS ; l'audit complet avec
-  cache chaud prend 24,17 secondes.
+  ciblés mesurent 47 mutants en 34,26 secondes sur macOS ; l'audit complet avec
+  cache chaud prend 36,76 secondes.
 - DSM reste sans runner CI. Les builds Linux `arm64` et `amd64` prouvent la
   compilation, pas l'exécution sur son noyau et sa libc ; un changement du
   bootstrap y reste une vérification manuelle.

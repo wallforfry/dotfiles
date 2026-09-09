@@ -3,9 +3,12 @@ package commands
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
+	"syscall"
 	"testing"
+	"time"
 )
 
 func TestRegisterClaudeHookPreservesSettingsAndIsIdempotent(t *testing.T) {
@@ -71,5 +74,67 @@ func TestRegisterClaudeHookFailsClosedOnIncompatibleState(t *testing.T) {
 	}
 	if stderr.Len() == 0 {
 		t.Fatal("missing warning")
+	}
+}
+
+func TestReplaceJSONRejectsConcurrentModification(t *testing.T) {
+	directory := t.TempDir()
+	settings := filepath.Join(directory, "settings.json")
+	original := []byte(`{"theme":"dark"}`)
+	concurrent := []byte(`{"theme":"light"}`)
+	if err := os.WriteFile(settings, original, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(settings, concurrent, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	document := map[string]any{"theme": "dark", "hooks": map[string]any{}}
+	if err := replaceJSON(settings, original, document, 0o600, true); !errors.Is(err, errSettingsChanged) {
+		t.Fatalf("replaceJSON() error = %v", err)
+	}
+	content, err := os.ReadFile(settings)
+	if err != nil || !bytes.Equal(content, concurrent) {
+		t.Fatalf("concurrent settings changed: %q, err = %v", content, err)
+	}
+}
+
+func TestReplaceJSONDoesNotOverwriteWriterDuringBackup(t *testing.T) {
+	directory := t.TempDir()
+	settings := filepath.Join(directory, "settings.json")
+	original := []byte(`{"theme":"dark"}`)
+	concurrent := []byte(`{"theme":"light"}`)
+	if err := os.WriteFile(settings, original, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := syscall.Mkfifo(settings+".bak", 0o600); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() {
+		document := map[string]any{"theme": "dark", "hooks": map[string]any{}}
+		done <- replaceJSON(settings, original, document, 0o600, true)
+	}()
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		if _, err := os.Stat(settings); os.IsNotExist(err) {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("settings.json was not captured")
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if err := os.WriteFile(settings, concurrent, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.ReadFile(settings + ".bak"); err != nil {
+		t.Fatal(err)
+	}
+	if err := <-done; !errors.Is(err, errSettingsChanged) {
+		t.Fatalf("replaceJSON() error = %v", err)
+	}
+	content, err := os.ReadFile(settings)
+	if err != nil || !bytes.Equal(content, concurrent) {
+		t.Fatalf("concurrent settings changed: %q, err = %v", content, err)
 	}
 }

@@ -49,11 +49,15 @@ func repositoryMutationCases() []mutationCase {
 		{"skill-category", verify.ControlSkills, reject, "metadata.category invalide", []mutationStep{replace("dot_config/agent-skills/adr/SKILL.md", "category: dev", "category: misc")}},
 		{"skill-index", verify.ControlSkills, reject, "description README non dérivée", []mutationStep{replace("dot_config/agent-skills/README.md", "Write, amend or supersede an architecture decision record.", "Description divergente.")}},
 		{"go-syntax", verify.ControlGo, reject, "erreur de syntaxe du vérificateur", []mutationStep{action("append", "internal/verify/catalog.go|\nfunc broken( {\n")}},
+		{"handoff-confinement", verify.ControlGo, reject, "session hors du répertoire d'état", []mutationStep{replace("internal/commands/handoff.go", "return fmt.Sprintf(\"%x\", sha256.Sum256([]byte(session)))", "return session")}},
+		{"register-concurrency", verify.ControlGo, reject, "modification concurrente de settings.json écrasée", []mutationStep{replace("internal/commands/register.go", "os.Link(temporaryPath, path)", "os.Rename(temporaryPath, path)")}},
+		{"launcher-exit-code", verify.ControlGo, reject, "commande absente ramenée de 127 à 1", []mutationStep{replace("internal/commands/runtime.go", "return 127", "return 1")}},
 		{"shell-syntax", verify.ControlSyntax, reject, "erreur de syntaxe du bootstrap", []mutationStep{action("append", "run_onchange_before_install-tools.sh.tmpl|\nif true; then\n")}},
 		{"shell-boundary", verify.ControlSyntax, reject, "ancien script applicatif réintroduit", []mutationStep{write("scripts/migrate-homebrew-arm64.sh", "#!/bin/sh\nexit 0\n")}},
 		{"template-rendering", verify.ControlTemplates, reject, "template invalide", []mutationStep{action("append", "dot_gitconfig.tmpl|{{ .absent.champ }}\n")}},
 		{"bootstrap-temp", verify.ControlBootstrap, reject, "temporaire exécutable sous /tmp", []mutationStep{replace("run_onchange_before_install-tools.sh.tmpl", "$HOME/.cache/install-tools.XXXXXX", "/tmp/install-tools.XXXXXX")}},
 		{"bootstrap-network", verify.ControlBootstrap, reject, "succès annoncé après échec réseau", []mutationStep{replace("run_onchange_before_install-tools.sh.tmpl", "if fetch \"https://starship.rs/install.sh\" \"$tmp/starship-install.sh\" &&", "if true ||")}},
+		{"bootstrap-macos-go", verify.ControlBootstrap, reject, "ancien Go choisi devant Homebrew", []mutationStep{replace("run_onchange_after_build-dotfiles.sh.tmpl", "prefix=$(brew --prefix go 2>/dev/null || true)", "prefix=")}},
 		{"adr-index", verify.ControlADR, reject, "ADR hors index", []mutationStep{action("copy-first", "docs/adr/001-*.md|docs/adr/099-fantome.md")}},
 		{"age-encryption", verify.ControlEncryption, reject, "fragment age en clair", []mutationStep{write("age-key.txt.age", "texte en clair\n")}},
 		{"ci-confidentiality", verify.ControlWorkflows, reject, "chezmoi diff en CI", []mutationStep{replace(".github/workflows/verify.yml", "chezmoi status", "chezmoi diff")}},
@@ -140,7 +144,7 @@ func applyStep(root, list string, step mutationStep) error {
 		_, err := gitOutput(root, "switch", "-qc", step.path)
 		return err
 	case "commit":
-		_, err := gitOutput(root, "commit", "--allow-empty", "-qm", step.path)
+		_, err := gitOutput(root, "-c", "core.hooksPath=/dev/null", "commit", "--no-gpg-sign", "--allow-empty", "-qm", step.path)
 		return err
 	}
 	return fmt.Errorf("mutation inconnue: %s", step.kind)

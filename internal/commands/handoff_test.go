@@ -33,7 +33,7 @@ func TestAgentHandoffBlocksOnceAtDerivedThreshold(t *testing.T) {
 	if !strings.Contains(stdout.String(), `"decision":"block"`) || !strings.Contains(stdout.String(), "85k handoff threshold") {
 		t.Fatalf("stdout = %q", stdout.String())
 	}
-	if _, err := os.Stat(filepath.Join(temporary, "claude", "handoff", "session")); err != nil {
+	if _, err := os.Stat(filepath.Join(temporary, "claude", "handoff", handoffSession("session"))); err != nil {
 		t.Fatalf("sentinel: %v", err)
 	}
 
@@ -41,6 +41,13 @@ func TestAgentHandoffBlocksOnceAtDerivedThreshold(t *testing.T) {
 	runtime.Stdout = &bytes.Buffer{}
 	if code := AgentHandoff(runtime, nil); code != 0 || runtime.Stdout.(*bytes.Buffer).Len() != 0 {
 		t.Fatalf("second invocation code = %d, stdout = %q", code, runtime.Stdout)
+	}
+}
+
+func TestHandoffSessionCannotEscapeStateDirectory(t *testing.T) {
+	name := handoffSession("../outside")
+	if strings.Contains(name, "/") || strings.Contains(name, "..") || len(name) != 64 {
+		t.Fatalf("unsafe sentinel name %q", name)
 	}
 }
 

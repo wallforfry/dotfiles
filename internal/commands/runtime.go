@@ -1,10 +1,14 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 	"syscall"
 )
 
@@ -53,6 +57,9 @@ func (OSExecutor) Run(process Process) error {
 	if process.Replace {
 		path, err := exec.LookPath(process.Name)
 		if err != nil {
+			if errors.Is(err, exec.ErrNotFound) && commandExistsOnPath(process.Name) {
+				return fs.ErrPermission
+			}
 			return err
 		}
 		return syscall.Exec(path, append([]string{process.Name}, process.Args...), process.Env)
@@ -63,6 +70,19 @@ func (OSExecutor) Run(process Process) error {
 	command.Stdout = process.Stdout
 	command.Stderr = process.Stderr
 	return command.Run()
+}
+
+func commandExistsOnPath(name string) bool {
+	if strings.ContainsRune(name, filepath.Separator) {
+		_, err := os.Stat(name)
+		return err == nil
+	}
+	for _, directory := range filepath.SplitList(os.Getenv("PATH")) {
+		if _, err := os.Stat(filepath.Join(directory, name)); err == nil {
+			return true
+		}
+	}
+	return false
 }
 
 func (runtime Runtime) env(key, fallback string) string {
@@ -102,6 +122,12 @@ func exitCode(err error) int {
 	}
 	if exitError, ok := err.(*exec.ExitError); ok {
 		return exitError.ExitCode()
+	}
+	if errors.Is(err, exec.ErrNotFound) || errors.Is(err, syscall.ENOENT) {
+		return 127
+	}
+	if errors.Is(err, fs.ErrPermission) || errors.Is(err, syscall.EACCES) {
+		return 126
 	}
 	return 1
 }

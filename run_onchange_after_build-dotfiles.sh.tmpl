@@ -19,6 +19,13 @@ go_usable() {
 
 GO=$(command -v go 2>/dev/null || true)
 if ! go_usable "$GO"; then
+  GO=
+  if command -v brew >/dev/null 2>&1; then
+    prefix=$(brew --prefix go 2>/dev/null || true)
+    GO="$prefix/bin/go"
+  fi
+fi
+if ! go_usable "$GO"; then
   GO="$HOME/.local/go/bin/go"
 fi
 if ! go_usable "$GO"; then

@@ -101,6 +101,25 @@ func TestCommandsUseSysexitsForUsageAndUnavailableDocker(t *testing.T) {
 	}
 }
 
+func TestReplacingCommandPreservesShellResolutionExitCodes(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+	missing := exitCode((OSExecutor{}).Run(Process{Name: "absent-command", Replace: true}))
+	if missing != 127 {
+		t.Fatalf("missing command code = %d", missing)
+	}
+
+	directory := t.TempDir()
+	t.Setenv("PATH", directory)
+	blocked := filepath.Join(directory, "blocked-command")
+	if err := os.WriteFile(blocked, []byte("#!/bin/sh\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	notExecutable := exitCode((OSExecutor{}).Run(Process{Name: "blocked-command", Replace: true}))
+	if notExecutable != 126 {
+		t.Fatalf("non-executable command code = %d", notExecutable)
+	}
+}
+
 func TestPostgresKeepsSecretOutOfArguments(t *testing.T) {
 	const uri = "postgres://user:secret@host.docker.internal:5432/db"
 	executor := &fakeExecutor{errors: []error{nil, errors.New("absent"), nil, nil}}

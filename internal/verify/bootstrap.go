@@ -36,6 +36,11 @@ func (v *verifier) checkBootstrap() {
 	if configOK && tested == len(bootstrapArchitectures()) {
 		v.ok("2 architectures Linux sans gestionnaire, cache utilisateur et dégradation vérifiés")
 	}
+	if err := v.checkDarwinGoBootstrap(); err != nil {
+		v.ko(err.Error())
+	} else {
+		v.ok("Go Homebrew installé et sélectionné face à un ancien Go sur macOS")
+	}
 }
 
 func bootstrapArchitectures() []bootstrapArchitecture {

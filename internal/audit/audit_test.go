@@ -54,7 +54,7 @@ func TestMutationMatrixKeepsPromiseCounts(t *testing.T) {
 			t.Fatalf("incomplete mutation: %#v", item)
 		}
 	}
-	if counts["reject"] != 43 || counts["accept"] != 2 || counts["observe"] != 2 {
+	if counts["reject"] != 47 || counts["accept"] != 2 || counts["observe"] != 2 {
 		t.Fatalf("matrix counts = %#v", counts)
 	}
 }

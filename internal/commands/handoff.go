@@ -2,6 +2,7 @@ package commands
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -65,7 +66,7 @@ func handoffSession(session string) string {
 	if session == "" {
 		return "unknown"
 	}
-	return session
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(session)))
 }
 
 func blockHandoff(runtime Runtime, sentinel string, used, threshold int64) int {
