@@ -6,6 +6,10 @@ case ":$PATH:" in
   *":$HOME/bin:"*) ;;
   *) export PATH="$HOME/bin:$PATH" ;;
 esac
+case ":$PATH:" in
+  *":$HOME/.local/go/bin:"*) ;;
+  *) [ ! -d "$HOME/.local/go/bin" ] || export PATH="$HOME/.local/go/bin:$PATH" ;;
+esac
 
 # Rover (Apollo GraphQL)
 if [[ -s "$HOME/.rover/env" ]]; then

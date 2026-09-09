@@ -1,6 +1,9 @@
 README.md
 docs
-scripts
+cmd
+internal
+go.mod
+toolchain
 LICENSE
 .github
 .oh-my-zsh/cache

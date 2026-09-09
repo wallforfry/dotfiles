@@ -31,10 +31,11 @@ embarque des navigateurs et des dépendances Python lourdes.
 
 ## Décision
 
-Un serveur MCP livré par image Docker s'enregistre à travers un **script de
+Un serveur MCP livré par image Docker s'enregistre à travers une **commande de
 `~/.local/bin` qui `docker exec` dans un conteneur nommé unique**, démarré à la
-demande. Quatre pilotes suivent cette forme : `firecrawl-mcp`, `scrapling-mcp`,
-`postgres-mcp`, `cloak`.
+demande. Quatre noms suivent cette forme : `firecrawl-mcp`, `scrapling-mcp`,
+`postgres-mcp`, `cloak`. Ils sont des liens vers le CLI Go unique depuis
+[ADR-023](023-outillage-applicatif-en-go.md).
 
 Trois règles les gouvernent :
 

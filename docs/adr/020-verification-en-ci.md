@@ -6,7 +6,7 @@
 
 ## Contexte
 
-`AGENTS.md` et l'en-tête de [scripts/verify.sh](../../scripts/verify.sh) affirmaient
+`AGENTS.md` et l'ancienne barrière shell affirmaient
 « rien ne tourne en CI, donc tout se vérifie ici ». C'était vrai et suffisant
 tant que le dépôt n'avait qu'un poste et un opérateur. Deux limites l'ont rendu
 insuffisant.
@@ -35,7 +35,7 @@ n'aurait donc pas pu être verte.
 `pull_request` vers `main` et sur `workflow_dispatch`, en `permissions:
 contents: read`. Il porte deux jobs :
 
-- **`barriere`** rejoue `bash scripts/verify.sh` sur `ubuntu-latest`, avec
+- **`barriere`** rejoue `go run ./cmd/dotfiles verify` sur `ubuntu-latest`, avec
   `fetch-depth: 0` pour que le contrôle des messages de commit ait
   `origin/main..HEAD`, et `SENSIBLE_LIST` pointé sur un
   `chezmoi cat ~/.config/dotfiles/sensible.txt`.
@@ -48,7 +48,7 @@ contents: read`. Il porte deux jobs :
 dépôt public sont lisibles par tous, et un fragment déchiffré en sort aussi
 sûrement que d'un fichier versionné. `apply --verbose` et `chezmoi diff`
 émettent un diff unifié des fichiers écrits, donc le clair des sept fragments
-`age` sur un `$HOME` vierge : ni l'un ni l'autre n'est admis, et `verify.sh`
+`age` sur un `$HOME` vierge : ni l'un ni l'autre n'est admis, et `dotfiles verify`
 refuse désormais leur retour dans `.github/`. L'idempotence se lit dans
 `chezmoi status`, qui ne donne que des chemins.
 

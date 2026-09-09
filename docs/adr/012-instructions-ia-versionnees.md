@@ -56,10 +56,10 @@ aussi la charge des trois sources, passée de la source canonique à l'adaptateu
   écrits par des installeurs tiers, de l'état de plugins, une `statusLine`. Le
   déployer l'écraserait.
   **Amendement** : la conséquence « le hook `agent-handoff` doit être enregistré
-  à la main » ne tient plus. `run_onchange_after_register-claude-hooks.sh.tmpl`
-  fusionne cette entrée dans le fichier vivant, sans toucher au reste. Le fichier
-  demeure hors du dépôt : c'est la fusion qui est versionnée, pas la
-  configuration.
+  à la main » ne tient plus. Le CLI Go construit après le bootstrap fusionne
+  cette entrée dans le fichier vivant, sans toucher au reste. Le fichier demeure
+  hors du dépôt : c'est la fusion qui est versionnée, pas la configuration
+  ([ADR-023](023-outillage-applicatif-en-go.md)).
 - **Ne jamais ajouter l'attribut `exact_` à `dot_claude/`** : `~/.claude` contient
   l'état vivant des sessions et des projets, que chezmoi supprimerait.
 

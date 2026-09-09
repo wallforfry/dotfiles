@@ -45,7 +45,8 @@ same commit:
 - the adapters: `dot_claude/CLAUDE.md`, the root `CLAUDE.md`;
 - `.chezmoiignore`, when a new source must stay undeployed, or a fragment is `pro`-only;
 - the indexes: `dot_config/agent-skills/README.md`, `docs/adr/README.md`;
-- the barrier: `scripts/verify.sh`, which must cover the new shape as well as the old;
+- the barrier: `internal/verify`, invoked by `go run ./cmd/dotfiles verify`, which must cover the new
+  shape as well as the old;
 - the documentation: `README.md`, `docs/`, and the ADR that records the decision if one does.
 
 ## Verification
@@ -53,7 +54,7 @@ same commit:
 - `chezmoi diff` - the deployed effect. A template that renders is not a template that lands where
   you think.
 - `chezmoi execute-template < <file>` - one template in isolation, when the diff is unclear.
-- `bash scripts/verify.sh` - renders every template across the three profile combinations, and
+- `go run ./cmd/dotfiles verify` - renders every template across the three profile combinations, and
   checks the skills, the subagents and the ADR index.
 - Both values of `.profile` for anything conditional. The current machine proves one.
 

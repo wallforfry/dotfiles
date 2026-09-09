@@ -61,7 +61,7 @@ explicitement marquées comme observations plutôt que comptées dans le score. 
 barrière complète valide d'abord le clone ; chaque cas rejoue ensuite son contrôle
 ciblé, dont l'appartenance à l'orchestrateur est elle-même exigée.
 
-Le corpus de routage est un contrat d'entrée positif, négatif et ambigu. Le shell
+Le corpus de routage est un contrat d'entrée positif, négatif et ambigu. Le CLI Go
 en valide la forme, la couverture et la taille des descriptions ; le comportement
 du modèle reste une mesure distincte à rejouer sur chaque hôte.
 
@@ -80,9 +80,8 @@ du modèle reste une mesure distincte à rejouer sur chaque hôte.
   verte.
 - Une évolution de schéma invalide le cache agrégé. Le premier audit relit alors
   tous les transcripts; les suivants retrouvent le chemin amorti.
-- Les mutations restent le poste lent, mais rejouer leurs contrôles ciblés ramène
-  sur macOS une matrice étendue à 30 mutants à 9,81 s et l'audit complet à
-  10,43 s ; la version qui rejouait toute la barrière prenait 46,88 s pour 20 mutants.
+- Les mutations restent le poste lent. Après la migration vers Go, rejouer leurs
+  contrôles ciblés évite de rejouer la barrière complète pour chaque cas.
 
 ## Alternatives écartées
 

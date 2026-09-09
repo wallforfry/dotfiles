@@ -89,4 +89,4 @@ The check must pass. Identical frontmatter must always produce identical bytes.
 - Never truncate a description at an approximate character count.
 - Never keep a row whose directory no longer exists, and never drop a directory from the index.
 - Never rewrite the `## Origin` attribution while regenerating.
-- Always verify that a second generation changes no byte, then run `bash scripts/verify.sh`.
+- Always verify that a second generation changes no byte, then run `go run ./cmd/dotfiles verify`.

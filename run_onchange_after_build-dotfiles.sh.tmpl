@@ -1,0 +1,40 @@
+#!/bin/sh
+# Construit l'outillage Go après que le hook before a installé la chaîne.
+# La révision source rend ce script à nouveau exécutable après chaque update.
+# SOURCE_REVISION: {{ output "git" "-C" .chezmoi.sourceDir "rev-parse" "HEAD" | trim }}
+set -eu
+
+SOURCE={{ .chezmoi.sourceDir | quote }}
+TARGET="$HOME/bin/dotfiles"
+REQUIRED=$(awk '$1 == "go" { print $2; exit }' "$SOURCE/go.mod")
+
+go_usable() {
+  current=$("$1" env GOVERSION 2>/dev/null) || return 1
+  current=${current#go}
+  awk -v current="$current" -v required="$REQUIRED" 'BEGIN {
+    split(current, c, "."); split(required, r, ".")
+    exit !((c[1] > r[1]) || (c[1] == r[1] && c[2] >= r[2]))
+  }'
+}
+
+GO=$(command -v go 2>/dev/null || true)
+if ! go_usable "$GO"; then
+  GO="$HOME/.local/go/bin/go"
+fi
+if ! go_usable "$GO"; then
+  echo "⚠️   Go >= $REQUIRED absent : CLI dotfiles non construit" >&2
+  exit 0
+fi
+
+mkdir -p "$HOME/bin" "$HOME/.cache"
+tmp=$(mktemp -d "$HOME/.cache/dotfiles-build.XXXXXX")
+trap 'rm -rf "$tmp"' EXIT HUP INT TERM
+
+if (cd "$SOURCE" && CGO_ENABLED=0 "$GO" build -trimpath -o "$tmp/dotfiles" ./cmd/dotfiles); then
+  mv "$tmp/dotfiles" "$TARGET"
+  chmod +x "$TARGET"
+  "$TARGET" register-claude-hook
+  echo "🐹  CLI dotfiles construit"
+else
+  echo "⚠️   CLI dotfiles non construit" >&2
+fi

@@ -40,7 +40,7 @@ Le dépôt est public. Rien de sensible n'y figure, ni en clair ni en prose :
    `~/.secrets`, `nas.conf`, `~/.config/zsh/pro.zsh`,
    `~/.config/zsh/pro.zprofile`, `~/.config/git/pro.gitconfig`,
    `~/.claude/CONTEXT.md`, `~/.config/dotfiles/sensible.txt`. Ce dernier est la
-   liste des noms que `scripts/verify.sh` interdit : l'énumération est la donnée
+   liste des noms que `dotfiles verify` interdit : l'énumération est la donnée
    à protéger, donc elle ne peut pas vivre dans le script qui la lit.
 2. **Les fichiers publics chargent ces fragments sans les nommer** : un
    `[ -f … ] && source …` en zsh, un `[include]` en git - git ignore silencieusement

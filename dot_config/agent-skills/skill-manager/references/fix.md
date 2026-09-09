@@ -14,7 +14,7 @@ With neither, refuse to edit and ask what behaviour should change. A passing ski
 
 1. Read `conventions.md` completely.
 2. Identify the slug and the input type: findings, or requested evolution.
-3. Record the baseline: `doctor <slug>` plus the Skills section of `bash scripts/verify.sh`, unless
+3. Record the baseline: `doctor <slug>` plus the Skills section of `go run ./cmd/dotfiles verify`, unless
    a current cross-check report is the only input.
 4. For an evolution, write the requested contract as one testable sentence.
 5. Present the findings or the contract before writing anything.
@@ -66,4 +66,4 @@ unchanged. A formatting-only diff is not evidence of anything.
 - Never modify more than one skill in one `fix` operation.
 - Never invent a finding or a domain rule to justify a write.
 - Never apply a correction inside the read-only `cross-check` operation.
-- Never declare the fix done while `scripts/verify.sh` is red.
+- Never declare the fix done while `dotfiles verify` is red.

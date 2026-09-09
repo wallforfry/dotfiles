@@ -121,3 +121,4 @@ cas la citation est explicite.
 | [020](020-verification-en-ci.md) | Barrière rejouée en CI, clé `age` en secret | 2026-09 |
 | [021](021-codex-second-hote.md) | Codex second hôte, skills hors de `dot_claude/` | 2026-09 |
 | [022](022-telemetrie-harness-multi-hote.md) | Télémétrie du harness multi-hôte | 2026-09 |
+| [023](023-outillage-applicatif-en-go.md) | Outillage applicatif en Go, shell limité au bootstrap | 2026-09 |

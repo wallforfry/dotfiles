@@ -12,6 +12,7 @@
 # UV_VERSION: 0.12.8
 # BUN_VERSION: 1.4.2
 # BUN_MIN: 1.4.0
+# GO_TOOLCHAIN: toolchain/go.env
 #
 # age      : déchiffre ~/.secrets. Indispensable - l'implémentation intégrée à
 #            chezmoi ne gère pas les passphrases et échoue sur
@@ -29,6 +30,9 @@
 #            téléchargée quand rien n'est en place. « bun upgrade » et brew
 #            posent le dernier amont, donc BUN_VERSION n'est pas un épinglage
 #            au sens des autres outils - seul le plancher est garanti.
+# go       : compile le CLI de ce dépôt après le bootstrap. Homebrew le gère
+#            sur macOS ; ailleurs, l'archive officielle épinglée va dans
+#            ~/.local/go.
 #
 # Le bloc darwin ajoute ce qui n'a de sens que sur macOS : thefuck (alias posé
 # par .zshrc), pinentry-mac (saisie du PIN de la YubiKey, ADR-010), ykman,
@@ -50,6 +54,8 @@ DUF_VERSION=0.9.1
 UV_VERSION=0.12.8
 BUN_VERSION=1.4.2
 BUN_MIN=1.4.0
+. {{ joinPath .chezmoi.sourceDir "toolchain/go.env" | quote }}
+GO_MIN=$(awk '$1 == "go" { print $2; exit }' {{ joinPath .chezmoi.sourceDir "go.mod" | quote }})
 BIN="$HOME/bin"
 
 # Vrai quand $1 est strictement antérieur à $2, en « majeur.mineur.correctif ».
@@ -163,11 +169,27 @@ if command -v brew >/dev/null; then
   # compilation échoue sur « unsupported argument 'westmere' to -march= ».
   for f in age:age gh:gh jq:jq ripgrep:rg starship:starship neovim:nvim fd:fd \
            duf:duf uv:uv thefuck:thefuck pinentry-mac:pinentry-mac ykman:ykman \
-           bitwarden-cli:bw; do
+           bitwarden-cli:bw go:go; do
     if ! command -v "${f#*:}" >/dev/null; then
       brew install "${f%:*}" || echo "⚠️   ${f%:*} non installé" >&2
     fi
   done
+
+  go_current=
+  if command -v go >/dev/null; then
+    go_current=$(go version 2>/dev/null | awk '{ sub(/^go/, "", $3); print $3 }')
+  fi
+  if version_lt "$go_current" "$GO_MIN"; then
+    brew upgrade go >/dev/null 2>&1 || true
+    hash -r
+    go_current=
+    if command -v go >/dev/null; then
+      go_current=$(go version 2>/dev/null | awk '{ sub(/^go/, "", $3); print $3 }')
+    fi
+    if version_lt "$go_current" "$GO_MIN"; then
+      echo "⚠️   Go $go_current conservé : le CLI dotfiles exige >= $GO_MIN" >&2
+    fi
+  fi
 
   bun_strip_completions
   bun_prune_dead
@@ -277,6 +299,43 @@ tmp=$(mktemp -d "$HOME/.cache/install-tools.XXXXXX")
 trap 'rm -rf "$tmp"' EXIT
 
 fetch() { curl -fsSL --retry 3 -o "$2" "$1"; }
+
+verify_sha256() {
+  expected=$1
+  file=$2
+  if command -v sha256sum >/dev/null; then
+    actual=$(sha256sum "$file" | cut -d' ' -f1)
+  elif command -v shasum >/dev/null; then
+    actual=$(shasum -a 256 "$file" | cut -d' ' -f1)
+  else
+    echo "⚠️   somme de contrôle de Go non vérifiée : sha256sum et shasum absents" >&2
+    return 1
+  fi
+  [ "$actual" = "$expected" ]
+}
+
+go_current=
+if command -v go >/dev/null; then
+  go_current=$(go version 2>/dev/null | awk '{ sub(/^go/, "", $3); print $3 }')
+fi
+if ! command -v go >/dev/null || version_lt "$go_current" "$GO_MIN"; then
+  case "$arch" in
+    amd64) go_sha=$GO_SHA_LINUX_AMD64 ;;
+    arm64) go_sha=$GO_SHA_LINUX_ARM64 ;;
+  esac
+  go_archive="go${GO_VERSION}.linux-${arch}.tar.gz"
+  if fetch "https://go.dev/dl/${go_archive}" "$tmp/go.tgz" &&
+     verify_sha256 "$go_sha" "$tmp/go.tgz" &&
+     tar xzf "$tmp/go.tgz" -C "$tmp" &&
+     "$tmp/go/bin/go" version >/dev/null 2>&1; then
+    rm -rf "$HOME/.local/go"
+    mkdir -p "$HOME/.local"
+    mv "$tmp/go" "$HOME/.local/go"
+    echo "🐹  Go $GO_VERSION installé dans ~/.local/go"
+  else
+    echo "⚠️   Go non installé : le CLI dotfiles ne sera pas construit" >&2
+  fi
+fi
 
 if ! command -v age >/dev/null; then
   if fetch "https://github.com/FiloSottile/age/releases/download/v${AGE_VERSION}/age-v${AGE_VERSION}-linux-${arch}.tar.gz" "$tmp/age.tgz" &&

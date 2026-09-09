@@ -48,7 +48,7 @@ importe `@AGENTS.md`, `@SOUL.md`, `@USER.md` et `@CONTEXT.md` ; chez Codex, le t
 les inline, car Codex n'expanse aucun import et désigne `CONTEXT.md` par une consigne de
 lecture.
 
-`scripts/verify.sh` gagne une section « Projections d'instructions » : elle refuse un
+`dotfiles verify` porte une section « Projections d'instructions » : elle refuse un
 import `@` dans `harness/`, exige que chaque adaptateur charge les trois sources, exige
 un lien par skill et par hôte vers la source unique, refuse un lien orphelin, et
 **refuse un `symlink_skills` sur le répertoire entier** - le défaut qui détruirait l'état
