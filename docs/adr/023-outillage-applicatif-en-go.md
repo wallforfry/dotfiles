@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-09
-- **Commits** : à compléter au commit qui porte la migration
+- **Commits** : `e55bf3a`
 
 ## Contexte
 
