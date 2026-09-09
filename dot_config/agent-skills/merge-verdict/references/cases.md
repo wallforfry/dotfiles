@@ -119,14 +119,16 @@ a documented deferral without an authoritative exclusion must keep AC-2 `absent`
 
 ## Execution record
 
-Cases C and D were run on 2026-09-09 with Codex in separate fresh, read-only subagents. Case C
+**Evidence status:** observation only, not reproducible evidence for either approval verdict.
+
+Cases C and D were observed on 2026-09-09 with Codex in separate fresh, read-only subagents. Case C
 returned _changes required_, kept four ledger rows, recorded all four negative witnesses as
 `absent`, and made those witnesses the lift criteria. Case D returned _changes required_ while AC-2
 was promised but absent; its discriminating control retained AC-2 as `excluded`, filled its three
 evidence cells with `not required - excluded`, and returned _approved_. All observed verdicts
 matched the cases.
 
-These runs exercised only the contract inventory, ledger and verdict logic. They had no PR, head
+These observations exercised only the contract inventory, ledger and verdict logic. They had no PR, head
 SHA, forge, authenticated barrier or publication step, so they are not evidence for anchoring,
 barrier execution or forge behaviour. Cases A and B remain unrun.
 
