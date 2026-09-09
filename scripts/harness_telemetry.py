@@ -26,7 +26,9 @@ from harness_telemetry_events import (
 from harness_telemetry_report import activated_body_cost, print_report, rate
 
 
-CACHE_VERSION = 9
+CACHE_VERSION = 14
+FORMAT_DRIFT = 2
+READ_INTERRUPTED = 3
 
 
 def empty_summary(source):
@@ -42,7 +44,8 @@ def empty_summary(source):
         "comments": {},
         "write_tools": {},
         "uninspectable_writes": {},
-        "records": {},
+        "read_records": {},
+        "recognized_records": {},
         "unknown_records": {},
         "invalid_records": {},
     }
@@ -56,6 +59,7 @@ def summarize_file(source, path, since):
     summary = empty_summary(source)
     with open(path, encoding="utf-8", errors="replace") as handle:
         for line in handle:
+            increment(summary, "read_records", source)
             try:
                 record = json.loads(line)
             except (TypeError, ValueError):
@@ -64,10 +68,10 @@ def summarize_file(source, path, since):
             if not isinstance(record, dict):
                 increment(summary, "invalid_records", source)
                 continue
-            increment(summary, "records", source)
             if not recognized_record(source, record):
                 increment(summary, "unknown_records", source)
                 continue
+            increment(summary, "recognized_records", source)
             timestamp = record.get("timestamp")
             if isinstance(timestamp, str) and re.match(r"^\d{4}-\d{2}-\d{2}", timestamp):
                 summary["days"].append(timestamp[:10])
@@ -84,7 +88,12 @@ def summarize_file(source, path, since):
                 if name == "skill":
                     increment(summary, "skills", labelled(event.payload, "skill", "name"))
                 elif name in ("agent", "task", "spawn_agent"):
-                    increment(summary, "agents", labelled(event.payload, "subagent_type", "agent_type"))
+                    label = labelled(event.payload, "subagent_type", "agent_type")
+                    if event.source == "codex" and name == "spawn_agent" and label == UNKNOWN:
+                        label = "spawn_agent"
+                    elif event.source == "claude" and name == "agent" and label == UNKNOWN:
+                        label = "agent"
+                    increment(summary, "agents", label)
                 if name not in EXPLICIT_WRITERS:
                     if is_potential_write(event):
                         increment(summary, "write_tools", name)
@@ -154,7 +163,8 @@ def merge(summaries):
         result["days"].extend(summary["days"])
         for field in (
             "skills", "agents", "blocks", "dash", "middle_dot", "lines", "comments",
-            "write_tools", "uninspectable_writes", "records", "unknown_records", "invalid_records",
+            "write_tools", "uninspectable_writes", "read_records", "recognized_records",
+            "unknown_records", "invalid_records",
         ):
             for key, value in summary[field].items():
                 increment(result, field, key, value)
@@ -205,7 +215,7 @@ def main():
             entries, source_summaries, source_hits = collect_source(source, root, arguments.since, cache)
         except OSError:
             print(f"  {source} : lecture interrompue, aucun chemin affiché", file=sys.stderr)
-            return 1
+            return READ_INTERRUPTED
         next_cache.update(entries)
         summaries.extend(source_summaries)
         hits += source_hits
@@ -231,7 +241,7 @@ def main():
     unknown = sum(total["unknown_records"].values())
     if malformed or unknown:
         print(f"  formats non mesurés : {unknown} inconnus, {malformed} invalides", file=sys.stderr)
-        return 1
+        return FORMAT_DRIFT
     return 0
 
 

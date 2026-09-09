@@ -23,7 +23,8 @@ def print_report(sources, total, by_source, hits, elapsed, local_sizes, unknown,
     print(f"  cache : {hits}/{sum(sources.values())} sessions réutilisées, {elapsed} ms")
     print(
         "  formats : "
-        f"{sum(total['records'].values())} enregistrements reconnus, "
+        f"{sum(total['read_records'].values())} enregistrements lus, "
+        f"{sum(total['recognized_records'].values())} enregistrements reconnus, "
         f"{sum(total['unknown_records'].values())} inconnus, "
         f"{sum(total['invalid_records'].values())} invalides"
     )

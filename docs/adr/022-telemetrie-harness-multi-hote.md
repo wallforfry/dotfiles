@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-09
-- **Commits** : à compléter au commit qui porte ce fichier
+- **Commits** : `ee75fcd` (télémétrie et matrice), `a87d7d9` (échecs fermés), `c0a1388` (formats Codex et bootstrap simulé)
 
 ## Contexte
 
@@ -15,6 +15,12 @@ Les deux hôtes stockent des JSONL de formes différentes. Leur absence de signa
 n'a pas non plus le même sens : Codex n'émet pas d'événement explicite
 d'activation de skill. Additionner directement leurs compteurs transforme ainsi
 une inconnue en mesure.
+
+Le 2026-09-09, l'audit a refusé six nouveaux records Codex `realtime_item` au
+lieu de les ignorer. Le diagnostic a aussi montré que le rapport appelait
+« reconnus » tous les enregistrements lus et transformait toute dérive de format
+en « lecture interrompue ». Une interruption contrôlée a ensuite révélé le record
+passif `turn_aborted`.
 
 Le parcours complet des transcripts prenait plusieurs dizaines de secondes alors
 que leur grande majorité ne change pas entre deux audits. Enfin, les mutations
@@ -33,6 +39,14 @@ Codex projette aussi certains messages et appels de subagent sous
 événement : le `message` ou `function_call` source reste l'enregistrement
 autoritaire. `FileChange` et `CommandExecution`, qui n'ont pas cette projection
 source, restent normalisés depuis `item_completed`.
+
+Les segments `realtime_item` de rôle `assistant` alimentent les métriques de
+texte; ceux de rôle `user` sont reconnus mais exclus, et tout rôle nouveau rend
+la mesure incomplète. Les débuts et fins de session, ainsi que `turn_aborted`,
+sont passifs. Les appels de subagent sans qualification propre à l'hôte sont
+agrégés sous le nom stable de l'outil, jamais sous leur description ou leur nom
+de tâche. Le rapport sépare les enregistrements lus, reconnus, inconnus et
+invalides; dérive de format et interruption de lecture ont des sorties distinctes.
 
 Le cache ne conserve que des compteurs agrégés, des empreintes de fichiers et des
 identifiants de chemins hachés. Il ne conserve ni chemin ni contenu brut, change
@@ -64,6 +78,8 @@ du modèle reste une mesure distincte à rejouer sur chaque hôte.
 - Chaque nouveau format d'hôte exige un adaptateur et des fixtures. Un changement
   de format non reconnu doit rendre la mesure incomplète, jamais silencieusement
   verte.
+- Une évolution de schéma invalide le cache agrégé. Le premier audit relit alors
+  tous les transcripts; les suivants retrouvent le chemin amorti.
 - Les mutations restent le poste lent, mais rejouer leurs contrôles ciblés ramène
   sur macOS une matrice étendue à 30 mutants à 9,81 s et l'audit complet à
   10,43 s ; la version qui rejouait toute la barrière prenait 46,88 s pour 20 mutants.

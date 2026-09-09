@@ -319,7 +319,10 @@ fi
 
 if ! command -v starship >/dev/null; then
   # L'installeur amont déverse les instructions de configuration de dix shells.
-  if curl -fsSL https://starship.rs/install.sh | sh -s -- -b "$BIN" -y >/dev/null; then
+  # Le fichier intermédiaire conserve l'échec de curl, qu'un pipeline POSIX
+  # vers sh masquerait en retenant seulement le statut du dernier processus.
+  if fetch "https://starship.rs/install.sh" "$tmp/starship-install.sh" &&
+     sh "$tmp/starship-install.sh" -b "$BIN" -y >/dev/null; then
     echo "🚀  starship installé dans ~/bin"
   else
     echo "⚠️   starship non installé, prompt zsh par défaut" >&2

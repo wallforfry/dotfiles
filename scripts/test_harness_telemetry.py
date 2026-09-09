@@ -53,7 +53,7 @@ class HarnessTelemetryTest(unittest.TestCase):
         self.assertEqual(summary["dash"]["depuis"], 1)
         self.assertEqual(summary["middle_dot"]["depuis"], 1)
         self.assertEqual(summary["skills"][MODULE.NONE], 1)
-        self.assertEqual(summary["agents"][MODULE.UNKNOWN], 1)
+        self.assertEqual(summary["agents"]["agent"], 1)
         self.assertEqual(summary["lines"]["depuis"], 8)
         self.assertEqual(summary["comments"]["depuis"], 4)
         self.assertEqual(summary["uninspectable_writes"]["bash"], 1)
@@ -164,7 +164,7 @@ class HarnessTelemetryTest(unittest.TestCase):
             },
         ]
         summary = self.summarize("codex", records)
-        self.assertEqual(summary["agents"][MODULE.UNKNOWN], 1)
+        self.assertEqual(summary["agents"]["spawn_agent"], 1)
         self.assertEqual(summary["lines"]["inconnu"], 2)
         self.assertEqual(summary["comments"]["inconnu"], 1)
         self.assertEqual(summary["write_tools"]["apply_patch"], 1)
@@ -174,7 +174,13 @@ class HarnessTelemetryTest(unittest.TestCase):
     def test_zero_denominator_is_unknown(self):
         self.assertEqual(MODULE.rate(0, 0), "inconnu")
 
-    def test_cache_rejects_another_version_or_period(self):
+    def test_cache_rejects_another_version(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory, "cache.json")
+            path.write_text(json.dumps({"version": MODULE.CACHE_VERSION - 1, "since": "x", "files": {"a": {}}}), encoding="utf-8")
+            self.assertEqual(MODULE.load_cache(path, "x"), {})
+
+    def test_cache_rejects_another_period(self):
         with tempfile.TemporaryDirectory() as directory:
             path = pathlib.Path(directory, "cache.json")
             path.write_text(json.dumps({"version": MODULE.CACHE_VERSION, "since": "x", "files": {"a": {}}}), encoding="utf-8")
@@ -192,6 +198,8 @@ class HarnessTelemetryTest(unittest.TestCase):
             summary = MODULE.summarize_file("codex", path, "2026-08-17")
         self.assertEqual(summary["unknown_records"]["codex"], 1)
         self.assertEqual(summary["invalid_records"]["codex"], 1)
+        self.assertEqual(summary["read_records"]["codex"], 2)
+        self.assertEqual(summary["recognized_records"], {})
 
     def test_malformed_known_codex_record_is_not_silently_accepted(self):
         records = [
@@ -228,11 +236,10 @@ class HarnessTelemetryTest(unittest.TestCase):
             },
         ]
         summary = self.summarize("codex", records)
-        self.assertEqual(summary["records"]["codex"], 2)
+        self.assertEqual(summary["recognized_records"]["codex"], 2)
         self.assertEqual(summary["unknown_records"], {})
         self.assertEqual(summary["blocks"], {})
         self.assertEqual(summary["agents"], {})
-
 
 if __name__ == "__main__":
     unittest.main()

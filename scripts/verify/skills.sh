@@ -57,4 +57,7 @@ listed=$(grep -cE '^\| `[a-z-]+` \|' "$readme")
 for slug in $(grep -oE '^\| `[a-z-]+`' "$readme" | tr -d '|` '); do
   [ -d "dot_config/agent-skills/$slug" ] || ko "$slug : ligne du README sans répertoire"
 done
+merge_verdict_cases=dot_config/agent-skills/merge-verdict/references/cases.md
+grep -Fqx '**Evidence status:** observation only, not reproducible evidence for either approval verdict.' "$merge_verdict_cases" ||
+  ko "merge-verdict : les observations C et D peuvent être prises pour une preuve d'approbation"
 okif "$n skills, frontmatter et tableau cohérents"

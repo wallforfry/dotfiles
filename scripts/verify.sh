@@ -14,6 +14,7 @@ cd "$(git rev-parse --show-toplevel)"
 checks=(
   scripts/verify/syntax.sh
   scripts/verify/templates.sh
+  scripts/verify/bootstrap.sh
   scripts/verify/skills.sh
   scripts/verify/routing.sh
   scripts/verify/subagents.sh

@@ -73,6 +73,11 @@ def codex_events(record):
     if not isinstance(payload, dict):
         return
     kind = payload.get("type")
+    if kind == "transcript_segment":
+        yield Event(
+            "codex", "text", timestamp, role=payload.get("role"), text=payload.get("text")
+        )
+        return
     if kind == "item_completed":
         item = payload.get("item")
         if not isinstance(item, dict):

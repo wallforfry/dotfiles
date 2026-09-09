@@ -39,6 +39,7 @@ if ! git -C "$root" rev-parse --show-toplevel >/dev/null 2>&1; then
 fi
 cd "$root"
 source scripts/harness-audit-capture.sh
+source scripts/harness-telemetry-status.sh
 
 fail=0
 ok() { printf '  ✅  %s\n' "$1"; }
@@ -127,16 +128,17 @@ duration "$section_started"
 # parcours de plusieurs centaines de sessions coûtent le double pour rien.
 section_started=$(now_ms)
 head_ "Activation et adhérence (règles introduites le $SINCE)"
-if ! PYTHONDONTWRITEBYTECODE=1 python3 -B scripts/harness_telemetry.py \
+if PYTHONDONTWRITEBYTECODE=1 python3 -B scripts/harness_telemetry.py \
   --claude-root "$PROJECTS" \
   --codex-root "$CODEX_SESSIONS" \
   --since "$SINCE" \
   --cache "$HOME/.cache/harness-audit/telemetry-v1.json"
 then
-  ko "lecture des transcripts interrompue : activation et adhérence non mesurées"
-else
   ok "mesuré sur les transcripts disponibles"
   echo "  l'adhérence est corrélationnelle : le modèle a changé sur la même période"
+else
+  status=$?
+  ko "$(telemetry_failure_message "$status")"
 fi
 duration "$section_started"
 
