@@ -1,6 +1,6 @@
 head_ "Télémétrie du harness"
-n=$(grep -c '^    def test_' scripts/test_harness_telemetry.py)
-if output=$(PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -q scripts/test_harness_telemetry.py 2>&1); then
+n=$(grep -h '^    def test_' scripts/test_harness_telemetry*.py | wc -l | tr -d ' ')
+if output=$(PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts -p 'test_harness_telemetry*.py' -q 2>&1); then
   ok "$n/$n tests de normalisation et de cache"
 else
   ko "tests de télémétrie rouges"

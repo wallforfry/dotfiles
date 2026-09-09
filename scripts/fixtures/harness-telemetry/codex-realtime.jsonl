@@ -1,0 +1,4 @@
+{"type":"realtime_item","timestamp":"2026-09-09T00:00:00Z","ordinal":1,"payload":{"type":"realtime_session_started","id":"event-1","realtime_session_id":"session-1"}}
+{"type":"realtime_item","timestamp":"2026-09-09T00:00:01Z","ordinal":2,"payload":{"type":"transcript_segment","id":"event-2","realtime_session_id":"session-1","role":"assistant","text":"a\u2014b\u00b7c"}}
+{"type":"realtime_item","timestamp":"2026-09-09T00:00:02Z","ordinal":3,"payload":{"type":"transcript_segment","id":"event-3","realtime_session_id":"session-1","role":"user","text":"a\u2014b\u00b7c"}}
+{"type":"realtime_item","timestamp":"2026-09-09T00:00:03Z","ordinal":4,"payload":{"type":"realtime_session_closed","id":"event-4","realtime_session_id":"session-1","outcome":"completed"}}

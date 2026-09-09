@@ -5,6 +5,8 @@ skill-index	scripts/verify/skills.sh	reject	description README non dérivée	p='
 shell-syntax	scripts/verify.sh	reject	erreur de syntaxe orchestrateur	p='scripts/verify.sh';s=open(p).read();open(p,'w').write(s+'\nif true; then\n')
 shell-syntax	scripts/verify.sh	reject	erreur de syntaxe composant	p='scripts/verify/skills.sh';s=open(p).read();open(p,'w').write(s+'\nif true; then\n')
 template-rendering	scripts/verify/templates.sh	reject	template invalide	open('dot_gitconfig.tmpl','a').write('{{ .absent.champ }}\n')
+bootstrap-temp	scripts/verify/bootstrap.sh	reject	temporaire exécutable sous /tmp	p='run_onchange_before_install-tools.sh.tmpl';s=open(p).read();open(p,'w').write(s.replace('$HOME/.cache/install-tools.XXXXXX','/tmp/install-tools.XXXXXX',1))
+bootstrap-network	scripts/verify/bootstrap.sh	reject	téléchargement starship annoncé réussi après échec	p='run_onchange_before_install-tools.sh.tmpl';s=open(p).read();open(p,'w').write(s.replace('if fetch "https://starship.rs/install.sh" "$tmp/starship-install.sh" &&','if true ||',1))
 adr-index	scripts/verify/adr.sh	reject	ADR hors index	import glob,shutil;shutil.copy(glob.glob('docs/adr/001-*.md')[0],'docs/adr/099-fantome.md')
 age-encryption	scripts/verify/encryption.sh	reject	fragment age en clair	open('age-key.txt.age','w').write('texte en clair\n')
 ci-confidentiality	scripts/verify/workflows.sh	reject	chezmoi diff en CI	p='.github/workflows/verify.yml';s=open(p).read();open(p,'w').write(s.replace('chezmoi status','chezmoi diff'))
@@ -30,5 +32,6 @@ sensitive-commit	scripts/verify/sensitive.sh	reject	message de commit sensible	i
 sensitive-path	scripts/verify/sensitive.sh	accept	nom de fichier ordinaire	open('harness-audit-ordinary-marker.txt','w').write('safe\n')
 sensitive-branch	scripts/verify/sensitive.sh	accept	nom de branche ordinaire	import subprocess;subprocess.run(['git','switch','-qc','harness-audit-ordinary'],check=True)
 telemetry-contract	scripts/verify/telemetry.sh	reject	format vivant non testé	p='scripts/harness_telemetry_schema.py';s=open(p).read();open(p,'w').write(s.replace('"FileChange",','"FileChangeBroken",',1))
+telemetry-contract	scripts/verify/telemetry.sh	reject	format vocal Codex non testé	p='scripts/harness_telemetry_schema.py';s=open(p).read();open(p,'w').write(s.replace('"realtime_item",','"realtime_item_broken",',1))
 typography	scripts/harness_telemetry.py	observe	adhérence mesurée	:
 comment-policy	scripts/harness_telemetry.py	observe	adhérence mesurée	:

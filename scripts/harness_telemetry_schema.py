@@ -6,16 +6,19 @@ CLAUDE_RECORD_TYPES = {
 }
 CODEX_RECORD_TYPES = {
     "compacted", "event_msg", "inter_agent_communication_metadata", "response_item", "session_meta",
-    "token_usage_record", "turn_context", "world_state",
+    "realtime_item", "token_usage_record", "turn_context", "world_state",
 }
 CODEX_PAYLOAD_TYPES = {
     "agent_message", "custom_tool_call", "custom_tool_call_output", "function_call",
     "function_call_output", "item_completed", "message", "reasoning", "task_complete",
-    "task_started", "thread_settings_applied", "token_count", None,
+    "task_started", "thread_settings_applied", "token_count", "turn_aborted", None,
 }
 CODEX_ITEM_TYPES = {
     "AgentMessage", "CollabAgentToolCall", "CommandExecution", "Extension", "FileChange",
     "ContextCompaction", "McpToolCall", "Reasoning", "SubAgentActivity", "UserMessage",
+}
+CODEX_REALTIME_PAYLOAD_TYPES = {
+    "realtime_session_closed", "realtime_session_started", "transcript_segment",
 }
 
 
@@ -96,6 +99,25 @@ def valid_codex_payload(payload):
         return isinstance(payload.get("name"), str) and isinstance(payload.get("input"), str)
     if payload_type == "item_completed":
         return valid_item(payload.get("item"))
+    if payload_type == "turn_aborted":
+        return (
+            all(isinstance(payload.get(key), str) for key in ("turn_id", "reason"))
+            and all(type(payload.get(key)) is int for key in ("started_at", "completed_at"))
+            and type(payload.get("duration_ms")) is int
+        )
+    return True
+
+
+def valid_realtime_payload(payload):
+    payload_type = payload.get("type")
+    if payload_type not in CODEX_REALTIME_PAYLOAD_TYPES:
+        return False
+    if not all(isinstance(payload.get(key), str) for key in ("id", "realtime_session_id")):
+        return False
+    if payload_type == "transcript_segment":
+        return payload.get("role") in {"assistant", "user"} and isinstance(payload.get("text"), str)
+    if payload_type == "realtime_session_closed":
+        return isinstance(payload.get("outcome"), str)
     return True
 
 
@@ -108,4 +130,6 @@ def recognized_record(source, record):
     payload = record.get("payload")
     if not isinstance(payload, dict):
         return record_type in {"compacted", "inter_agent_communication_metadata", "world_state"}
+    if record_type == "realtime_item":
+        return valid_realtime_payload(payload)
     return valid_codex_payload(payload)
