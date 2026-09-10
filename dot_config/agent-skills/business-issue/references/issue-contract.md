@@ -23,6 +23,12 @@ Open decisions and prerequisites
 Question | Options and consequences | Decision owner | What it blocks
 Link actual dependencies; omit speculative chains.
 
+Relations to establish
+Subject | Relation | Target | Reason and expected side effect
+Record parent/child direction, blocking direction, canonical duplicate and related work. Distinguish
+a pull request that implements the issue from one that is only supporting context, and state whether
+merge is intended to close the issue.
+
 Acceptance scenarios
 AC-1: Given a situation, when an action occurs, then an observable result follows.
 AC-2: A relevant failure or refusal preserves the required state.
