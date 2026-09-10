@@ -122,8 +122,11 @@ first, unless the request explicitly says to post directly.
    that can lose or corrupt data blocks even when the author disagrees. A style, naming or structure
    preference never blocks: label it non-blocking, or drop it.
 
-6. **Trace and publish.** Open or reuse a fix ticket for blocking defects, and link the initial verdict
-   if one exists. Never open a ticket solely to request or record a re-review: the new head-specific
+6. **Trace and publish.** Use `business-issue` to open or reuse a fix ticket for blocking defects,
+   passing the reviewed PR, the initial verdict when one exists, and the exact relation intent. The
+   ticket publication establishes a native PR-issue development link when the available tracker and
+   forge integration support it; it uses closing semantics only when that PR is expected to deliver
+   the ticket. Never open a ticket solely to request or record a re-review: the new head-specific
    verdict comment is that record. Write one general comment from `assets/verdict-template.md`,
    prefixed with the idempotency marker `<!-- merge-verdict:<pr>:<head-sha-12> -->` - not a rain of
    inline comments. Search the existing comments for that marker first: a verdict carrying the same
@@ -148,6 +151,9 @@ first, unless the request explicitly says to post directly.
   leave the old one as the record of what was judged.
 - **A re-review ticket opened for traceability** - it duplicates the head-specific verdict and adds
   tracker noise without tracking a defect.
+- **A fix ticket merely mentions the reviewed PR** - readers can follow the URL, but native
+  development views and automations cannot follow the relationship; pass the relation intent to
+  `business-issue` and verify the resulting edge.
 - **"Approved with reservations" used to avoid a disagreement** - that state is a claim that the
   consequence is bounded. If you cannot state the bound, the verdict is _changes required_.
 - **A ticket requirement absent from the diff disappears from review** - a correct partial change
@@ -188,6 +194,8 @@ first, unless the request explicitly says to post directly.
 - Never leave a limit of the evidence implicit; the barrier's gaps belong in the verdict text.
 - Never publish two verdicts for the same `<pr>:<sha>`; update the existing comment instead.
 - Never create a ticket solely to request, schedule or record a re-review.
+- Never create or update a fix ticket outside `business-issue`; pass it the PR relation and intended
+  closing effect instead of maintaining a second publication procedure here.
 - Never publish without confirmation, unless the request explicitly says to post directly.
 
 ## References

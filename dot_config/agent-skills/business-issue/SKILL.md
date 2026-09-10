@@ -61,7 +61,10 @@ deliver the complete draft and name the unavailable operation.
    rather than cloning it into another project. Keep one issue for one coherent outcome; split only
    for independently deliverable outcomes, distinct decisions or real prerequisites. A parent's
    scenario and shared sources stay authoritative; children link to them and state their own delta.
-   Missing access leaves the duplicate check unperformed, not clear.
+   Inventory every intended relation before drafting: which issue is the parent, which work blocks
+   which other work, which item is the canonical duplicate, and whether an existing pull request
+   merely provides context or is expected to deliver the issue. Missing access leaves the duplicate
+   and relation checks unperformed, not clear.
 
 5. **Draft an executable contract.** Write in the recipient's language. Put a short business summary
    first, then only the detail needed for execution. Include the outcome, scope and exclusions,
@@ -107,6 +110,9 @@ deliver the complete draft and name the unavailable operation.
   approval duties; model the persona separately from ownership and decision authority.
 - **Later comments silently replace the contract** - an implementing agent may follow obsolete
   requirements; update the canonical issue when authorized and preserve the decision's provenance.
+- **A prose link is mistaken for relation metadata** - the issue looks connected while dependency
+  views and automations cannot see it; create the native edge when supported, otherwise label the
+  explicit-link fallback and its limitation.
 
 ## Constraints
 
@@ -115,3 +121,5 @@ deliver the complete draft and name the unavailable operation.
 - Never declare research, duplicate checks, independent review or publication performed without evidence.
 - Never mark work executable while a decision essential to its outcome remains unresolved.
 - Never infer completion from ticket status or a merged PR when the contract requires stronger evidence.
+- Never invert a hierarchy or blocking edge, or add PR closing semantics without the intended
+  delivery and merge effect in the contract.
