@@ -6,6 +6,22 @@ with links to shared source material rather than copied parent descriptions.
 
 ## Suggested shape
 
+Start the draft with two short, visible lines before its detailed contract:
+
+```text
+Outcome: the business result now established or the current decision state
+Next: one action or decision needed to advance the issue
+```
+
+Use `Decision:` instead of `Outcome:` when no result is established yet. The recipient may translate
+these labels, but preserve their order and make both values concrete. This opening is an entry point,
+not a replacement for any required section below.
+
+For a multi-step handoff, state `Progress` as the current step and next action. When an error matters
+to the next action, state its `Location`, `Cause` and `Correction`. Keep a visible numbered or bullet
+group to five items or fewer; split a longer group by purpose. The regression fixture exercises every
+one of these presentation rules alongside acceptance scenarios and completion evidence.
+
 ```text
 Title: the business outcome or decision
 
