@@ -110,10 +110,11 @@ first, unless the request explicitly says to post directly.
    until it is reproduced.
 
 5. **Return a verdict.** Exactly one of _changes required_, _approved with reservations_, _approved_.
-   Write it in the order defined by `assets/verdict-template.md`, with the complete ledger before the
-   blocking paragraph: one row per inventoried requirement or additional behaviour, never a prose
-   summary of the rows. A non-excluded promised requirement without implementation or evidence blocks; name the
-   missing outcome and the implementation and evidence needed to lift it. Both approval verdicts
+   Write it in the order defined by `assets/verdict-template.md`. Lead with the decision, one next
+   action and the current status before the detail. Keep ledger rows in visible groups of five when
+   more are needed, without omitting any row or evidence. State every blocker by location, cause,
+   failure mechanism and lift criterion. A non-excluded promised requirement without implementation
+   or evidence blocks; name the missing outcome and the implementation and evidence needed to lift it. Both approval verdicts
    require every non-excluded row to hold an implementation, reproduced positive evidence on the exact head and a
    reproduced negative witness, with no contradictory result; otherwise the verdict is _changes
    required_ and the missing evidence is the lift criterion.
@@ -167,6 +168,8 @@ first, unless the request explicitly says to post directly.
 - **A green aggregate barrier read as behavioural evidence** - a suite that passes proves the suite
   passes. A row of the ledger is filled by a test that was seen to fail when the behaviour is broken,
   not by a total.
+- **A concise opening hides the evidence** - a reader sees a decision but not its basis; keep the
+  decision, next action and status short, then retain the complete ledger and the barrier limits.
 - **Numbers copied from the PR's own pipeline** - a green pipeline is context for phase 1, never the
   barrier of phase 4. The barrier is what you ran, authenticated, on the head you checked out.
 - **The package script mistaken for the CI gate** - the repository's `lint` script may walk the whole
@@ -189,6 +192,7 @@ first, unless the request explicitly says to post directly.
 - Never call a passing test a negative witness without an observed failure when the behaviour is
   broken.
 - Never report as absent, or demand in a lift criterion, evidence the PR already supplies.
+- Never omit a ledger row, evidence limit or blocker mechanism to make a verdict shorter.
 - Never sweep the failure classes on a head you wrote in this session from the context that wrote it
   without saying so in the verdict; independence is either obtained, or declared absent.
 - Never leave a limit of the evidence implicit; the barrier's gaps belong in the verdict text.

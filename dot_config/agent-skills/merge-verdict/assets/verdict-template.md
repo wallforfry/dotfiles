@@ -10,9 +10,12 @@ publishing an incomplete verdict. This file is English; the verdict itself follo
 <!-- merge-verdict:<pr>:<head-sha-12> -->
 ## Independent verdict - <changes required | approved with reservations | approved>
 
+Decision: <changes required | approved with reservations | approved>
+Next: <one executable action>
+Status: <head SHA, merge state, checks, conflicts and open tasks>
+
 <Anchor sentence - REQUIRED. Whose work, on which head SHA, against which base: the real one, naming
-the parent PR when the branch is stacked. Then the CI state, open tasks and conflicts, or "none
-observed".>
+the parent PR when the branch is stacked.>
 
 <Contract and behaviour ledger - REQUIRED when a linked issue promises requirements or the diff
 changes an observable behaviour. One row per issue requirement or additional changed behaviour,
@@ -24,9 +27,11 @@ and never shortened to keep the verdict small.
 | <criterion ID and observable outcome> | <issue criterion link, or PR/diff source> | <verified location or absent> | <the test or run reproduced here> | <the observed RED, or the faulty variant that failed> | held / absent / excluded |
 >
 
-<Blocking paragraph - one clause per blocker: the mechanism, then the invariant it breaks. Close with
-one sentence stating what must become true to lift them. Omit this paragraph entirely when the verdict
-is "approved".>
+Group ledger rows in visible sets of five when more are needed; retain every row.
+
+Blockers: <location, cause, failure mechanism and lift criterion>
+
+<One clause per blocker. Omit this section entirely when the verdict is "approved".>
 
 <Barrier paragraph - REQUIRED. Open with "Authenticated local validation on this exact head:" and give
 counts, never adjectives. Then, in the same paragraph, REQUIRED: what this evidence does not cover. The

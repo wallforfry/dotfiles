@@ -135,6 +135,33 @@ func TestBusinessIssueInstructionMatchesFixtureContract(t *testing.T) {
 	}
 }
 
+func TestMergeVerdictPresentationTemplate(t *testing.T) {
+	t.Parallel()
+	_, source, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("cannot resolve test source path")
+	}
+	root := filepath.Clean(filepath.Join(filepath.Dir(source), "..", ".."))
+	path := filepath.Join(root, "dot_config", "agent-skills", "merge-verdict", "assets", "verdict-template.md")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateMergeVerdictPresentation(string(content)); err != nil {
+		t.Fatal(err)
+	}
+	for _, marker := range mergeVerdictPresentationMarkers {
+		marker := marker
+		t.Run(marker, func(t *testing.T) {
+			t.Parallel()
+			mutant := strings.Replace(string(content), marker, "", 1)
+			if err := validateMergeVerdictPresentation(mutant); err == nil || !strings.Contains(err.Error(), marker) {
+				t.Fatalf("validateMergeVerdictPresentation() = %v, want error containing %q", err, marker)
+			}
+		})
+	}
+}
+
 func TestLoadSensitivePatternsFailsClosed(t *testing.T) {
 	t.Parallel()
 	path := filepath.Join(t.TempDir(), "sensible.txt")
