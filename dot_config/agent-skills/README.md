@@ -33,6 +33,7 @@ the deployed copy.
 | `handoff` | Hand the current work to a fresh session instead of letting the context compact. |
 | `harness-audit` | Measure harness cost, deployment lag, activation, adherence, and mutation detection. |
 | `harness-reflection` | Turn a repeated agent failure into one evidence-backed harness change. |
+| `i-have-adhd` | Shape agent output for a reader with ADHD. |
 | `neovim` | Maintain the dotfiles repository's Neovim and LazyVim configuration. |
 | `scripts` | Create and maintain portable bootstrap shell in the dotfiles repository. |
 | `skill-manager` | Manage the skills of the dotfiles repository: create, doctor, fix, cross-check, and rebuild their README index. |
@@ -44,3 +45,6 @@ the deployed copy.
 `agent-handoff` Stop hook are adapted from <https://github.com/SebastienElet/dotfiles>
 (BSD 2-Clause, Copyright (c) 2014 Sébastien ELET), whose `LICENSE` requires that this notice be retained. `scripts`, `neovim` and
 `adr` are written for this repository and keep only the shape of their originals.
+
+`i-have-adhd` is adapted from <https://github.com/ayghri/i-have-adhd> (MIT, Copyright (c) 2026
+Ayoub Ghriss). Its license requires that this notice be retained.
