@@ -160,6 +160,24 @@ func TestMergeVerdictPresentationTemplate(t *testing.T) {
 			}
 		})
 	}
+	t.Run("opening before anchor", func(t *testing.T) {
+		t.Parallel()
+		opening := strings.Join(mergeVerdictPresentationOrder[:3], "\n") + "\n\n"
+		mutant := strings.Replace(string(content), opening, "", 1)
+		mutant = strings.Replace(mutant, "<Anchor sentence - REQUIRED.", "<Anchor sentence - REQUIRED.\n\n"+opening, 1)
+		if err := validateMergeVerdictPresentation(mutant); err == nil || !strings.Contains(err.Error(), "ordre") {
+			t.Fatalf("validateMergeVerdictPresentation() = %v, want ordering error", err)
+		}
+	})
+	t.Run("grouping before ledger", func(t *testing.T) {
+		t.Parallel()
+		grouping := mergeVerdictPresentationOrder[5] + "\n\n"
+		mutant := strings.Replace(string(content), grouping, "", 1)
+		mutant = strings.Replace(mutant, "<Contract and behaviour ledger - REQUIRED", grouping+"<Contract and behaviour ledger - REQUIRED", 1)
+		if err := validateMergeVerdictPresentation(mutant); err == nil || !strings.Contains(err.Error(), "ordre") {
+			t.Fatalf("validateMergeVerdictPresentation() = %v, want ordering error", err)
+		}
+	})
 }
 
 func TestLoadSensitivePatternsFailsClosed(t *testing.T) {
