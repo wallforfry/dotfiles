@@ -81,6 +81,60 @@ func TestLoadRoutingCasesRejectsDuplicateIdentifiers(t *testing.T) {
 	}
 }
 
+func TestBusinessIssueOpeningFixtures(t *testing.T) {
+	t.Parallel()
+	_, source, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("cannot resolve test source path")
+	}
+	root := filepath.Clean(filepath.Join(filepath.Dir(source), "..", ".."))
+	fixtures := []struct {
+		name    string
+		wantErr string
+	}{
+		{name: "valid.md"},
+		{name: "missing-next.md", wantErr: "Next"},
+		{name: "too-many-steps.md", wantErr: "liste"},
+		{name: "missing-completion-evidence.md", wantErr: "Completion evidence"},
+		{name: "missing-progress.md", wantErr: "Progress"},
+		{name: "missing-progress-next.md", wantErr: "Progress doit annoncer Next"},
+		{name: "missing-error-correction.md", wantErr: "Correction"},
+	}
+	for _, fixture := range fixtures {
+		fixture := fixture
+		t.Run(fixture.name, func(t *testing.T) {
+			t.Parallel()
+			content, err := os.ReadFile(filepath.Join(root, "internal", "verify", "testdata", "business-issue-drafts", fixture.name))
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = validateBusinessIssueRegressionFixture(string(content))
+			if fixture.wantErr == "" && err != nil {
+				t.Fatalf("validateBusinessIssueOpening() = %v, want nil", err)
+			}
+			if fixture.wantErr != "" && (err == nil || !strings.Contains(err.Error(), fixture.wantErr)) {
+				t.Fatalf("validateBusinessIssueOpening() = %v, want error containing %q", err, fixture.wantErr)
+			}
+		})
+	}
+}
+
+func TestBusinessIssueInstructionMatchesFixtureContract(t *testing.T) {
+	t.Parallel()
+	_, source, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("cannot resolve test source path")
+	}
+	root := filepath.Clean(filepath.Join(filepath.Dir(source), "..", ".."))
+	content, err := os.ReadFile(filepath.Join(root, "dot_config", "agent-skills", "business-issue", "SKILL.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateBusinessIssueInstruction(string(content)); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestLoadSensitivePatternsFailsClosed(t *testing.T) {
 	t.Parallel()
 	path := filepath.Join(t.TempDir(), "sensible.txt")

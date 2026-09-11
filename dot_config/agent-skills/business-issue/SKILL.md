@@ -72,8 +72,12 @@ deliver the complete draft and name the unavailable operation.
    evidence. Acceptance criteria describe observable outcomes, including relevant refusals and
    regressions, rather than implementation activities. Give criteria stable local identifiers so
    tests and the eventual review can cite them. Name concrete paths or commands only after verifying
-   them; link permanent repository rules instead of copying them into every issue. Use
-   [references/issue-contract.md](references/issue-contract.md) when shaping the draft.
+   them; link permanent repository rules instead of copying them into every issue. Make the draft
+   action-first: begin with the current outcome or decision and one next action, then use numbered,
+   bounded steps for multi-step work. Keep each visible group to five items where possible, grouping
+   longer material by purpose; this shapes presentation only, so acceptance criteria, evidence and
+   unresolved decisions remain complete. Use [references/issue-contract.md](references/issue-contract.md)
+   when shaping the draft.
 
 6. **Challenge executability.** Read as an agent that has only this issue and its accessible links:
    what would it have to invent, which assumption can break the result, and how could a test pass
@@ -92,9 +96,11 @@ deliver the complete draft and name the unavailable operation.
 
 8. **Read back and hand off.** After publication, re-read content, destination, relations and metadata
    and correct discrepancies within the requested scope. Return direct links and counts of actual
-   creations or updates, remaining decisions and missing evidence. For a draft, say what is ready
-   and what publication could not be verified. Pass criterion identifiers and source links to the
-   implementing agent and PR reviewer, including requirements absent from the eventual diff.
+   creations or updates, then the remaining decision or next action, then missing evidence. State
+   progress explicitly for multi-step work and describe errors by location, cause and correction.
+   For a draft, say what is ready and what publication could not be verified. Pass criterion
+   identifiers and source links to the implementing agent and PR reviewer, including requirements
+   absent from the eventual diff.
    Ticket readiness, code verification, merge, deployment and business acceptance remain distinct;
    completion requires the evidence level the issue actually specifies.
 
@@ -106,13 +112,16 @@ deliver the complete draft and name the unavailable operation.
   queries or permissive checks; establish its meaning and source of truth before prescribing it.
 - **A detailed ticket hides missing evidence** - precise-looking paths and checkboxes can still be
   guesses; verify references and define what observable result would falsify acceptance.
+- **A concise summary replaces the contract** - an agent acts on the visible action but misses a
+  refusal or prerequisite; use the summary as an entry point and retain every material criterion,
+  decision and evidence requirement in the body.
+- **A prose link is mistaken for relation metadata** - the issue looks connected while dependency
+  views and automations cannot see it; create the native edge when supported, otherwise label the
+  explicit-link fallback and its limitation.
 - **The assignee becomes the business actor** - a developer's name silently changes permissions and
   approval duties; model the persona separately from ownership and decision authority.
 - **Later comments silently replace the contract** - an implementing agent may follow obsolete
   requirements; update the canonical issue when authorized and preserve the decision's provenance.
-- **A prose link is mistaken for relation metadata** - the issue looks connected while dependency
-  views and automations cannot see it; create the native edge when supported, otherwise label the
-  explicit-link fallback and its limitation.
 
 ## Constraints
 
@@ -123,3 +132,4 @@ deliver the complete draft and name the unavailable operation.
 - Never infer completion from ticket status or a merged PR when the contract requires stronger evidence.
 - Never invert a hierarchy or blocking edge, or add PR closing semantics without the intended
   delivery and merge effect in the contract.
+- Never trade away a material requirement, refusal, prerequisite or evidence obligation for brevity.
