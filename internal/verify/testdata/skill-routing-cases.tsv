@@ -7,6 +7,7 @@ do-nothing-script-positive	positive	do-nothing-script	-	Turn this partly manual 
 handoff-positive	positive	handoff	-	The context window is nearly full; prepare a fresh session to continue the work.
 harness-audit-positive	positive	harness-audit	-	Measure the harness token cost and real skill activation counts.
 harness-reflection-positive	positive	harness-reflection	-	The same agent failure happened again after the previous recovery; make the harness learn from it.
+i-have-adhd-positive	positive	i-have-adhd	-	Use i-have-adhd for this conversation and make every answer action-first.
 merge-verdict-positive	positive	merge-verdict	-	Review this open pull request and decide whether it is safe to merge.
 neovim-positive	positive	neovim	-	Disable this LazyVim plugin and update its keymaps.
 obsolescence-positive	positive	obsolescence	-	Remove this endpoint and decide whether its legacy alias must survive.
@@ -21,6 +22,7 @@ do-nothing-script-negative	negative	-	do-nothing-script	Automate this determinis
 handoff-negative	negative	-	handoff	Summarize the task that has already finished.
 harness-audit-negative	negative	-	harness-audit	Give an opinion about whether this prompt feels concise.
 harness-reflection-negative	negative	-	harness-reflection	Diagnose this failure that has occurred only once.
+i-have-adhd-negative	negative	-	i-have-adhd	Give a concise answer to this question.
 merge-verdict-negative	negative	-	merge-verdict	Review my uncommitted local diff without making a merge decision.
 neovim-negative	negative	-	neovim	Change the Visual Studio Code theme settings.
 obsolescence-negative	negative	-	obsolescence	Add a brand-new endpoint with no predecessor or compatibility path.
