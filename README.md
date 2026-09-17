@@ -57,6 +57,7 @@ apply où le script a changé :
 | `duf` | affichage disque | `.zshrc` n'aliase pas `df` |
 | `uv` | lance `scrapling-mcp` | le MCP scrapling ne démarre pas |
 | `bun` | runtime de l'outillage agentique | `bun` et `bunx` indisponibles |
+| `hindsight` | administrer les banques de mémoire Hindsight | consultation et diagnostic en ligne de commande indisponibles |
 | `go` | compile le CLI `dotfiles` après le bootstrap | vérification, audit et lanceurs indisponibles |
 
 Sur macOS il passe par Homebrew, et y ajoute `thefuck` (aliasé par `.zshrc`),
@@ -378,6 +379,43 @@ le fichier inchangé.
 
 Ne jamais ajouter l'attribut `exact_` à `dot_claude/` : `~/.claude` contient
 l'état vivant des sessions, que chezmoi supprimerait.
+
+### Mémoire Hindsight
+
+La configuration Hindsight reste locale et chiffrée : `dotfiles register-hindsight` lit une
+configuration JSON chiffrée, fusionne la configuration vivante de Claude Code, Codex et
+Cursor, désactive les mises à jour implicites du runtime et ajoute un serveur MCP HTTP
+Cursor par banque. Le fichier permet de rattacher plusieurs dépôts à plusieurs banques.
+
+```bash
+dotfiles register-hindsight --config ~/.hindsight/dotfiles.json
+```
+
+Le fichier `~/.hindsight/dotfiles.json` est ajouté à la source chezmoi avec
+`chezmoi add --encrypt ~/.hindsight/dotfiles.json`. Son contenu suit cette forme :
+
+```json
+{
+  "apiUrl": "https://api.example.invalid",
+  "apiToken": "…",
+  "registrations": [
+    { "repository": "/chemin/absolu/premier-dépôt", "bank": "première-banque" },
+    { "repository": "/chemin/absolu/autre-dépôt", "bank": "autre-banque" }
+  ]
+}
+```
+
+ChatGPT se configure dans son interface, sous Réglages > Apps > Créer, avec l'URL
+MCP de la banque souhaitée et le même Bearer token. Un dépôt reste hors mémoire tant
+qu'il n'a pas été ajouté à ce fichier chiffré. Retirer une inscription supprime aussi
+les configurations gérées pour ce dépôt et cette banque.
+
+La CLI `hindsight` s'installe avec l'outillage et est configurée depuis ce même fichier
+à chaque reconstruction du CLI dotfiles, sans exposer ses valeurs au dépôt.
+
+Les destinations `~/.hindsight` et `~/.cursor/mcp.json` sont nécessairement en
+clair pendant l'exécution, mais le CLI les force à `0600`; leur source reste le
+fragment `age` et n'est jamais versionnée en clair.
 
 ## ssh
 

@@ -2,6 +2,7 @@
 # Construit l'outillage Go après que le hook before a installé la chaîne.
 # La révision source rend ce script à nouveau exécutable après chaque update.
 # SOURCE_REVISION: {{ output "git" "-C" .chezmoi.sourceDir "rev-parse" "HEAD" | trim }}
+# HINDSIGHT_CONFIG_REVISION: {{ output "git" "-C" .chezmoi.sourceDir "hash-object" "private_dot_hindsight/encrypted_dotfiles.json.age" | trim }}
 set -eu
 
 SOURCE={{ .chezmoi.sourceDir | quote }}
@@ -41,6 +42,10 @@ if (cd "$SOURCE" && CGO_ENABLED=0 "$GO" build -trimpath -o "$tmp/dotfiles" ./cmd
   mv "$tmp/dotfiles" "$TARGET"
   chmod +x "$TARGET"
   "$TARGET" register-claude-hook
+  CONFIG="$HOME/.hindsight/dotfiles.json"
+  if [ -r "$CONFIG" ]; then
+    "$TARGET" register-hindsight --config "$CONFIG"
+  fi
   echo "🐹  CLI dotfiles construit"
 else
   echo "⚠️   CLI dotfiles non construit" >&2
