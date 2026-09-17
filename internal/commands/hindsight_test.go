@@ -27,7 +27,7 @@ func TestRegisterHindsightMergesMultiplePrivateConfigurations(t *testing.T) {
 	if len(servers) != 1 || servers["hindsight-memory-personal"].(map[string]any)["url"] != "https://memory.invalid/mcp/personal/" {
 		t.Fatalf("servers = %#v", servers)
 	}
-	if len(executor.processes) < 1 || executor.processes[0].Name != "npx" {
+	if len(executor.processes) < 1 || executor.processes[0].Name != "bunx" {
 		t.Fatalf("processes = %#v", executor.processes)
 	}
 	for _, path := range []string{filepath.Join(home, ".hindsight", "coding-agent.json"), filepath.Join(home, ".cursor", "mcp.json")} {

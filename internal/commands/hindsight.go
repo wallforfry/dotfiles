@@ -44,7 +44,7 @@ func RegisterHindsight(runtime Runtime, args []string) int {
 		fprintf(runtime.Stderr, "dotfiles: configuration Hindsight inchangée : %s\n", err)
 		return 1
 	}
-	process := runtime.process("npx", "--yes", hindsightPackage, "install", "claude-code", "codex")
+	process := runtime.process("bunx", "--yes", hindsightPackage, "install", "claude-code", "codex")
 	process.Env = append(process.Env, "HINDSIGHT_API_TOKEN="+configuration.APIToken)
 	if err := runtime.Executor.Run(process); err != nil {
 		fprintf(runtime.Stderr, "dotfiles: intégrations Claude Code et Codex non installées : %s\n", err)

@@ -382,7 +382,7 @@ l'état vivant des sessions, que chezmoi supprimerait.
 
 ### Mémoire Hindsight
 
-La mémoire Hindsight reste locale et privée : `dotfiles register-hindsight` lit une
+La configuration Hindsight reste locale et chiffrée : `dotfiles register-hindsight` lit une
 configuration JSON chiffrée, fusionne la configuration vivante de Claude Code, Codex et
 Cursor, désactive les mises à jour implicites du runtime et ajoute un serveur MCP HTTP
 Cursor par banque. Le fichier permet de rattacher plusieurs dépôts à plusieurs banques.
