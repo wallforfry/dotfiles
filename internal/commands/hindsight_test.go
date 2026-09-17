@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -58,6 +59,7 @@ func TestRegisterHindsightRejectsMissingCredentialsWithoutWriting(t *testing.T) 
 }
 
 func TestHindsightBankAddsAndRemovesDirectoryFromNativeConfiguration(t *testing.T) {
+	setHindsightCLIAvailable(t)
 	home := t.TempDir()
 	directory := makeHindsightRepository(t, home, "directory")
 	configuration := writeNativeHindsightConfiguration(t, home, map[string]string{})
@@ -85,7 +87,7 @@ func TestHindsightBankAddsAndRemovesDirectoryFromNativeConfiguration(t *testing.
 	if err != nil || info.Mode().Perm() != 0o600 {
 		t.Fatalf("configuration permissions = %v, %v", info, err)
 	}
-	assertArgs(t, executor.processes, [][]string{{"add", "--encrypt", configuration}, {"apply", "--force"}})
+	assertArgs(t, executor.processes, [][]string{{"add", "--encrypt", configuration}, {"apply", "--force"}, {"configure", "--api-url", "https://memory.invalid", "--api-key", "secret"}})
 	executor = &fakeExecutor{}
 	runtime, _, _ = testRuntime(executor, map[string]string{"HOME": home})
 	if code := HindsightBank(runtime, []string{"bank", "remove", directory}); code != 0 {
@@ -94,10 +96,11 @@ func TestHindsightBankAddsAndRemovesDirectoryFromNativeConfiguration(t *testing.
 	if paths := readHindsightConfiguration(t, configuration).MapPathToBank; len(paths) != 0 {
 		t.Fatalf("mapPathToBank after remove = %#v", paths)
 	}
-	assertArgs(t, executor.processes, [][]string{{"add", "--encrypt", configuration}, {"apply", "--force"}})
+	assertArgs(t, executor.processes, [][]string{{"add", "--encrypt", configuration}, {"apply", "--force"}, {"configure", "--api-url", "https://memory.invalid", "--api-key", "secret"}})
 }
 
 func TestHindsightBankReplacesTildeMappedDirectory(t *testing.T) {
+	setHindsightCLIUnavailable(t)
 	home := t.TempDir()
 	userHome, err := os.UserHomeDir()
 	if err != nil {
@@ -182,6 +185,7 @@ func TestHindsightBankRejectsBlankBankWithoutWriting(t *testing.T) {
 }
 
 func TestHindsightBankRestoresConfigurationWhenChezmoiFails(t *testing.T) {
+	setHindsightCLIUnavailable(t)
 	for _, test := range []struct {
 		name          string
 		errors        []error
@@ -226,6 +230,40 @@ func TestHindsightBankRestoresConfigurationWhenChezmoiFails(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHindsightBankReportsCLIConfigurationFailureAfterApply(t *testing.T) {
+	setHindsightCLIAvailable(t)
+	home := t.TempDir()
+	directory := makeHindsightRepository(t, home, "directory")
+	configuration := writeNativeHindsightConfiguration(t, home, map[string]string{})
+	executor := &fakeExecutor{errors: []error{nil, nil, errors.New("configure")}}
+	runtime, _, stderr := testRuntime(executor, map[string]string{"HOME": home})
+
+	if code := HindsightBank(runtime, []string{"bank", "add", directory, "bank"}); code == 0 {
+		t.Fatal("HindsightBank(add) succeeded")
+	}
+	if paths := readHindsightConfiguration(t, configuration).MapPathToBank; len(paths) != 1 {
+		t.Fatalf("mapPathToBank after CLI failure = %#v", paths)
+	}
+	if !strings.Contains(stderr.String(), "CLI Hindsight non configurée") {
+		t.Fatalf("stderr = %q", stderr.String())
+	}
+	assertArgs(t, executor.processes, [][]string{{"add", "--encrypt", configuration}, {"apply", "--force"}, {"configure", "--api-url", "https://memory.invalid", "--api-key", "secret"}})
+}
+
+func setHindsightCLIAvailable(t *testing.T) {
+	t.Helper()
+	previous := lookPath
+	lookPath = func(string) (string, error) { return "/test/hindsight", nil }
+	t.Cleanup(func() { lookPath = previous })
+}
+
+func setHindsightCLIUnavailable(t *testing.T) {
+	t.Helper()
+	previous := lookPath
+	lookPath = func(string) (string, error) { return "", errors.New("absent") }
+	t.Cleanup(func() { lookPath = previous })
 }
 
 func TestExpandHindsightRepositoryExpandsHome(t *testing.T) {

@@ -16,6 +16,7 @@ import (
 const hindsightPackage = "@vectorize-io/hindsight-coding-agents"
 
 var nonServerName = regexp.MustCompile(`[^a-z0-9]+`)
+var lookPath = exec.LookPath
 
 type hindsightConfiguration struct {
 	APIURL        string            `json:"apiUrl"`
@@ -40,14 +41,8 @@ func RegisterHindsight(runtime Runtime, args []string) int {
 		fprintf(runtime.Stderr, "dotfiles: intégrations Claude Code et Codex non installées : %s\n", err)
 		return exitCode(err)
 	}
-	if _, err := exec.LookPath("hindsight"); err == nil {
-		configure := runtime.process("hindsight", "configure", "--api-url", configuration.APIURL, "--api-key", configuration.APIToken)
-		configure.Stdout = io.Discard
-		configure.Stderr = io.Discard
-		if err := runtime.Executor.Run(configure); err != nil {
-			fprintf(runtime.Stderr, "dotfiles: CLI Hindsight non configurée : %s\n", err)
-			return exitCode(err)
-		}
+	if code := configureHindsightCLI(runtime, configuration); code != 0 {
+		return code
 	}
 	fprintf(runtime.Stdout, "Hindsight enregistré pour %d dépôt(s), Claude Code, Codex et Cursor. Ajoute l'application MCP dans ChatGPT depuis Réglages > Apps > Créer.\n", len(configuration.MapPathToBank))
 	return 0
@@ -131,7 +126,7 @@ func updateHindsightBankMapping(runtime Runtime, directory, bank string, add boo
 		fprintf(runtime.Stderr, "dotfiles: configuration Hindsight inchangée : %s\n", err)
 		return 1
 	}
-	if code := synchronizeHindsightConfiguration(runtime, configurationPath, stage); code != 0 {
+	if code := synchronizeHindsightConfiguration(runtime, configuration, configurationPath, stage); code != 0 {
 		return code
 	}
 	return 0
@@ -190,7 +185,7 @@ func (stage hindsightConfigurationStage) rollback() error {
 	return nil
 }
 
-func synchronizeHindsightConfiguration(runtime Runtime, path string, stage hindsightConfigurationStage) int {
+func synchronizeHindsightConfiguration(runtime Runtime, configuration hindsightConfiguration, path string, stage hindsightConfigurationStage) int {
 	if err := runtime.Executor.Run(runtime.process("chezmoi", "add", "--encrypt", path)); err != nil {
 		return rollbackHindsightConfiguration(runtime, stage, err)
 	}
@@ -200,6 +195,20 @@ func synchronizeHindsightConfiguration(runtime Runtime, path string, stage hinds
 		return exitCode(err)
 	}
 	stage.commit()
+	return configureHindsightCLI(runtime, configuration)
+}
+
+func configureHindsightCLI(runtime Runtime, configuration hindsightConfiguration) int {
+	if _, err := lookPath("hindsight"); err != nil {
+		return 0
+	}
+	configure := runtime.process("hindsight", "configure", "--api-url", configuration.APIURL, "--api-key", configuration.APIToken)
+	configure.Stdout = io.Discard
+	configure.Stderr = io.Discard
+	if err := runtime.Executor.Run(configure); err != nil {
+		fprintf(runtime.Stderr, "dotfiles: CLI Hindsight non configurée : %s\n", err)
+		return exitCode(err)
+	}
 	return 0
 }
 
