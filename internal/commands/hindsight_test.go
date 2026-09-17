@@ -103,8 +103,16 @@ func TestHindsightBankReplacesTildeMappedDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	directory := filepath.Join(userHome, ".hindsight")
-	configuration := writeNativeHindsightConfiguration(t, home, map[string]string{"~/.hindsight": "old"})
+	directory, err := os.MkdirTemp(userHome, "dotfiles-hindsight-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Remove(directory) })
+	relativeDirectory, err := filepath.Rel(userHome, directory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	configuration := writeNativeHindsightConfiguration(t, home, map[string]string{"~/" + relativeDirectory: "old"})
 	runtime, _, _ := testRuntime(&fakeExecutor{}, map[string]string{"HOME": home})
 	if code := HindsightBank(runtime, []string{"bank", "add", directory, "new"}); code != 0 {
 		t.Fatalf("HindsightBank(add) = %d", code)
