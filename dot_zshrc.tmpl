@@ -75,3 +75,8 @@ command -v starship >/dev/null && eval "$(starship init zsh)"
 
 # Secrets (déchiffrés par chezmoi depuis encrypted_private_dot_secrets.age)
 [ -f "$HOME/.secrets" ] && source "$HOME/.secrets"
+
+# La CLI Hindsight attend API_KEY, tandis que le coding-agent attend API_TOKEN.
+if [[ -n ${HINDSIGHT_API_TOKEN-} ]]; then
+  export HINDSIGHT_API_KEY="$HINDSIGHT_API_TOKEN"
+fi
