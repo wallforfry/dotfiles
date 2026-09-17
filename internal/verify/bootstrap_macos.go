@@ -44,6 +44,9 @@ func (v *verifier) checkDarwinGoBootstrap() error {
 	if !bytes.Contains(build, []byte("HINDSIGHT_CONFIG_REVISION:")) {
 		return fmt.Errorf("construction Go macOS ne dépend pas de la configuration Hindsight chiffrée")
 	}
+	if bytes.Contains(build, []byte("register-hindsight --config \"$CONFIG\" ||")) {
+		return fmt.Errorf("construction Go macOS masque un échec d'enregistrement Hindsight")
+	}
 	if _, _, err := runBootstrapScript(build, home, fakeBin, brewPrefix, brewLog, buildLog); err != nil {
 		return fmt.Errorf("construction Go macOS interrompue: %w", err)
 	}
