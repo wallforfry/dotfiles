@@ -76,8 +76,8 @@ func parseHindsightConfiguration(args []string) (hindsightConfiguration, error) 
 		return hindsightConfiguration{}, errors.New("JSON Hindsight invalide")
 	}
 	configuration.APIURL = strings.TrimRight(configuration.APIURL, "/")
-	if configuration.APIURL == "" || configuration.APIToken == "" || len(configuration.Registrations) == 0 {
-		return hindsightConfiguration{}, errors.New("apiUrl, apiToken et au moins une inscription sont requis")
+	if configuration.APIURL == "" || configuration.APIToken == "" {
+		return hindsightConfiguration{}, errors.New("apiUrl et apiToken sont requis")
 	}
 	seenRepositories := map[string]bool{}
 	for index := range configuration.Registrations {

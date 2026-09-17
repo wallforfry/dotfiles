@@ -59,11 +59,23 @@ func TestRegisterHindsightRemovesDeletedRegistrations(t *testing.T) {
 	if _, exists := servers["hindsight-memory-first"]; exists {
 		t.Fatalf("removed bank is still registered: %#v", servers)
 	}
+	configuration = writeHindsightConfiguration(t, home, "https://memory.invalid", "secret", nil)
+	if code := RegisterHindsight(runtime, []string{"--config", configuration}); code != 0 {
+		t.Fatalf("empty RegisterHindsight() = %d", code)
+	}
+	paths = readJSON(t, filepath.Join(home, ".hindsight", "coding-agent.json"))["mapPathToBank"].(map[string]any)
+	if len(paths) != 0 {
+		t.Fatalf("all repositories should be removed: %#v", paths)
+	}
+	servers = readJSON(t, filepath.Join(home, ".cursor", "mcp.json"))["mcpServers"].(map[string]any)
+	if len(servers) != 0 {
+		t.Fatalf("all banks should be removed: %#v", servers)
+	}
 }
 
-func TestRegisterHindsightRejectsInvalidConfigurationWithoutWriting(t *testing.T) {
+func TestRegisterHindsightRejectsMissingCredentialsWithoutWriting(t *testing.T) {
 	home := t.TempDir()
-	configuration := writeHindsightConfiguration(t, home, "https://memory.invalid", "secret", nil)
+	configuration := writeHindsightConfiguration(t, home, "https://memory.invalid", "", nil)
 	runtime, _, _ := testRuntime(&fakeExecutor{}, map[string]string{"HOME": home})
 	if code := RegisterHindsight(runtime, []string{"--config", configuration}); code != ExitUsage {
 		t.Fatalf("RegisterHindsight() = %d", code)
