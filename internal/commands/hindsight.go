@@ -70,7 +70,7 @@ func HindsightBank(runtime Runtime, args []string) int {
 	operation := args[1]
 	switch operation {
 	case "create":
-		if len(args) != 3 || args[2] == "" {
+		if len(args) != 3 || strings.TrimSpace(args[2]) == "" {
 			return hindsightBankUsage(runtime)
 		}
 		if err := runtime.Executor.Run(runtime.process("hindsight", "bank", "create", args[2])); err != nil {
@@ -79,7 +79,7 @@ func HindsightBank(runtime Runtime, args []string) int {
 		}
 		return 0
 	case "add":
-		if len(args) != 4 || args[3] == "" {
+		if len(args) != 4 || strings.TrimSpace(args[3]) == "" {
 			return hindsightBankUsage(runtime)
 		}
 		return updateHindsightBankMapping(runtime, args[2], args[3], true)

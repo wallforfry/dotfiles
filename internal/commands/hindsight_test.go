@@ -147,6 +147,26 @@ func TestHindsightBankCreatesRemoteBank(t *testing.T) {
 	}
 }
 
+func TestHindsightBankRejectsBlankRemoteBankWithoutRunningCLI(t *testing.T) {
+	executor := &fakeExecutor{}
+	runtime, _, _ := testRuntime(executor, map[string]string{})
+	if code := HindsightBank(runtime, []string{"bank", "create", "   "}); code != ExitUsage {
+		t.Fatalf("HindsightBank(blank create) = %d", code)
+	}
+	if len(executor.processes) != 0 {
+		t.Fatalf("processes = %#v", executor.processes)
+	}
+}
+
+func TestHindsightBankPropagatesRemoteBankCreationFailure(t *testing.T) {
+	executor := &fakeExecutor{errors: []error{errors.New("remote failure")}}
+	runtime, _, _ := testRuntime(executor, map[string]string{})
+	if code := HindsightBank(runtime, []string{"bank", "create", "bank"}); code == 0 {
+		t.Fatal("HindsightBank(create) succeeded")
+	}
+	assertArgs(t, executor.processes, [][]string{{"bank", "create", "bank"}})
+}
+
 func TestHindsightBankRejectsBlankBankWithoutWriting(t *testing.T) {
 	home := t.TempDir()
 	directory := makeHindsightRepository(t, home, "directory")
@@ -160,7 +180,7 @@ func TestHindsightBankRejectsBlankBankWithoutWriting(t *testing.T) {
 	}
 	executor := &fakeExecutor{}
 	runtime, _, _ := testRuntime(executor, map[string]string{"HOME": home})
-	if code := HindsightBank(runtime, []string{"bank", "add", directory, ""}); code != ExitUsage {
+	if code := HindsightBank(runtime, []string{"bank", "add", directory, "   "}); code != ExitUsage {
 		t.Fatalf("HindsightBank(blank add) = %d", code)
 	}
 	content, err := os.ReadFile(configuration)
