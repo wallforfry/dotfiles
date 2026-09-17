@@ -382,31 +382,34 @@ l'état vivant des sessions, que chezmoi supprimerait.
 
 ### Mémoire Hindsight
 
-La configuration Hindsight reste locale et chiffrée : `dotfiles register-hindsight` lit une
-configuration JSON chiffrée, fusionne la configuration vivante de Claude Code, Codex et
-Cursor, désactive les mises à jour implicites du runtime et ajoute un serveur MCP HTTP
-Cursor par banque. Le fichier permet de rattacher plusieurs dépôts à plusieurs banques.
+La configuration Hindsight reste locale et chiffrée dans son format natif. Claude Code et
+Codex lisent directement `~/.hindsight/coding-agent.json`; `dotfiles register-hindsight`
+réconcilie Cursor à partir de `mapPathToBank`, désactive les mises à jour implicites du
+runtime et installe les intégrations.
 
 ```bash
-dotfiles register-hindsight --config ~/.hindsight/dotfiles.json
+dotfiles register-hindsight --config ~/.hindsight/coding-agent.json
 ```
 
-Le fichier `~/.hindsight/dotfiles.json` est ajouté à la source chezmoi avec
-`chezmoi add --encrypt ~/.hindsight/dotfiles.json`. Son contenu suit cette forme :
+L'opérateur crée ce fichier local puis l'ajoute chiffré à la source chezmoi avec
+`chezmoi add --encrypt ~/.hindsight/coding-agent.json`. Le seul fragment suivi est alors
+`private_dot_hindsight/encrypted_private_coding-agent.json.age`, déployé avec le mode
+`0600`. Son contenu suit ce format natif :
 
 ```json
 {
   "apiUrl": "https://api.example.invalid",
   "apiToken": "…",
-  "registrations": [
-    { "repository": "/chemin/absolu/premier-dépôt", "bank": "première-banque" },
-    { "repository": "/chemin/absolu/autre-dépôt", "bank": "autre-banque" }
-  ]
+  "optInOnly": true,
+  "mapPathToBank": {
+    "/chemin/absolu/premier-dépôt": "première-banque",
+    "/chemin/absolu/autre-dépôt": "autre-banque"
+  }
 }
 ```
 
-La gestion des associations passe par le CLI dotfiles, qui met à jour le fichier chiffré et
-réconcilie les clients configurés :
+La gestion des associations passe par le CLI dotfiles, qui modifie directement
+`mapPathToBank`, met à jour le fragment chiffré et réconcilie Cursor :
 
 ```bash
 dotfiles hindsight bank create <banque>
@@ -418,15 +421,17 @@ dotfiles hindsight bank remove <dossier>
 
 ChatGPT se configure dans son interface, sous Réglages > Apps > Créer, avec l'URL
 MCP de la banque souhaitée et le même Bearer token. Un dépôt reste hors mémoire tant
-qu'il n'a pas été ajouté à ce fichier chiffré. Retirer une inscription supprime aussi
-les configurations gérées pour ce dépôt et cette banque.
+qu'il n'a pas été ajouté à `mapPathToBank`. Retirer une association retire les serveurs
+Cursor dont le nom commence par `hindsight-memory-`; les autres serveurs Cursor restent
+intacts.
 
 La CLI `hindsight` s'installe avec l'outillage et est configurée depuis ce même fichier
-à chaque reconstruction du CLI dotfiles, sans exposer ses valeurs au dépôt.
+à chaque reconstruction du CLI dotfiles, sans exposer ses valeurs au dépôt. Son fichier
+`~/.hindsight/config` lui appartient et ne remplace pas `coding-agent.json`.
 
-Les destinations `~/.hindsight` et `~/.cursor/mcp.json` sont nécessairement en
-clair pendant l'exécution, mais le CLI les force à `0600`; leur source reste le
-fragment `age` et n'est jamais versionnée en clair.
+Les destinations `~/.hindsight/coding-agent.json` et `~/.cursor/mcp.json` sont
+nécessairement en clair pendant l'exécution, mais le CLI les force à `0600`; la source
+de `coding-agent.json` reste le fragment `age` et n'est jamais versionnée en clair.
 
 ## ssh
 

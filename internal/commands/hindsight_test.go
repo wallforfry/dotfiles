@@ -8,94 +8,59 @@ import (
 	"testing"
 )
 
-func TestRegisterHindsightMergesMultiplePrivateConfigurations(t *testing.T) {
+func TestRegisterHindsightSynchronizesCursorFromNativeConfiguration(t *testing.T) {
 	home := t.TempDir()
 	first := makeHindsightRepository(t, home, "first")
 	second := makeHindsightRepository(t, home, "second")
-	configuration := writeHindsightConfiguration(t, home, "https://memory.invalid", "secret", []hindsightRegistration{{Repository: first, Bank: "personal"}, {Repository: second, Bank: "personal"}})
+	configuration := writeNativeHindsightConfiguration(t, home, map[string]string{first: "personal", second: "personal"})
+	originalConfiguration, err := os.ReadFile(configuration)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cursorPath := filepath.Join(home, ".cursor", "mcp.json")
+	writeJSON(t, cursorPath, map[string]any{"mcpServers": map[string]any{
+		"other": map[string]any{"url": "https://other.invalid"}, "hindsight-memory-obsolete": map[string]any{"url": "https://obsolete.invalid"},
+	}})
 	executor := &fakeExecutor{}
 	runtime, _, _ := testRuntime(executor, map[string]string{"HOME": home})
 	if code := RegisterHindsight(runtime, []string{"--config", configuration}); code != 0 {
 		t.Fatalf("RegisterHindsight() = %d", code)
 	}
-	config := readJSON(t, filepath.Join(home, ".hindsight", "coding-agent.json"))
-	paths := config["mapPathToBank"].(map[string]any)
-	if paths[first] != "personal" || paths[second] != "personal" {
-		t.Fatalf("paths = %#v", paths)
-	}
-	cursor := readJSON(t, filepath.Join(home, ".cursor", "mcp.json"))
-	servers := cursor["mcpServers"].(map[string]any)
-	if len(servers) != 1 || servers["hindsight-memory-personal"].(map[string]any)["url"] != "https://memory.invalid/mcp/personal/" {
+	servers := readJSON(t, cursorPath)["mcpServers"].(map[string]any)
+	if len(servers) != 2 || servers["other"] == nil || servers["hindsight-memory-personal"].(map[string]any)["url"] != "https://memory.invalid/mcp/personal/" {
 		t.Fatalf("servers = %#v", servers)
+	}
+	if _, exists := servers["hindsight-memory-obsolete"]; exists {
+		t.Fatalf("obsolete server remains: %#v", servers)
+	}
+	if content, err := os.ReadFile(configuration); err != nil || string(content) != string(originalConfiguration) {
+		t.Fatalf("native configuration changed: %q, %v", content, err)
 	}
 	if len(executor.processes) < 1 || executor.processes[0].Name != "bunx" {
 		t.Fatalf("processes = %#v", executor.processes)
 	}
-	for _, path := range []string{filepath.Join(home, ".hindsight", "coding-agent.json"), filepath.Join(home, ".cursor", "mcp.json")} {
-		info, err := os.Stat(path)
-		if err != nil || info.Mode().Perm() != 0o600 {
-			t.Fatalf("permissions %s = %v, %v", path, info.Mode().Perm(), err)
-		}
-	}
-}
-
-func TestRegisterHindsightRemovesDeletedRegistrations(t *testing.T) {
-	home := t.TempDir()
-	first := makeHindsightRepository(t, home, "first")
-	second := makeHindsightRepository(t, home, "second")
-	configuration := writeHindsightConfiguration(t, home, "https://memory.invalid", "secret", []hindsightRegistration{{Repository: first, Bank: "first"}, {Repository: second, Bank: "second"}})
-	runtime, _, _ := testRuntime(&fakeExecutor{}, map[string]string{"HOME": home})
-	if code := RegisterHindsight(runtime, []string{"--config", configuration}); code != 0 {
-		t.Fatalf("initial RegisterHindsight() = %d", code)
-	}
-	configuration = writeHindsightConfiguration(t, home, "https://memory.invalid", "secret", []hindsightRegistration{{Repository: second, Bank: "second"}})
-	if code := RegisterHindsight(runtime, []string{"--config", configuration}); code != 0 {
-		t.Fatalf("updated RegisterHindsight() = %d", code)
-	}
-	paths := readJSON(t, filepath.Join(home, ".hindsight", "coding-agent.json"))["mapPathToBank"].(map[string]any)
-	if _, exists := paths[first]; exists {
-		t.Fatalf("removed repository is still registered: %#v", paths)
-	}
-	servers := readJSON(t, filepath.Join(home, ".cursor", "mcp.json"))["mcpServers"].(map[string]any)
-	if _, exists := servers["hindsight-memory-first"]; exists {
-		t.Fatalf("removed bank is still registered: %#v", servers)
-	}
-	configuration = writeHindsightConfiguration(t, home, "https://memory.invalid", "secret", nil)
-	if code := RegisterHindsight(runtime, []string{"--config", configuration}); code != 0 {
-		t.Fatalf("empty RegisterHindsight() = %d", code)
-	}
-	paths = readJSON(t, filepath.Join(home, ".hindsight", "coding-agent.json"))["mapPathToBank"].(map[string]any)
-	if len(paths) != 0 {
-		t.Fatalf("all repositories should be removed: %#v", paths)
-	}
-	servers = readJSON(t, filepath.Join(home, ".cursor", "mcp.json"))["mcpServers"].(map[string]any)
-	if len(servers) != 0 {
-		t.Fatalf("all banks should be removed: %#v", servers)
+	info, err := os.Stat(cursorPath)
+	if err != nil || info.Mode().Perm() != 0o600 {
+		t.Fatalf("permissions %s = %v, %v", cursorPath, info.Mode().Perm(), err)
 	}
 }
 
 func TestRegisterHindsightRejectsMissingCredentialsWithoutWriting(t *testing.T) {
 	home := t.TempDir()
-	configuration := writeHindsightConfiguration(t, home, "https://memory.invalid", "", nil)
+	configuration := writeHindsightConfiguration(t, home, "https://memory.invalid", "", map[string]string{})
 	runtime, _, _ := testRuntime(&fakeExecutor{}, map[string]string{"HOME": home})
 	if code := RegisterHindsight(runtime, []string{"--config", configuration}); code != ExitUsage {
 		t.Fatalf("RegisterHindsight() = %d", code)
 	}
-	if _, err := os.Stat(filepath.Join(home, ".hindsight", "coding-agent.json")); !os.IsNotExist(err) {
-		t.Fatalf("configuration created: %v", err)
+	if _, err := os.Stat(filepath.Join(home, ".cursor", "mcp.json")); !os.IsNotExist(err) {
+		t.Fatalf("cursor configuration created: %v", err)
 	}
 }
 
-func TestHindsightBankAddsAndRemovesDirectory(t *testing.T) {
+func TestHindsightBankAddsAndRemovesDirectoryFromNativeConfiguration(t *testing.T) {
 	home := t.TempDir()
 	directory := makeHindsightRepository(t, home, "directory")
-	configuration := filepath.Join(home, ".hindsight", "dotfiles.json")
-	if err := os.MkdirAll(filepath.Dir(configuration), 0o700); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(configuration, []byte(`{"apiUrl":"https://memory.invalid","apiToken":"secret","registrations":[]}`), 0o600); err != nil {
-		t.Fatal(err)
-	}
+	configuration := writeNativeHindsightConfiguration(t, home, map[string]string{})
 	if err := os.Chmod(configuration, 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -113,26 +78,56 @@ func TestHindsightBankAddsAndRemovesDirectory(t *testing.T) {
 		t.Fatalf("HindsightBank(add) = %d", code)
 	}
 	updated := readHindsightConfiguration(t, configuration)
-	if len(updated.Registrations) != 1 || updated.Registrations[0] != (hindsightRegistration{Repository: canonicalHindsightDirectory(t, directory), Bank: "bank"}) {
-		t.Fatalf("registrations after add = %#v", updated.Registrations)
+	if updated.MapPathToBank[canonicalHindsightDirectory(t, directory)] != "bank" || len(updated.MapPathToBank) != 1 {
+		t.Fatalf("mapPathToBank after add = %#v", updated.MapPathToBank)
 	}
 	info, err := os.Stat(configuration)
 	if err != nil || info.Mode().Perm() != 0o600 {
 		t.Fatalf("configuration permissions = %v, %v", info, err)
 	}
 	assertArgs(t, executor.processes, [][]string{{"add", "--encrypt", configuration}, {"apply", "--force"}})
-	if executor.processes[0].Name != "chezmoi" || executor.processes[1].Name != "chezmoi" {
-		t.Fatalf("processes = %#v", executor.processes)
-	}
 	executor = &fakeExecutor{}
 	runtime, _, _ = testRuntime(executor, map[string]string{"HOME": home})
 	if code := HindsightBank(runtime, []string{"bank", "remove", directory}); code != 0 {
 		t.Fatalf("HindsightBank(remove) = %d", code)
 	}
-	if registrations := readHindsightConfiguration(t, configuration).Registrations; len(registrations) != 0 {
-		t.Fatalf("registrations after remove = %#v", registrations)
+	if paths := readHindsightConfiguration(t, configuration).MapPathToBank; len(paths) != 0 {
+		t.Fatalf("mapPathToBank after remove = %#v", paths)
 	}
 	assertArgs(t, executor.processes, [][]string{{"add", "--encrypt", configuration}, {"apply", "--force"}})
+}
+
+func TestHindsightBankReplacesTildeMappedDirectory(t *testing.T) {
+	home := t.TempDir()
+	userHome, err := os.UserHomeDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	directory, err := os.MkdirTemp(userHome, "dotfiles-hindsight-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Remove(directory) })
+	relativeDirectory, err := filepath.Rel(userHome, directory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	configuration := writeNativeHindsightConfiguration(t, home, map[string]string{"~/" + relativeDirectory: "old"})
+	runtime, _, _ := testRuntime(&fakeExecutor{}, map[string]string{"HOME": home})
+	if code := HindsightBank(runtime, []string{"bank", "add", directory, "new"}); code != 0 {
+		t.Fatalf("HindsightBank(add) = %d", code)
+	}
+	paths := readHindsightConfiguration(t, configuration).MapPathToBank
+	canonical := canonicalHindsightDirectory(t, directory)
+	if len(paths) != 1 || paths[canonical] != "new" {
+		t.Fatalf("mapPathToBank after add = %#v", paths)
+	}
+	if code := HindsightBank(runtime, []string{"bank", "remove", directory}); code != 0 {
+		t.Fatalf("HindsightBank(remove) = %d", code)
+	}
+	if paths := readHindsightConfiguration(t, configuration).MapPathToBank; len(paths) != 0 {
+		t.Fatalf("mapPathToBank after remove = %#v", paths)
+	}
 }
 
 func TestHindsightBankCreatesRemoteBank(t *testing.T) {
@@ -170,12 +165,9 @@ func TestHindsightBankPropagatesRemoteBankCreationFailure(t *testing.T) {
 func TestHindsightBankRejectsBlankBankWithoutWriting(t *testing.T) {
 	home := t.TempDir()
 	directory := makeHindsightRepository(t, home, "directory")
-	configuration := filepath.Join(home, ".hindsight", "dotfiles.json")
-	if err := os.MkdirAll(filepath.Dir(configuration), 0o700); err != nil {
-		t.Fatal(err)
-	}
-	original := []byte(`{"apiUrl":"https://memory.invalid","apiToken":"secret","registrations":[]}`)
-	if err := os.WriteFile(configuration, original, 0o600); err != nil {
+	configuration := writeNativeHindsightConfiguration(t, home, map[string]string{})
+	original, err := os.ReadFile(configuration)
+	if err != nil {
 		t.Fatal(err)
 	}
 	executor := &fakeExecutor{}
@@ -202,12 +194,9 @@ func TestHindsightBankRestoresConfigurationWhenChezmoiFails(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			home := t.TempDir()
 			directory := makeHindsightRepository(t, home, "directory")
-			configuration := filepath.Join(home, ".hindsight", "dotfiles.json")
-			if err := os.MkdirAll(filepath.Dir(configuration), 0o700); err != nil {
-				t.Fatal(err)
-			}
-			original := []byte(`{"apiUrl":"https://memory.invalid","apiToken":"secret","registrations":[]}`)
-			if err := os.WriteFile(configuration, original, 0o600); err != nil {
+			configuration := writeNativeHindsightConfiguration(t, home, map[string]string{})
+			original, err := os.ReadFile(configuration)
+			if err != nil {
 				t.Fatal(err)
 			}
 			executor := &fakeExecutor{errors: test.errors}
@@ -217,20 +206,17 @@ func TestHindsightBankRestoresConfigurationWhenChezmoiFails(t *testing.T) {
 			}
 			content, err := os.ReadFile(configuration)
 			if err != nil {
-				t.Fatalf("configuration = %q, %v", content, err)
+				t.Fatal(err)
 			}
 			if test.restored && string(content) != string(original) {
 				t.Fatalf("configuration after rollback = %q", content)
 			}
-			if !test.restored && len(readHindsightConfiguration(t, configuration).Registrations) != 1 {
+			if !test.restored && len(readHindsightConfiguration(t, configuration).MapPathToBank) != 1 {
 				t.Fatalf("configuration after apply failure = %q", content)
 			}
 			info, err := os.Stat(configuration)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if info.Mode().Perm() != 0o600 {
-				t.Fatalf("configuration permissions = %v", info.Mode().Perm())
+			if err != nil || info.Mode().Perm() != 0o600 {
+				t.Fatalf("configuration permissions = %v, %v", info, err)
 			}
 			if len(executor.processes) != test.processesWant {
 				t.Fatalf("processes = %#v", executor.processes)
@@ -261,20 +247,31 @@ func makeHindsightRepository(t *testing.T, home, name string) string {
 	}
 	return repository
 }
-
-func writeHindsightConfiguration(t *testing.T, home, apiURL, token string, registrations []hindsightRegistration) string {
+func writeHindsightConfiguration(t *testing.T, home, apiURL, token string, paths map[string]string) string {
 	t.Helper()
 	path := filepath.Join(home, "hindsight.json")
-	content, err := json.Marshal(hindsightConfiguration{APIURL: apiURL, APIToken: token, Registrations: registrations})
+	writeHindsightConfigurationAt(t, path, apiURL, token, paths)
+	return path
+}
+func writeNativeHindsightConfiguration(t *testing.T, home string, paths map[string]string) string {
+	t.Helper()
+	path := filepath.Join(home, ".hindsight", "coding-agent.json")
+	writeHindsightConfigurationAt(t, path, "https://memory.invalid", "secret", paths)
+	return path
+}
+func writeHindsightConfigurationAt(t *testing.T, path, apiURL, token string, paths map[string]string) {
+	t.Helper()
+	content, err := json.Marshal(hindsightConfiguration{APIURL: apiURL, APIToken: token, MapPathToBank: paths})
 	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(path, content, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	return path
 }
-
 func readHindsightConfiguration(t *testing.T, path string) hindsightConfiguration {
 	t.Helper()
 	content, err := os.ReadFile(path)
@@ -287,7 +284,6 @@ func readHindsightConfiguration(t *testing.T, path string) hindsightConfiguratio
 	}
 	return configuration
 }
-
 func canonicalHindsightDirectory(t *testing.T, directory string) string {
 	t.Helper()
 	canonical, err := filepath.EvalSymlinks(directory)
@@ -296,7 +292,19 @@ func canonicalHindsightDirectory(t *testing.T, directory string) string {
 	}
 	return canonical
 }
-
+func writeJSON(t *testing.T, path string, document map[string]any) {
+	t.Helper()
+	content, err := json.Marshal(document)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, content, 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
 func readJSON(t *testing.T, path string) map[string]any {
 	t.Helper()
 	content, err := os.ReadFile(path)
