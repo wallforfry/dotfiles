@@ -115,20 +115,17 @@ func updateHindsightBankMapping(runtime Runtime, directory, bank string, add boo
 		fprintf(runtime.Stderr, "dotfiles: configuration Hindsight absente\n")
 		return ExitUnavailable
 	}
-	_, document, err := parseHindsightConfigurationContent(content)
+	configuration, document, err := parseHindsightConfigurationContent(content)
 	if err != nil {
 		fprintf(runtime.Stderr, "dotfiles: %s\n", err)
 		return ExitUsage
 	}
-	paths, err := objectField(document, "mapPathToBank")
-	if err != nil {
-		fprintf(runtime.Stderr, "dotfiles: %s\n", err)
-		return ExitUsage
-	}
+	paths := configuration.MapPathToBank
 	delete(paths, canonical)
 	if add {
 		paths[canonical] = bank
 	}
+	document["mapPathToBank"] = paths
 	stage, err := stageHindsightConfiguration(configurationPath, content, document, 0o600, existed)
 	if err != nil {
 		fprintf(runtime.Stderr, "dotfiles: configuration Hindsight inchangée : %s\n", err)

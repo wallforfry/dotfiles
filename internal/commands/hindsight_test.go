@@ -97,6 +97,31 @@ func TestHindsightBankAddsAndRemovesDirectoryFromNativeConfiguration(t *testing.
 	assertArgs(t, executor.processes, [][]string{{"add", "--encrypt", configuration}, {"apply", "--force"}})
 }
 
+func TestHindsightBankReplacesTildeMappedDirectory(t *testing.T) {
+	home := t.TempDir()
+	userHome, err := os.UserHomeDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	directory := filepath.Join(userHome, ".hindsight")
+	configuration := writeNativeHindsightConfiguration(t, home, map[string]string{"~/.hindsight": "old"})
+	runtime, _, _ := testRuntime(&fakeExecutor{}, map[string]string{"HOME": home})
+	if code := HindsightBank(runtime, []string{"bank", "add", directory, "new"}); code != 0 {
+		t.Fatalf("HindsightBank(add) = %d", code)
+	}
+	paths := readHindsightConfiguration(t, configuration).MapPathToBank
+	canonical := canonicalHindsightDirectory(t, directory)
+	if len(paths) != 1 || paths[canonical] != "new" {
+		t.Fatalf("mapPathToBank after add = %#v", paths)
+	}
+	if code := HindsightBank(runtime, []string{"bank", "remove", directory}); code != 0 {
+		t.Fatalf("HindsightBank(remove) = %d", code)
+	}
+	if paths := readHindsightConfiguration(t, configuration).MapPathToBank; len(paths) != 0 {
+		t.Fatalf("mapPathToBank after remove = %#v", paths)
+	}
+}
+
 func TestHindsightBankCreatesRemoteBank(t *testing.T) {
 	executor := &fakeExecutor{}
 	runtime, _, _ := testRuntime(executor, map[string]string{})
