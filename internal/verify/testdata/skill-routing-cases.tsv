@@ -5,6 +5,7 @@ business-issue-positive	positive	business-issue	-	Investigate this persona and t
 containerized-mcp-positive	positive	containerized-mcp	-	Register this Docker image as an MCP server without leaking a container per session.
 do-nothing-script-positive	positive	do-nothing-script	-	Turn this partly manual release checklist into an operator-driven script.
 handoff-positive	positive	handoff	-	The context window is nearly full; prepare a fresh session to continue the work.
+hindsight-memory-positive	positive	hindsight-memory	-	Recall what we learned in earlier sessions before changing this repository.
 harness-audit-positive	positive	harness-audit	-	Measure the harness token cost and real skill activation counts.
 harness-reflection-positive	positive	harness-reflection	-	The same agent failure happened again after the previous recovery; make the harness learn from it.
 i-have-adhd-positive	positive	i-have-adhd	-	Use i-have-adhd for this conversation and make every answer action-first.
@@ -20,6 +21,7 @@ business-issue-negative	negative	-	business-issue	Implement this already specifi
 containerized-mcp-negative	negative	-	containerized-mcp	Run an ordinary one-shot Docker build container.
 do-nothing-script-negative	negative	-	do-nothing-script	Automate this deterministic formatting command with no operator steps.
 handoff-negative	negative	-	handoff	Summarize the task that has already finished.
+hindsight-memory-negative	negative	-	hindsight-memory	Summarize the files changed in this current task only.
 harness-audit-negative	negative	-	harness-audit	Give an opinion about whether this prompt feels concise.
 harness-reflection-negative	negative	-	harness-reflection	Diagnose this failure that has occurred only once.
 i-have-adhd-negative	negative	-	i-have-adhd	Give a concise answer to this question.

@@ -33,6 +33,7 @@ the deployed copy.
 | `handoff` | Hand the current work to a fresh session instead of letting the context compact. |
 | `harness-audit` | Measure harness cost, deployment lag, activation, adherence, and mutation detection. |
 | `harness-reflection` | Turn a repeated agent failure into one evidence-backed harness change. |
+| `hindsight-memory` | Use Hindsight for durable project memory. |
 | `i-have-adhd` | Shape agent output for a reader with ADHD. |
 | `neovim` | Maintain the dotfiles repository's Neovim and LazyVim configuration. |
 | `scripts` | Create and maintain portable bootstrap shell in the dotfiles repository. |
