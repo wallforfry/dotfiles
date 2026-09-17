@@ -12,6 +12,7 @@
 # UV_VERSION: 0.12.8
 # BUN_VERSION: 1.4.2
 # BUN_MIN: 1.4.0
+# HINDSIGHT_VERSION: 0.10.0
 # GO_TOOLCHAIN: toolchain/go.env
 #
 # age      : déchiffre ~/.secrets. Indispensable - l'implémentation intégrée à
@@ -30,6 +31,7 @@
 #            téléchargée quand rien n'est en place. « bun upgrade » et brew
 #            posent le dernier amont, donc BUN_VERSION n'est pas un épinglage
 #            au sens des autres outils - seul le plancher est garanti.
+# hindsight: CLI d'administration des banques de mémoire Hindsight.
 # go       : compile le CLI de ce dépôt après le bootstrap. Homebrew le gère
 #            sur macOS ; ailleurs, l'archive officielle épinglée va dans
 #            ~/.local/go.
@@ -54,6 +56,7 @@ DUF_VERSION=0.9.1
 UV_VERSION=0.12.8
 BUN_VERSION=1.4.2
 BUN_MIN=1.4.0
+HINDSIGHT_VERSION=0.10.0
 . {{ joinPath .chezmoi.sourceDir "toolchain/go.env" | quote }}
 GO_MIN=$(awk '$1 == "go" { print $2; exit }' {{ joinPath .chezmoi.sourceDir "go.mod" | quote }})
 BIN="$HOME/bin"
@@ -158,7 +161,42 @@ bun_upgrade() {
   fi
 }
 
+install_hindsight_cli() {
+  asset=$1
+  expected=$2
+  if command -v hindsight >/dev/null; then
+    return 0
+  fi
+  mkdir -p "$HOME/.cache" "$BIN"
+  file=$(mktemp "$HOME/.cache/hindsight.XXXXXX") || return 0
+  if curl -fsSL --retry 3 -o "$file" "https://github.com/vectorize-io/hindsight/releases/download/v${HINDSIGHT_VERSION}/${asset}"; then
+    if command -v sha256sum >/dev/null; then
+      actual=$(sha256sum "$file" | cut -d' ' -f1)
+    elif command -v shasum >/dev/null; then
+      actual=$(shasum -a 256 "$file" | cut -d' ' -f1)
+    else
+      actual=
+    fi
+    if [ "$actual" = "$expected" ]; then
+      chmod +x "$file"
+      if "$file" --version >/dev/null 2>&1; then
+        mv "$file" "$BIN/hindsight"
+        echo "🧠  hindsight $HINDSIGHT_VERSION installé dans ~/bin"
+        return 0
+      fi
+    fi
+  fi
+  rm -f "$file"
+  echo "⚠️   hindsight non installé : archive indisponible, somme invalide ou binaire inexécutable." >&2
+}
+
 {{ if eq .chezmoi.os "darwin" -}}
+case "$(uname -m)" in
+  arm64) install_hindsight_cli hindsight-darwin-arm64 c9f43f4f2d445922fedc2f334ff05a93576fe5b94beaef2c6aebdc532223b418 ;;
+  x86_64) install_hindsight_cli hindsight-darwin-amd64 49953b4ebcf8a11ba02ede8cf751f49974e271e5135c418e12281041fda3afeb ;;
+  *) echo "⚠️   hindsight non installé : architecture $(uname -m) non gérée." >&2 ;;
+esac
+
 if command -v brew >/dev/null; then
   # « formule:commande », car ripgrep s'installe sous ce nom et s'appelle rg.
   #
@@ -294,6 +332,13 @@ case "$(uname -m)" in
   *) echo "⚠️   architecture $(uname -m) non gérée, installation manuelle requise" >&2
      exit 0 ;;
 esac
+
+{{ if ne .chezmoi.os "darwin" -}}
+case "$arch" in
+  amd64) install_hindsight_cli hindsight-linux-amd64 02160d71a0ecafda1df7cceab4446362d76500dfa2c3b768d773b86e423e8f19 ;;
+  arm64) install_hindsight_cli hindsight-linux-arm64 7c2f85129e861464a2fc28e264e3ddf55a1eb6b9eeeea12a738e889cb77facf7 ;;
+esac
+{{ end -}}
 
 mkdir -p "$BIN" "$HOME/.cache"
 # Pas /tmp : monté noexec sur DSM, et tar y écrirait des binaires inutilisables.

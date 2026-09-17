@@ -41,6 +41,11 @@ if (cd "$SOURCE" && CGO_ENABLED=0 "$GO" build -trimpath -o "$tmp/dotfiles" ./cmd
   mv "$tmp/dotfiles" "$TARGET"
   chmod +x "$TARGET"
   "$TARGET" register-claude-hook
+  CONFIG="$HOME/.hindsight/dotfiles.json"
+  if [ -r "$CONFIG" ]; then
+    "$TARGET" register-hindsight --config "$CONFIG" || \
+      echo "⚠️   Hindsight non enregistré : voir le diagnostic ci-dessus." >&2
+  fi
   echo "🐹  CLI dotfiles construit"
 else
   echo "⚠️   CLI dotfiles non construit" >&2
