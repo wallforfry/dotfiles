@@ -43,6 +43,8 @@ func run(arguments []string, runtime commands.Runtime) int {
 		return commands.RegisterClaudeHook(runtime, args)
 	case "register-hindsight":
 		return commands.RegisterHindsight(runtime, args)
+	case "hindsight":
+		return commands.HindsightBank(runtime, args)
 	case "harness-audit":
 		root, code := requiredRepositoryRoot(args, runtime)
 		if code != 0 {
@@ -111,5 +113,5 @@ func repositoryRoot(args []string, runtime commands.Runtime) (string, int) {
 }
 
 func usage(runtime commands.Runtime) {
-	fmt.Fprintln(runtime.Stderr, "dotfiles: commandes - verify, harness-audit, validate-skill-routing, register-claude-hook, register-hindsight, agent-handoff, cloak, firecrawl-mcp, postgres-mcp, scrapling-mcp")
+	fmt.Fprintln(runtime.Stderr, "dotfiles: commandes - verify, harness-audit, validate-skill-routing, register-claude-hook, register-hindsight, hindsight bank, agent-handoff, cloak, firecrawl-mcp, postgres-mcp, scrapling-mcp")
 }

@@ -63,6 +63,169 @@ func RegisterHindsight(runtime Runtime, args []string) int {
 	return 0
 }
 
+func HindsightBank(runtime Runtime, args []string) int {
+	if len(args) < 2 || args[0] != "bank" {
+		return hindsightBankUsage(runtime)
+	}
+	operation := args[1]
+	switch operation {
+	case "create":
+		if len(args) != 3 || strings.TrimSpace(args[2]) == "" {
+			return hindsightBankUsage(runtime)
+		}
+		if err := runtime.Executor.Run(runtime.process("hindsight", "bank", "create", args[2])); err != nil {
+			fprintf(runtime.Stderr, "dotfiles: création de la banque Hindsight impossible : %s\n", err)
+			return exitCode(err)
+		}
+		return 0
+	case "add":
+		if len(args) != 4 || strings.TrimSpace(args[3]) == "" {
+			return hindsightBankUsage(runtime)
+		}
+		return updateHindsightBankMapping(runtime, args[2], args[3], true)
+	case "remove":
+		if len(args) != 3 {
+			return hindsightBankUsage(runtime)
+		}
+		return updateHindsightBankMapping(runtime, args[2], "", false)
+	default:
+		return hindsightBankUsage(runtime)
+	}
+}
+
+func hindsightBankUsage(runtime Runtime) int {
+	fprintf(runtime.Stderr, "dotfiles: usage - hindsight bank create <bank> | add <dossier> <bank> | remove <dossier>\n")
+	return ExitUsage
+}
+
+func updateHindsightBankMapping(runtime Runtime, directory, bank string, add bool) int {
+	home := runtime.env("HOME", "")
+	if home == "" {
+		fprintf(runtime.Stderr, "dotfiles: HOME est absent\n")
+		return ExitUsage
+	}
+	absolute, err := filepath.Abs(directory)
+	if err != nil {
+		fprintf(runtime.Stderr, "dotfiles: dossier Hindsight introuvable\n")
+		return ExitUsage
+	}
+	canonical, err := filepath.EvalSymlinks(absolute)
+	if err != nil {
+		fprintf(runtime.Stderr, "dotfiles: dossier Hindsight introuvable\n")
+		return ExitUsage
+	}
+	info, err := os.Stat(canonical)
+	if err != nil || !info.IsDir() {
+		fprintf(runtime.Stderr, "dotfiles: dossier Hindsight introuvable\n")
+		return ExitUsage
+	}
+	configurationPath := filepath.Join(home, ".hindsight", "dotfiles.json")
+	content, _, existed, err := readSettings(configurationPath)
+	if err != nil || !existed {
+		fprintf(runtime.Stderr, "dotfiles: configuration Hindsight absente\n")
+		return ExitUnavailable
+	}
+	configuration, document, err := parseHindsightConfigurationContent(content)
+	if err != nil {
+		fprintf(runtime.Stderr, "dotfiles: %s\n", err)
+		return ExitUsage
+	}
+	registrations := make([]hindsightRegistration, 0, len(configuration.Registrations)+1)
+	for _, registration := range configuration.Registrations {
+		if registration.Repository != canonical {
+			registrations = append(registrations, registration)
+		}
+	}
+	if add {
+		registrations = append(registrations, hindsightRegistration{Repository: canonical, Bank: bank})
+	}
+	document["registrations"] = registrations
+	stage, err := stageHindsightConfiguration(configurationPath, content, document, 0o600, existed)
+	if err != nil {
+		fprintf(runtime.Stderr, "dotfiles: configuration Hindsight inchangée : %s\n", err)
+		return 1
+	}
+	if code := synchronizeHindsightConfiguration(runtime, configurationPath, stage); code != 0 {
+		return code
+	}
+	return 0
+}
+
+type hindsightConfigurationStage struct {
+	path             string
+	candidatePath    string
+	candidateContent []byte
+	capturePath      string
+}
+
+func stageHindsightConfiguration(path string, original []byte, document map[string]any, mode os.FileMode, existed bool) (hindsightConfigurationStage, error) {
+	directory := filepath.Dir(path)
+	candidatePath, err := writeJSONCandidate(directory, document, mode)
+	if err != nil {
+		return hindsightConfigurationStage{}, err
+	}
+	candidateContent, err := os.ReadFile(candidatePath)
+	if err != nil {
+		_ = os.Remove(candidatePath)
+		return hindsightConfigurationStage{}, err
+	}
+	capturePath, err := captureSettings(path, directory, original, existed)
+	if err != nil {
+		_ = os.Remove(candidatePath)
+		return hindsightConfigurationStage{}, err
+	}
+	if err := os.Link(candidatePath, path); err != nil {
+		if existed {
+			_ = restoreCapturedSettings(capturePath, path)
+		}
+		_ = os.Remove(capturePath)
+		_ = os.Remove(candidatePath)
+		return hindsightConfigurationStage{}, err
+	}
+	return hindsightConfigurationStage{path: path, candidatePath: candidatePath, candidateContent: candidateContent, capturePath: capturePath}, nil
+}
+
+func (stage hindsightConfigurationStage) commit() {
+	_ = os.Remove(stage.capturePath)
+	_ = os.Remove(stage.candidatePath)
+}
+
+func (stage hindsightConfigurationStage) rollback() error {
+	directory := filepath.Dir(stage.path)
+	currentCapture, err := captureSettings(stage.path, directory, stage.candidateContent, true)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(currentCapture)
+	if err := restoreCapturedSettings(stage.capturePath, stage.path); err != nil {
+		return err
+	}
+	stage.commit()
+	return nil
+}
+
+func synchronizeHindsightConfiguration(runtime Runtime, path string, stage hindsightConfigurationStage) int {
+	if err := runtime.Executor.Run(runtime.process("chezmoi", "add", "--encrypt", path)); err != nil {
+		return rollbackHindsightConfiguration(runtime, stage, err)
+	}
+	if err := runtime.Executor.Run(runtime.process("chezmoi", "apply", "--force")); err != nil {
+		stage.commit()
+		fprintf(runtime.Stderr, "dotfiles: synchronisation chezmoi incomplète : %s; relancer chezmoi apply --force\n", err)
+		return exitCode(err)
+	}
+	stage.commit()
+	return 0
+}
+
+func rollbackHindsightConfiguration(runtime Runtime, stage hindsightConfigurationStage, cause error) int {
+	if err := stage.rollback(); err != nil {
+		fprintf(runtime.Stderr, "dotfiles: synchronisation chezmoi impossible : %s; restauration locale impossible : %s\n", cause, err)
+		return exitCode(cause)
+	}
+	fprintf(runtime.Stderr, "dotfiles: synchronisation chezmoi impossible : %s\n", cause)
+	return exitCode(cause)
+}
+
 func parseHindsightConfiguration(args []string) (hindsightConfiguration, error) {
 	if len(args) != 2 || args[0] != "--config" || args[1] == "" {
 		return hindsightConfiguration{}, errors.New("--config est requis")
@@ -71,35 +234,47 @@ func parseHindsightConfiguration(args []string) (hindsightConfiguration, error) 
 	if err != nil {
 		return hindsightConfiguration{}, err
 	}
+	configuration, _, err := parseHindsightConfigurationContent(content)
+	if err != nil {
+		return hindsightConfiguration{}, err
+	}
+	return configuration, nil
+}
+
+func parseHindsightConfigurationContent(content []byte) (hindsightConfiguration, map[string]any, error) {
+	var document map[string]any
 	var configuration hindsightConfiguration
+	if err := json.Unmarshal(content, &document); err != nil || document == nil {
+		return hindsightConfiguration{}, nil, errors.New("JSON Hindsight invalide")
+	}
 	if err := json.Unmarshal(content, &configuration); err != nil {
-		return hindsightConfiguration{}, errors.New("JSON Hindsight invalide")
+		return hindsightConfiguration{}, nil, errors.New("JSON Hindsight invalide")
 	}
 	configuration.APIURL = strings.TrimRight(configuration.APIURL, "/")
-	if configuration.APIURL == "" || configuration.APIToken == "" || len(configuration.Registrations) == 0 {
-		return hindsightConfiguration{}, errors.New("apiUrl, apiToken et au moins une inscription sont requis")
+	if configuration.APIURL == "" || configuration.APIToken == "" {
+		return hindsightConfiguration{}, nil, errors.New("apiUrl et apiToken sont requis")
 	}
 	seenRepositories := map[string]bool{}
 	for index := range configuration.Registrations {
 		registration := &configuration.Registrations[index]
 		if registration.Repository == "" || registration.Bank == "" {
-			return hindsightConfiguration{}, errors.New("chaque inscription exige repository absolu et bank")
+			return hindsightConfiguration{}, nil, errors.New("chaque inscription exige repository absolu et bank")
 		}
 		repository, err := expandHindsightRepository(registration.Repository)
 		if err != nil {
-			return hindsightConfiguration{}, err
+			return hindsightConfiguration{}, nil, err
 		}
 		registration.Repository = repository
 		info, err := os.Stat(repository)
 		if err != nil || !info.IsDir() {
-			return hindsightConfiguration{}, fmt.Errorf("dépôt introuvable : %s", repository)
+			return hindsightConfiguration{}, nil, fmt.Errorf("dépôt introuvable : %s", repository)
 		}
 		if seenRepositories[repository] {
-			return hindsightConfiguration{}, fmt.Errorf("dépôt enregistré deux fois : %s", repository)
+			return hindsightConfiguration{}, nil, fmt.Errorf("dépôt enregistré deux fois : %s", repository)
 		}
 		seenRepositories[repository] = true
 	}
-	return configuration, nil
+	return configuration, document, nil
 }
 
 func expandHindsightRepository(repository string) (string, error) {
