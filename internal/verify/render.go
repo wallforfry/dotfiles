@@ -37,7 +37,7 @@ func (v *verifier) checkSyntax() {
 			n++
 		}
 	}
-	patterns := []string{"scripts/*.sh", "dot_claude/hooks/executable_*", "dot_local/bin/executable_*", "dot_config/agent-skills/*/scripts/executable_*"}
+	patterns := []string{"scripts/*.sh", "dot_claude/hooks/executable_*", "dot_local/bin/executable_*"}
 	for _, pattern := range patterns {
 		for _, file := range glob(v.path(pattern)) {
 			content, err := os.ReadFile(file)
@@ -73,9 +73,6 @@ func (v *verifier) checkScriptBoundary() {
 	}
 	for _, file := range files {
 		if allowed[file] {
-			continue
-		}
-		if strings.HasPrefix(file, "dot_config/agent-skills/") && strings.Contains(file, "/scripts/executable_") {
 			continue
 		}
 		if strings.HasSuffix(file, ".py") || strings.HasSuffix(file, ".sh") || strings.HasSuffix(file, ".sh.tmpl") {

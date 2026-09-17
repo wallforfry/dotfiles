@@ -405,6 +405,17 @@ Le fichier `~/.hindsight/dotfiles.json` est ajouté à la source chezmoi avec
 }
 ```
 
+La gestion des associations passe par le CLI dotfiles, qui met à jour le fichier chiffré et
+réconcilie les clients configurés :
+
+```bash
+dotfiles hindsight bank create <banque>
+dotfiles hindsight bank add <dossier> <banque>
+dotfiles hindsight bank remove <dossier>
+```
+
+`add` remplace l'association du dossier, et `remove` ne supprime jamais la banque distante.
+
 ChatGPT se configure dans son interface, sous Réglages > Apps > Créer, avec l'URL
 MCP de la banque souhaitée et le même Bearer token. Un dépôt reste hors mémoire tant
 qu'il n'a pas été ajouté à ce fichier chiffré. Retirer une inscription supprime aussi
