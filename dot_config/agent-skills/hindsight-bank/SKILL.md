@@ -4,7 +4,7 @@ description: >
   Create a Hindsight bank or manage a local directory-to-bank association. Use when the user asks to
   create a memory bank, attach a folder to a bank, detach a folder, or change its bank. Make sure to
   use it whenever Hindsight bank routing changes, even if the user only mentions a local directory.
-compatibility: Requires the dotfiles CLI, hindsight for remote-bank creation, chezmoi, and the encrypted ~/.hindsight/dotfiles.json configuration.
+compatibility: Requires the dotfiles CLI, hindsight for remote-bank creation, chezmoi, and the encrypted native ~/.hindsight/coding-agent.json configuration.
 metadata:
   category: ops
 ---
@@ -13,9 +13,10 @@ metadata:
 
 ## Overview
 
-This skill manages explicit Hindsight banks and the local directory-to-bank mapping. The mapping
-is stored in the encrypted chezmoi source, then reconciled into Claude Code, Codex, and Cursor.
-Creating or deleting a remote bank is separate from attaching or detaching a local directory.
+This skill manages explicit Hindsight banks and the local directory-to-bank mapping. The native
+`mapPathToBank` object in the encrypted `~/.hindsight/coding-agent.json` is the sole mapping
+source; Cursor is reconciled from it. Creating or deleting a remote bank is separate from
+attaching or detaching a local directory.
 
 ## Usage
 
@@ -29,8 +30,8 @@ or `dotfiles hindsight bank remove <directory>` to detach it without deleting re
    a new remote bank, not merely a local mapping.
 2. For an existing bank, use `hindsight bank list` or `hindsight bank stats <bank-id>` before adding
    a mapping when the bank identifier is uncertain.
-3. Run the dotfiles command from this skill. It records the requested directory at its canonical
-   path, updates the encrypted source through chezmoi, and applies the configuration.
+3. Run the dotfiles command from this skill. It records or removes the requested canonical path
+   directly in `mapPathToBank`, re-encrypts the chezmoi source, and applies the configuration.
 4. Verify the mapping with `hindsight_diagnose` in a new agent session or by checking that the
    intended client exposes the expected bank. Do not display the Hindsight configuration file.
 

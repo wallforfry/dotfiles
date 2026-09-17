@@ -17,20 +17,10 @@ const hindsightPackage = "@vectorize-io/hindsight-coding-agents"
 
 var nonServerName = regexp.MustCompile(`[^a-z0-9]+`)
 
-type hindsightRegistration struct {
-	Repository string `json:"repository"`
-	Bank       string `json:"bank"`
-}
-
 type hindsightConfiguration struct {
-	APIURL        string                  `json:"apiUrl"`
-	APIToken      string                  `json:"apiToken"`
-	Registrations []hindsightRegistration `json:"registrations"`
-}
-
-type hindsightManaged struct {
-	Repositories []string `json:"repositories"`
-	Banks        []string `json:"banks"`
+	APIURL        string            `json:"apiUrl"`
+	APIToken      string            `json:"apiToken"`
+	MapPathToBank map[string]string `json:"mapPathToBank"`
 }
 
 func RegisterHindsight(runtime Runtime, args []string) int {
@@ -59,7 +49,7 @@ func RegisterHindsight(runtime Runtime, args []string) int {
 			return exitCode(err)
 		}
 	}
-	fprintf(runtime.Stdout, "Hindsight enregistré pour %d dépôt(s), Claude Code, Codex et Cursor. Ajoute l'application MCP dans ChatGPT depuis Réglages > Apps > Créer.\n", len(configuration.Registrations))
+	fprintf(runtime.Stdout, "Hindsight enregistré pour %d dépôt(s), Claude Code, Codex et Cursor. Ajoute l'application MCP dans ChatGPT depuis Réglages > Apps > Créer.\n", len(configuration.MapPathToBank))
 	return 0
 }
 
@@ -119,27 +109,26 @@ func updateHindsightBankMapping(runtime Runtime, directory, bank string, add boo
 		fprintf(runtime.Stderr, "dotfiles: dossier Hindsight introuvable\n")
 		return ExitUsage
 	}
-	configurationPath := filepath.Join(home, ".hindsight", "dotfiles.json")
+	configurationPath := filepath.Join(home, ".hindsight", "coding-agent.json")
 	content, _, existed, err := readSettings(configurationPath)
 	if err != nil || !existed {
 		fprintf(runtime.Stderr, "dotfiles: configuration Hindsight absente\n")
 		return ExitUnavailable
 	}
-	configuration, document, err := parseHindsightConfigurationContent(content)
+	_, document, err := parseHindsightConfigurationContent(content)
 	if err != nil {
 		fprintf(runtime.Stderr, "dotfiles: %s\n", err)
 		return ExitUsage
 	}
-	registrations := make([]hindsightRegistration, 0, len(configuration.Registrations)+1)
-	for _, registration := range configuration.Registrations {
-		if registration.Repository != canonical {
-			registrations = append(registrations, registration)
-		}
+	paths, err := objectField(document, "mapPathToBank")
+	if err != nil {
+		fprintf(runtime.Stderr, "dotfiles: %s\n", err)
+		return ExitUsage
 	}
+	delete(paths, canonical)
 	if add {
-		registrations = append(registrations, hindsightRegistration{Repository: canonical, Bank: bank})
+		paths[canonical] = bank
 	}
-	document["registrations"] = registrations
 	stage, err := stageHindsightConfiguration(configurationPath, content, document, 0o600, existed)
 	if err != nil {
 		fprintf(runtime.Stderr, "dotfiles: configuration Hindsight inchangée : %s\n", err)
@@ -254,26 +243,28 @@ func parseHindsightConfigurationContent(content []byte) (hindsightConfiguration,
 	if configuration.APIURL == "" || configuration.APIToken == "" {
 		return hindsightConfiguration{}, nil, errors.New("apiUrl et apiToken sont requis")
 	}
-	seenRepositories := map[string]bool{}
-	for index := range configuration.Registrations {
-		registration := &configuration.Registrations[index]
-		if registration.Repository == "" || registration.Bank == "" {
-			return hindsightConfiguration{}, nil, errors.New("chaque inscription exige repository absolu et bank")
+	if configuration.MapPathToBank == nil {
+		return hindsightConfiguration{}, nil, errors.New("mapPathToBank est requis")
+	}
+	canonicalPaths := make(map[string]string, len(configuration.MapPathToBank))
+	for repository, bank := range configuration.MapPathToBank {
+		if repository == "" || bank == "" {
+			return hindsightConfiguration{}, nil, errors.New("chaque mapPathToBank exige un dépôt et une banque")
 		}
-		repository, err := expandHindsightRepository(registration.Repository)
+		repository, err := expandHindsightRepository(repository)
 		if err != nil {
 			return hindsightConfiguration{}, nil, err
 		}
-		registration.Repository = repository
 		info, err := os.Stat(repository)
 		if err != nil || !info.IsDir() {
 			return hindsightConfiguration{}, nil, fmt.Errorf("dépôt introuvable : %s", repository)
 		}
-		if seenRepositories[repository] {
+		if _, exists := canonicalPaths[repository]; exists {
 			return hindsightConfiguration{}, nil, fmt.Errorf("dépôt enregistré deux fois : %s", repository)
 		}
-		seenRepositories[repository] = true
+		canonicalPaths[repository] = bank
 	}
+	configuration.MapPathToBank = canonicalPaths
 	return configuration, document, nil
 }
 
@@ -295,79 +286,38 @@ func registerHindsightFiles(home string, configuration hindsightConfiguration) e
 	if home == "" {
 		return errors.New("HOME est absent")
 	}
-	managedPath := filepath.Join(home, ".hindsight", "dotfiles-managed.json")
-	managed, err := readHindsightManaged(managedPath)
-	if err != nil {
-		return err
-	}
-	agentPath := filepath.Join(home, ".hindsight", "coding-agent.json")
 	cursorPath := filepath.Join(home, ".cursor", "mcp.json")
-	if err := validateHindsightJSON(agentPath, func(document map[string]any) error { return updateHindsightAgent(document, configuration, managed) }); err != nil {
+	if err := validateHindsightJSON(cursorPath, func(document map[string]any) error { return updateHindsightCursor(document, configuration) }); err != nil {
 		return err
 	}
-	if err := validateHindsightJSON(cursorPath, func(document map[string]any) error { return updateHindsightCursor(document, configuration, managed) }); err != nil {
-		return err
-	}
-	if err := mergeHindsightAgentConfig(agentPath, configuration, managed); err != nil {
-		return err
-	}
-	if err := mergeHindsightCursorConfig(cursorPath, configuration, managed); err != nil {
-		return err
-	}
-	return writeHindsightManaged(managedPath, configuration)
+	return mergeHindsightCursorConfig(cursorPath, configuration)
 }
 
-func mergeHindsightAgentConfig(path string, configuration hindsightConfiguration, managed hindsightManaged) error {
-	return mergeHindsightJSON(path, func(document map[string]any) error { return updateHindsightAgent(document, configuration, managed) })
+func mergeHindsightCursorConfig(path string, configuration hindsightConfiguration) error {
+	return mergeHindsightJSON(path, func(document map[string]any) error { return updateHindsightCursor(document, configuration) })
 }
 
-func updateHindsightAgent(document map[string]any, configuration hindsightConfiguration, managed hindsightManaged) error {
-	document["apiUrl"] = configuration.APIURL
-	document["apiToken"] = configuration.APIToken
-	document["optInOnly"] = true
-	document["autoUpdate"] = false
-	paths, err := objectField(document, "mapPathToBank")
-	if err != nil {
-		return err
-	}
-	for _, repository := range managed.Repositories {
-		delete(paths, repository)
-	}
-	for _, registration := range configuration.Registrations {
-		paths[registration.Repository] = registration.Bank
-	}
-	return nil
-}
-
-func mergeHindsightCursorConfig(path string, configuration hindsightConfiguration, managed hindsightManaged) error {
-	return mergeHindsightJSON(path, func(document map[string]any) error { return updateHindsightCursor(document, configuration, managed) })
-}
-
-func updateHindsightCursor(document map[string]any, configuration hindsightConfiguration, managed hindsightManaged) error {
+func updateHindsightCursor(document map[string]any, configuration hindsightConfiguration) error {
 	servers, err := objectField(document, "mcpServers")
 	if err != nil {
 		return err
 	}
-	for _, bank := range managed.Banks {
-		delete(servers, hindsightServerName(bank))
+	for name := range servers {
+		if strings.HasPrefix(name, "hindsight-memory-") {
+			delete(servers, name)
+		}
 	}
 	seenNames := map[string]string{}
-	for _, registration := range configuration.Registrations {
-		name := hindsightServerName(registration.Bank)
+	for _, bank := range configuration.MapPathToBank {
+		name := hindsightServerName(bank)
 		if name == "hindsight-memory-" {
 			return errors.New("nom de banque incompatible avec Cursor")
 		}
-		if bank, exists := seenNames[name]; exists && bank != registration.Bank {
-			return fmt.Errorf("banques Cursor ambiguës : %s et %s", bank, registration.Bank)
+		if existingBank, exists := seenNames[name]; exists && existingBank != bank {
+			return fmt.Errorf("banques Cursor ambiguës : %s et %s", existingBank, bank)
 		}
-		seenNames[name] = registration.Bank
-		url := configuration.APIURL + "/mcp/" + url.PathEscape(registration.Bank) + "/"
-		if current, exists := servers[name]; exists {
-			server, ok := current.(map[string]any)
-			if !ok || server["url"] != url {
-				return fmt.Errorf("mcpServers.%s existe déjà et ne cible pas cette banque", name)
-			}
-		}
+		seenNames[name] = bank
+		url := configuration.APIURL + "/mcp/" + url.PathEscape(bank) + "/"
 		servers[name] = map[string]any{
 			"type":    "http",
 			"url":     url,
@@ -424,34 +374,4 @@ func validateHindsightJSON(path string, update func(map[string]any) error) error
 		return errors.New("JSON invalide")
 	}
 	return update(document)
-}
-
-func readHindsightManaged(path string) (hindsightManaged, error) {
-	content, _, _, err := readSettings(path)
-	if err != nil {
-		return hindsightManaged{}, err
-	}
-	var managed hindsightManaged
-	if err := json.Unmarshal(content, &managed); err != nil {
-		return hindsightManaged{}, errors.New("état Hindsight invalide")
-	}
-	return managed, nil
-}
-
-func writeHindsightManaged(path string, configuration hindsightConfiguration) error {
-	content, _, existed, err := readSettings(path)
-	if err != nil {
-		return err
-	}
-	banks := map[string]bool{}
-	managed := hindsightManaged{}
-	for _, registration := range configuration.Registrations {
-		managed.Repositories = append(managed.Repositories, registration.Repository)
-		if !banks[registration.Bank] {
-			managed.Banks = append(managed.Banks, registration.Bank)
-			banks[registration.Bank] = true
-		}
-	}
-	document := map[string]any{"repositories": managed.Repositories, "banks": managed.Banks}
-	return replaceJSON(path, content, document, 0o600, existed)
 }

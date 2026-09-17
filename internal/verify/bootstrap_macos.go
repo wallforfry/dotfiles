@@ -37,12 +37,19 @@ func (v *verifier) checkDarwinGoBootstrap() error {
 		return fmt.Errorf("Go Homebrew non installé face à un ancien Go sur macOS")
 	}
 
+	buildTemplate, err := os.ReadFile(v.path("run_onchange_after_build-dotfiles.sh.tmpl"))
+	if err != nil {
+		return fmt.Errorf("construction Go macOS introuvable: %w", err)
+	}
+	if !bytes.Contains(buildTemplate, []byte("encrypted_private_coding-agent.json.age")) {
+		return fmt.Errorf("construction Go macOS ne dépend pas de la configuration Hindsight chiffrée native")
+	}
 	build, err := v.renderForOS("run_onchange_after_build-dotfiles.sh.tmpl", "darwin")
 	if err != nil {
 		return fmt.Errorf("construction Go macOS non rendue")
 	}
-	if !bytes.Contains(build, []byte("HINDSIGHT_CONFIG_REVISION:")) {
-		return fmt.Errorf("construction Go macOS ne dépend pas de la configuration Hindsight chiffrée")
+	if !bytes.Contains(build, []byte(".hindsight/coding-agent.json")) {
+		return fmt.Errorf("construction Go macOS ne lit pas la configuration Hindsight native")
 	}
 	if bytes.Contains(build, []byte("register-hindsight --config \"$CONFIG\" ||")) {
 		return fmt.Errorf("construction Go macOS masque un échec d'enregistrement Hindsight")
