@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/wallforfry/dotfiles/internal/commands"
@@ -31,6 +32,20 @@ func TestSymlinkNameDispatchesDirectly(t *testing.T) {
 	}
 	if stdout.String() != "http://host.docker.internal:9222\n" {
 		t.Fatalf("stdout = %q", stdout.String())
+	}
+}
+
+func TestSmartcardWakeupSymlinkReachesTheCommand(t *testing.T) {
+	runtime := commands.NewRuntime()
+	stderr := &bytes.Buffer{}
+	runtime.Stdout = &bytes.Buffer{}
+	runtime.Stderr = stderr
+	// Un argument invalide prouve le dispatch sans toucher à la carte.
+	if code := run([]string{"/home/user/.local/bin/smartcard-wakeup", "--status"}, runtime); code != commands.ExitUsage {
+		t.Fatalf("run() = %d", code)
+	}
+	if !strings.HasPrefix(stderr.String(), "smartcard-wakeup: usage") {
+		t.Fatalf("stderr = %q", stderr.String())
 	}
 }
 

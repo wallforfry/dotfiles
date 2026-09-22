@@ -21,6 +21,13 @@ func TestRegisterClaudeHookPreservesSettingsAndIsIdempotent(t *testing.T) {
 	if err := os.WriteFile(hook, []byte("binary"), 0o700); err != nil {
 		t.Fatal(err)
 	}
+	wakeup := filepath.Join(home, ".local", "bin", "smartcard-wakeup")
+	if err := os.MkdirAll(filepath.Dir(wakeup), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(wakeup, []byte("binary"), 0o700); err != nil {
+		t.Fatal(err)
+	}
 	initial := []byte(`{"statusLine":{"type":"command"},"hooks":{"Stop":[]}}`)
 	if err := os.WriteFile(settings, initial, 0o600); err != nil {
 		t.Fatal(err)
@@ -40,10 +47,15 @@ func TestRegisterClaudeHookPreservesSettingsAndIsIdempotent(t *testing.T) {
 	if err := json.Unmarshal(content, &document); err != nil {
 		t.Fatal(err)
 	}
-	if !hookRegistered(document, hook) || document["statusLine"] == nil {
+	for _, registered := range claudeHooks(home) {
+		if !hookRegistered(document, registered) {
+			t.Fatalf("hook %s absent: %s", registered.command, content)
+		}
+	}
+	if document["statusLine"] == nil {
 		t.Fatalf("settings not preserved: %s", content)
 	}
-	if bytes.Count(stdout.Bytes(), []byte("enregistré")) != 1 {
+	if bytes.Count(stdout.Bytes(), []byte("enregistré")) != len(claudeHooks(home)) {
 		t.Fatalf("stdout = %q", stdout.String())
 	}
 	backup, err := os.ReadFile(settings + ".bak")
