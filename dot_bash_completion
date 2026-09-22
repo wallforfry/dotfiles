@@ -1,0 +1,2 @@
+# Complétion du CLI dotfiles, engendrée depuis son catalogue de commandes.
+command -v dotfiles >/dev/null && eval "$(dotfiles completion bash)"

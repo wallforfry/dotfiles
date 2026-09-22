@@ -70,6 +70,9 @@ function giga-blame() {
   git log --author="$1" --pretty=tformat: --numstat -- $2 | awk 'NF==3 {plus+=$1; minus+=$2} END {printf "+%d, -%d\n", plus, minus}'
 }
 
+# Complétion du CLI dotfiles, engendrée depuis son catalogue de commandes.
+command -v dotfiles >/dev/null && eval "$(dotfiles completion zsh)"
+
 # Prompt
 command -v starship >/dev/null && eval "$(starship init zsh)"
 

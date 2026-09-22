@@ -181,6 +181,24 @@ chezmoi diff
 chezmoi status
 ```
 
+### Découvrir les commandes
+
+```bash
+dotfiles help
+dotfiles help verify
+```
+
+Le catalogue des commandes vit dans `cmd/dotfiles/catalog.go` : l'aide, la ligne
+d'usage et les scripts de complétion en dérivent tous, et un test refuse une
+commande routée sans entrée. `--help` vaut après une commande comme après un nom
+lié de `~/.local/bin` (`cloak --help`).
+
+La complétion est engendrée à la demande depuis ce même catalogue : `.zshrc`
+évalue `dotfiles completion zsh` après le `compinit` d'oh-my-zsh. Côté bash,
+`.bash_completion` porte la variante, mais rien ne le lit hors du paquet
+`bash-completion` : aucun `.bashrc` n'est déployé, parce qu'il écraserait celui
+qu'écrivent les installeurs tiers.
+
 ### Vérifier avant de pousser
 
 ```bash
