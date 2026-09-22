@@ -28,7 +28,7 @@ func TestCompletionScriptsCoverEveryCommand(t *testing.T) {
 		if code := run([]string{"dotfiles", "completion", shell}, runtime); code != 0 {
 			t.Fatalf("completion %s = %d", shell, code)
 		}
-		for _, command := range catalog {
+		for _, command := range commandList() {
 			if !strings.Contains(stdout.String(), command.Name) {
 				t.Errorf("complétion %s sans %q", shell, command.Name)
 			}
@@ -67,7 +67,7 @@ func TestQuotedSummariesSurviveTheShell(t *testing.T) {
 		if err != nil {
 			t.Skipf("%s absent de la machine", shell)
 		}
-		for _, command := range catalog {
+		for _, command := range commandList() {
 			output, err := exec.Command(binary, "-c", "printf %s "+shellQuote(command.Summary)).Output()
 			if err != nil {
 				t.Fatalf("%s : %v", shell, err)

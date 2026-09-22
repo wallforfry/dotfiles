@@ -188,10 +188,11 @@ dotfiles help
 dotfiles help verify
 ```
 
-Le catalogue des commandes vit dans `cmd/dotfiles/catalog.go` : l'aide, la ligne
-d'usage et les scripts de complétion en dérivent tous, et un test refuse une
-commande routée sans entrée. `--help` vaut après une commande comme après un nom
-lié de `~/.local/bin` (`cloak --help`).
+Le catalogue de `cmd/dotfiles/catalog.go` est la table de routage elle-même :
+une commande sans entrée n'est pas routée du tout, et l'aide, la ligne d'usage
+et les scripts de complétion en dérivent. Deux tests exigent que le catalogue et
+la table des exécutions se recouvrent exactement. `--help` vaut après une
+commande comme après un nom lié de `~/.local/bin` (`cloak --help`).
 
 La complétion est engendrée à la demande depuis ce même catalogue : `.zshrc`
 évalue `dotfiles completion zsh` après le `compinit` d'oh-my-zsh. Côté bash,

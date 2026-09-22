@@ -35,12 +35,12 @@ func Help(runtime commands.Runtime, args []string) int {
 func writeOverview(writer io.Writer) {
 	fmt.Fprint(writer, "dotfiles - outillage du dépôt de configuration\n\nusage : dotfiles <commande> [arguments]\n\ncommandes :\n")
 	width := 0
-	for _, command := range catalog {
+	for _, command := range commandList() {
 		if length := len(command.Name); length > width {
 			width = length
 		}
 	}
-	for _, command := range catalog {
+	for _, command := range commandList() {
 		fmt.Fprintf(writer, "  %s%s  %s\n", command.Name, strings.Repeat(" ", width-len(command.Name)), command.Summary)
 	}
 	fmt.Fprint(writer, "\n« dotfiles help <commande> » détaille une commande.\n")

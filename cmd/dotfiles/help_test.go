@@ -17,22 +17,27 @@ func newTestRuntime() (commands.Runtime, *bytes.Buffer, *bytes.Buffer) {
 	return runtime, stdout, stderr
 }
 
-// Le catalogue est la source unique de l'aide et de la complétion : une
-// commande routée sans entrée ne serait ni documentée ni complétée.
-func TestEveryDispatchedCommandIsCatalogued(t *testing.T) {
-	routed := []string{"completion", "verify", "harness-audit", "validate-skill-routing", "register-claude-hook", "register-hindsight", "hindsight"}
-	for name := range directCommands {
-		routed = append(routed, name)
+// Le catalogue est la table de routage : une commande sans exécution ne serait
+// pas routée, une exécution sans entrée serait invisible de l'aide et de la
+// complétion. Les deux tables doivent donc se recouvrir exactement.
+func TestEveryCataloguedCommandHasARunner(t *testing.T) {
+	for _, command := range commandList() {
+		if _, exists := runner(command.Name); !exists {
+			t.Errorf("commande %q sans exécution", command.Name)
+		}
 	}
-	for _, name := range routed {
+}
+
+func TestEveryRunnerIsCatalogued(t *testing.T) {
+	for name := range runners() {
 		if _, exists := lookup(name); !exists {
-			t.Errorf("commande %q absente du catalogue", name)
+			t.Errorf("exécution %q absente du catalogue", name)
 		}
 	}
 }
 
 func TestCataloguedCommandsHaveSummaryAndUsage(t *testing.T) {
-	for _, command := range catalog {
+	for _, command := range commandList() {
 		if command.Summary == "" || command.Usage == "" {
 			t.Errorf("commande %q incomplète : %#v", command.Name, command)
 		}
@@ -44,7 +49,7 @@ func TestHelpListsEveryCommand(t *testing.T) {
 	if code := run([]string{"dotfiles", "help"}, runtime); code != 0 {
 		t.Fatalf("run() = %d", code)
 	}
-	for _, command := range catalog {
+	for _, command := range commandList() {
 		if !strings.Contains(stdout.String(), command.Name) {
 			t.Errorf("aide sans %q", command.Name)
 		}
@@ -104,7 +109,7 @@ func TestHelpFlagAfterSubcommandsPrintsTheCommandUsage(t *testing.T) {
 }
 
 func TestLinkedFlagMatchesTheDeployedSymlinks(t *testing.T) {
-	for _, command := range catalog {
+	for _, command := range commandList() {
 		_, err := os.Stat(filepath.Join("..", "..", "dot_local", "bin", "symlink_"+command.Name+".tmpl"))
 		if deployed := err == nil; deployed != command.Linked {
 			t.Errorf("%q : Linked = %t, lien déployé = %t", command.Name, command.Linked, deployed)

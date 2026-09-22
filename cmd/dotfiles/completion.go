@@ -28,8 +28,8 @@ func Completion(runtime commands.Runtime, args []string) int {
 }
 
 func linkedCommands() []Command {
-	linked := make([]Command, 0, len(catalog))
-	for _, command := range catalog {
+	linked := make([]Command, 0, len(commandList()))
+	for _, command := range commandList() {
 		if command.Linked && len(command.Subcommands) > 0 {
 			linked = append(linked, command)
 		}
@@ -43,11 +43,11 @@ func shellFunctionName(prefix, name string) string {
 
 func writeZshCompletion(writer io.Writer) {
 	fmt.Fprint(writer, "_dotfiles() {\n  local -a _dotfiles_commands\n  _dotfiles_commands=(\n")
-	for _, command := range catalog {
+	for _, command := range commandList() {
 		fmt.Fprintf(writer, "    %s\n", shellQuote(command.Name+":"+command.Summary))
 	}
 	fmt.Fprint(writer, "  )\n  if (( CURRENT == 2 )); then\n    _describe 'commande' _dotfiles_commands\n    return\n  fi\n  case ${words[2]} in\n")
-	for _, command := range catalog {
+	for _, command := range commandList() {
 		if completion := zshArguments(command); completion != "" {
 			fmt.Fprintf(writer, "    %s) %s ;;\n", command.Name, completion)
 		}
@@ -60,12 +60,12 @@ func writeZshCompletion(writer io.Writer) {
 }
 
 func writeBashCompletion(writer io.Writer) {
-	names := make([]string, 0, len(catalog))
-	for _, command := range catalog {
+	names := make([]string, 0, len(commandList()))
+	for _, command := range commandList() {
 		names = append(names, command.Name)
 	}
 	fmt.Fprintf(writer, "_dotfiles() {\n  local current=${COMP_WORDS[COMP_CWORD]}\n  if [ \"$COMP_CWORD\" -eq 1 ]; then\n    COMPREPLY=( $(compgen -W %s -- \"$current\") )\n    return\n  fi\n  case ${COMP_WORDS[1]} in\n", shellQuote(strings.Join(names, " ")))
-	for _, command := range catalog {
+	for _, command := range commandList() {
 		if completion := bashArguments(command); completion != "" {
 			fmt.Fprintf(writer, "    %s) %s ;;\n", command.Name, completion)
 		}
