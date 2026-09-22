@@ -43,7 +43,7 @@ func TestSmartcardWakeupProbesBeforeRestartingScdaemon(t *testing.T) {
 func TestSmartcardHookActsOnlyOnCardFailures(t *testing.T) {
 	unrelated := &fakeExecutor{}
 	runtime, _, stderr := testRuntime(unrelated, map[string]string{})
-	runtime.Stdin = strings.NewReader(`{"tool_response":{"stderr":"npm ERR! 404"}}`)
+	runtime.Stdin = strings.NewReader(`{"tool_name":"Bash","tool_response":{"stderr":"npm ERR! 404"}}`)
 	if code := SmartcardWakeup(runtime, []string{"--hook"}); code != 0 || len(unrelated.processes) != 0 {
 		t.Fatalf("code = %d, processes = %d", code, len(unrelated.processes))
 	}
@@ -51,7 +51,7 @@ func TestSmartcardHookActsOnlyOnCardFailures(t *testing.T) {
 	// Une signature sans panne réelle ne doit rien redémarrer.
 	healthy := &fakeExecutor{}
 	runtime, _, stderr = testRuntime(healthy, map[string]string{})
-	runtime.Stdin = strings.NewReader(`{"tool_response":{"stderr":"gpg: no such device"}}`)
+	runtime.Stdin = strings.NewReader(`{"tool_name":"Bash","tool_response":{"stderr":"gpg: no such device"}}`)
 	if code := SmartcardWakeup(runtime, []string{"--hook"}); code != 0 {
 		t.Fatalf("code = %d", code)
 	}
@@ -59,7 +59,7 @@ func TestSmartcardHookActsOnlyOnCardFailures(t *testing.T) {
 
 	broken := &fakeExecutor{errors: []error{errors.New("down"), nil, nil}}
 	runtime, _, stderr = testRuntime(broken, map[string]string{})
-	runtime.Stdin = strings.NewReader(`{"tool_response":{"stderr":"gpg: échec de la sélection de la carte"}}`)
+	runtime.Stdin = strings.NewReader(`{"tool_name":"Bash","tool_response":{"stderr":"gpg: échec de la sélection de la carte"}}`)
 	if code := SmartcardWakeup(runtime, []string{"--hook"}); code != ExitFeedback {
 		t.Fatalf("code = %d, want %d", code, ExitFeedback)
 	}
@@ -70,9 +70,17 @@ func TestSmartcardHookActsOnlyOnCardFailures(t *testing.T) {
 	// Sans carte - Linux, DSM - le hook se tait au lieu d'échouer à chaque appel.
 	absent := &fakeExecutor{errors: []error{errors.New("down"), nil, errors.New("down")}}
 	runtime, _, stderr = testRuntime(absent, map[string]string{})
-	runtime.Stdin = strings.NewReader(`{"tool_response":{"stderr":"gpg: card error"}}`)
+	runtime.Stdin = strings.NewReader(`{"tool_name":"Bash","tool_response":{"stderr":"gpg: card error"}}`)
 	if code := SmartcardWakeup(runtime, []string{"--hook"}); code != 0 || stderr.Len() != 0 {
 		t.Fatalf("code = %d, stderr = %q", code, stderr.String())
+	}
+
+	// Le matcher de settings.json n'est pas la frontière : le binaire la tient.
+	other := &fakeExecutor{}
+	runtime, _, _ = testRuntime(other, map[string]string{})
+	runtime.Stdin = strings.NewReader(`{"tool_name":"WebFetch","tool_response":{"stderr":"gpg: card not available"}}`)
+	if code := SmartcardWakeup(runtime, []string{"--hook"}); code != 0 || len(other.processes) != 0 {
+		t.Fatalf("code = %d, processes = %d", code, len(other.processes))
 	}
 
 	// La commande soumise porte les signatures dès qu'on lit ce fichier.

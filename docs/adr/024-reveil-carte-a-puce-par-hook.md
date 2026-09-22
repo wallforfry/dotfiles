@@ -47,8 +47,8 @@ commande. Aucune ligne n'est ajoutée aux fichiers toujours chargés.
   qui sort immédiatement sur une charge utile sans signature.
 - La liste des signatures est une heuristique, et `gpg` est localisé : elle doit
   couvrir le français et l'anglais, et elle manquera un message inédit. Deux
-  garde-fous rendent un faux positif inoffensif : seule la réponse de l'outil est
-  lue - sans quoi lire ce fichier suffirait à déclencher le hook - et le silence
+  garde-fous rendent un faux positif inoffensif : le binaire vérifie lui-même que
+  l'outil est `Bash` et ne lit que la réponse de l'outil - sans quoi lire ce fichier suffirait à déclencher le hook - et le silence
   en cas d'échec, sans lequel une machine sans carte, Linux ou DSM, verrait
   échouer chaque commande dont la sortie porte une signature.
 - `gpgconf --kill scdaemon` préserve `gpg-agent`, donc le cache SSH et les

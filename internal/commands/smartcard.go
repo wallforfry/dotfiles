@@ -55,7 +55,10 @@ func wakeSmartcard(runtime Runtime) int {
 // Le hook ne parle que lorsqu'il a réparé quelque chose : une machine sans carte
 // - Linux, DSM - échouerait sinon à chaque signature reconnue, sans recours.
 func smartcardHook(runtime Runtime) int {
-	if !mentionsSmartcardFailure(hookToolResponse(runtime.Stdin)) {
+	tool, response := hookEvent(runtime.Stdin)
+	// Le confinement ne peut pas reposer sur le seul matcher de settings.json,
+	// qu'un élargissement posé à la main n'est jamais revenu corriger.
+	if tool != "Bash" || !mentionsSmartcardFailure(response) {
 		return 0
 	}
 	if smartcardReachable(runtime) || !repairSmartcard(runtime) {
@@ -67,18 +70,19 @@ func smartcardHook(runtime Runtime) int {
 
 // Seule la réponse de l'outil est examinée : la commande soumise contient les
 // signatures dès qu'on lit ou teste ce fichier.
-func hookToolResponse(stdin io.Reader) string {
+func hookEvent(stdin io.Reader) (string, string) {
 	payload, err := io.ReadAll(io.LimitReader(stdin, smartcardHookPayloadLimit))
 	if err != nil {
-		return ""
+		return "", ""
 	}
 	var event struct {
+		ToolName     string          `json:"tool_name"`
 		ToolResponse json.RawMessage `json:"tool_response"`
 	}
 	if json.Unmarshal(payload, &event) != nil {
-		return ""
+		return "", ""
 	}
-	return string(event.ToolResponse)
+	return event.ToolName, string(event.ToolResponse)
 }
 
 func mentionsSmartcardFailure(response string) bool {
