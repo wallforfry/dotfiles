@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-09
-- **Commits** : `27a50f0`
+- **Commits** : `f8b85fb`
 
 ## Contexte
 
