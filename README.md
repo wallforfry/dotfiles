@@ -372,6 +372,12 @@ permanence pour quelques appels par mois
 firecrawl --start    # la première fois : environ 2 Gio d'images à télécharger
 ```
 
+Un poste qui les enregistrait encore les retire, une fois par profil :
+
+```bash
+claude mcp remove --scope user firecrawl && claude mcp remove --scope user scrapling
+```
+
 Aucune pile ne redémarre avec le daemon docker, volontairement - elles ne servent
 qu'à la demande, et CloakBrowser s'arrête seul après cinq minutes d'inactivité.
 L'API Firecrawl écoute sur `127.0.0.1` uniquement : elle tourne sans

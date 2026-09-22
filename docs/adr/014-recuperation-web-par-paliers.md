@@ -65,7 +65,7 @@ en est le client, par son paramètre `cdp_url`.
 
 **`stealthy_fetch` ne s'utilise pas**, pour les raisons établies plus haut ; l'interdiction
 est portée par la skill `web-fetching` afin qu'aucune session ne recommence le diagnostic. Les
-outils `make_request`, `fetch` et de session de Scrapling fonctionnent, et c'est à ce titre
+outils `make_request` et `fetch` de Scrapling fonctionnent, et c'est à ce titre
 qu'il reste servi - comme client CDP de CloakBrowser, appelé par `scrapling`
 ([ADR-025](025-paliers-web-sans-enregistrement-mcp.md)).
 

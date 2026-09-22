@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-09
-- **Commits** : à compléter au commit
+- **Commits** : `03a044e`
 
 ## Contexte
 
@@ -56,8 +56,9 @@ explicitement, après un échec constaté du palier 1, par la skill `web-fetchin
 - Chaque appel Scrapling paie une poignée de main MCP d'environ une seconde, au lieu d'une seule par
   session. Ses sessions navigateur (`open_session`) ne survivent pas d'un appel à l'autre : chaque
   appel est un processus neuf.
-- L'appel HTTP direct supprime `npx firecrawl-mcp`. Ce paquet n'était pas épinglé, et faute de
-  `FIRECRAWL_API_URL` il envoyait silencieusement les URL à l'API hébergée.
+- L'appel HTTP direct supprime `npx firecrawl-mcp`. Ce paquet n'était pas épinglé, et il bascule
+  en silence vers l'API hébergée dès que `FIRECRAWL_API_URL` manque : seul le pilote l'en
+  empêchait.
 - Arrêter reste la charge de la session qui a démarré. Un oubli coûte la pile jusqu'au prochain
   `--stop` ou redémarrage du poste, mais il ne se produit que dans les rares sessions qui en ont eu
   besoin, au lieu de toutes.

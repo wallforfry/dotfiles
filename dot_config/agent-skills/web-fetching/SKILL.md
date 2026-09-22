@@ -61,8 +61,8 @@ tools that must not be used, and the stop commands.
 
 - **Scrapling's `stealthy_fetch`** - it needs Camoufox, absent from the `pyd4vinci/scrapling` image
   and impossible to install: the upstream repository publishes tags but no releases, so Camoufox's
-  own downloader resolves zero versions. Scrapling's `get`, `fetch`, `screenshot` and session tools
-  do work. Tier 3 is CloakBrowser precisely because this one is unavailable.
+  own downloader resolves zero versions. Scrapling's `make_request` and `fetch` do work. Tier 3
+  is CloakBrowser precisely because this one is unavailable.
 - **Treating the browser pane as the next tier after a failed fetch** - it is a different need, not
   a fallback. Ranking it in the escalation makes an agent open a browser when a retrieval failed.
 - **Claude in Chrome as a workaround** - `mcp__claude-in-chrome__*` drives the real browser with its
