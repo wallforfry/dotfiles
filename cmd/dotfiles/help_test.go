@@ -22,9 +22,25 @@ func newTestRuntime() (commands.Runtime, *bytes.Buffer, *bytes.Buffer) {
 // complétion. Les deux tables doivent donc se recouvrir exactement.
 func TestEveryCataloguedCommandHasARunner(t *testing.T) {
 	for _, command := range commandList() {
-		if _, exists := runner(command.Name); !exists {
+		found, exists := lookup(command.Name)
+		if !exists || found.Run == nil {
 			t.Errorf("commande %q sans exécution", command.Name)
 		}
+	}
+}
+
+// Une exécution nulle ne doit pas atteindre dispatch : lookup la refuse comme
+// une commande absente, et l'appelant rend une erreur d'usage.
+func TestANilRunnerIsNotRouted(t *testing.T) {
+	if _, exists := lookup("commande-sans-execution"); exists {
+		t.Fatal("lookup route une commande sans exécution")
+	}
+	runtime, _, stderr := newTestRuntime()
+	if code := run([]string{"dotfiles", "commande-sans-execution"}, runtime); code != commands.ExitUsage {
+		t.Fatalf("run() = %d", code)
+	}
+	if !strings.Contains(stderr.String(), "commande inconnue") {
+		t.Fatalf("stderr = %q", stderr.String())
 	}
 }
 

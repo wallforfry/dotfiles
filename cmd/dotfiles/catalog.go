@@ -148,7 +148,11 @@ func lookup(name string) (Command, bool) {
 		if command.Name != name {
 			continue
 		}
-		command.Run, _ = runner(name)
+		found, exists := runner(name)
+		if !exists || found == nil {
+			return Command{}, false
+		}
+		command.Run = found
 		return command, true
 	}
 	return Command{}, false
