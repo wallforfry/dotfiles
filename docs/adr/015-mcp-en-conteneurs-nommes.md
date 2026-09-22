@@ -33,9 +33,11 @@ embarque des navigateurs et des dépendances Python lourdes.
 
 Un serveur MCP livré par image Docker s'enregistre à travers une **commande de
 `~/.local/bin` qui `docker exec` dans un conteneur nommé unique**, démarré à la
-demande. Quatre noms suivent cette forme : `firecrawl-mcp`, `scrapling-mcp`,
-`postgres-mcp`, `cloak`. Ils sont des liens vers le CLI Go unique depuis
-[ADR-023](023-outillage-applicatif-en-go.md).
+demande. Trois pilotes suivent cette forme : `scrapling`, `postgres-mcp`, `cloak` ;
+`firecrawl` pilote de même une composition nommée. Ils sont des liens vers le CLI Go
+unique depuis [ADR-023](023-outillage-applicatif-en-go.md). Firecrawl et Scrapling ne
+sont plus enregistrés comme serveurs MCP ([ADR-025](025-paliers-web-sans-enregistrement-mcp.md)) :
+la discipline de conteneur vaut pour eux, pas l'enregistrement.
 
 Trois règles les gouvernent :
 
@@ -57,7 +59,7 @@ obscurément.
 - Les dépendances lourdes restent isolées du poste.
 - Le conteneur survit entre les sessions, volontairement : c'est ce qui rend le
   démarrage suivant instantané. Contrepartie, il faut un `--stop` explicite, d'où
-  cette option sur les quatre pilotes.
+  cette option sur chaque pilote.
 - Un conteneur qui traîne retient l'image sur laquelle il a été créé : après un
   changement de version épinglée, il faut le retirer pour que la nouvelle prenne.
 - Docker devient une dépendance dure de ces serveurs, indisponible sur les cibles

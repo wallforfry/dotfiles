@@ -1,16 +1,17 @@
 name: firecrawl
 
-# Firecrawl auto-hébergé, palier 2 de l'escalade de récupération web décrite dans
-# harness/AGENTS.md. Piloté par ~/.local/bin/firecrawl-mcp.
+# Firecrawl auto-hébergé, palier 2 de l'escalade de récupération web portée par la
+# skill web-fetching. Piloté par ~/.local/bin/firecrawl.
 #
 # Adapté de github.com/SebastienElet/dotfiles, harness/firecrawl/compose.yml
 # (BSD 2-Clause, Copyright (c) 2014 Sébastien ELET), dont le LICENSE impose de
 # conserver cette mention. Deux écarts, tous deux volontaires :
 #
-#   - restart: on-failure au lieu de unless-stopped. Avec unless-stopped, la pile
-#     redémarre au lancement du daemon, donc à chaque démarrage du poste : cinq
-#     conteneurs et plus de 6 Gio réservés en permanence pour un outil qui ne sert
-#     qu'à la demande. On-failure couvre le crash sans ressusciter la pile.
+#   - restart: "no" au lieu de unless-stopped. Toute autre politique fait revenir
+#     la pile au lancement du daemon. on-failure compris : après un arrêt brutal du
+#     poste ou de la VM, le daemon marque les conteneurs en code 255, qu'on-failure
+#     traite comme un échec (moby restartmanager). Mesuré le 2026-09-18. Un crash
+#     se répare par `firecrawl --start`, que la skill lance avant chaque usage.
 #   - publication sur 127.0.0.1:3002 et non 0.0.0.0:3002 (voir le service api).
 #
 # `name: firecrawl` est conservé, et c'est ce qui évite la fuite de conteneurs : le
@@ -21,7 +22,7 @@ name: firecrawl
 # publiées. Sans SEARXNG_ENDPOINT, /search retombe sur DuckDuckGo.
 #
 # Les images suivent :latest, comme le recommande la documentation d'auto-hébergement
-# amont. Aucun lockfile ne protège donc d'une régression : `firecrawl-mcp --stop`
+# amont. Aucun lockfile ne protège donc d'une régression : `firecrawl --stop`
 # puis un retour à une image antérieure est le seul recours.
 
 x-common: &common
@@ -29,7 +30,7 @@ x-common: &common
     - "host.docker.internal:host-gateway"
   networks:
     - backend
-  restart: on-failure
+  restart: "no"
   logging:
     driver: "json-file"
     options:

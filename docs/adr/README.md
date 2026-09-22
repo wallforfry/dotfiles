@@ -123,3 +123,4 @@ cas la citation est explicite.
 | [022](022-telemetrie-harness-multi-hote.md) | Télémétrie du harness multi-hôte | 2026-09 |
 | [023](023-outillage-applicatif-en-go.md) | Outillage applicatif en Go, shell limité au bootstrap | 2026-09 |
 | [024](024-reveil-carte-a-puce-par-hook.md) | Réveil de la carte à puce par hook plutôt que par instruction | 2026-09 |
+| [025](025-paliers-web-sans-enregistrement-mcp.md) | Paliers web lourds appelés à la demande, sans enregistrement MCP | 2026-09 |

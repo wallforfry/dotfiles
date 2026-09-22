@@ -25,18 +25,21 @@ in `internal/commands`; deployed command names are symlinks to the single `dotfi
 
 ## Steps
 
-1. Identify the server's distinct runtime configuration, image, stdio command, environment inputs,
+1. Decide whether the server is registered at all. A client spawns every registered server at every
+   session start, used or not. A server that most sessions never call is not registered; its
+   command makes one `tools/call` per invocation instead, like `scrapling` (ADR-025).
+2. Identify the server's distinct runtime configuration, image, stdio command, environment inputs,
    stop operation and status operation.
-2. Derive a stable container name from the configuration without embedding credentials. Different
+3. Derive a stable container name from the configuration without embedding credentials. Different
    configurations get different containers; concurrent sessions for one configuration share one.
-3. Extend the cohesive Go command that tries `docker start`, creates the named detached container
+4. Extend the cohesive Go command that tries `docker start`, creates the named detached container
    only when absent, then retries `docker start` if creation lost a race to another session. Attach
    the MCP stdio process with `docker exec --interactive` only after one of those paths succeeds.
-4. Pass credentials through the wrapper's environment and then the container environment. Never put
+5. Pass credentials through the wrapper's environment and then the container environment. Never put
    them in the registered command, container name, arguments, logs or repository.
-5. Add a chezmoi symlink for the stable command name and register that path as the MCP command. Never
-   register `docker run -i --rm <image>`.
-6. Exercise two consecutive client sessions and confirm they reuse one container. Exercise explicit
+6. Add a chezmoi symlink for the stable command name and, when registered, register that path as the
+   MCP command. Never register `docker run -i --rm <image>`.
+7. Exercise two consecutive client sessions and confirm they reuse one container. Exercise explicit
    status and stop operations, then inspect the client handshake.
 
 ## Gotchas
@@ -48,13 +51,19 @@ in `internal/commands`; deployed command names are symlinks to the single `dotfi
 - **Putting credentials in arguments or names** - process lists and Docker metadata expose them.
   Read them from the environment and keep errors free of their values.
 - **Starting a heavy stack during the MCP handshake** - client startup can time out before the stack
-  is ready. Expose a separate explicit start operation when initialization is slow.
+  is ready, and every session start pays for it. Expose a separate explicit start operation instead.
+- **Registering a rarely used server** - "started on demand" then means started by every session:
+  Firecrawl and Scrapling ran permanently, 102 starts for 0 calls in five days. Leave it
+  unregistered and call it through its command.
+- **Relying on `restart: on-failure` to keep a stack down** - after an unclean daemon or VM stop,
+  containers are restored with exit code 255, which on-failure restarts. Use `restart: "no"`.
 - **Treating a failed create as fatal** - another session may have created the same named container
   between start and run. Retry `docker start` before reporting failure.
 
 ## Constraints
 
 - Never register `docker run -i --rm <image>` as an MCP command.
+- Never register a server that most sessions never call; give it a one-shot command instead.
 - Use one named container per distinct configuration and reuse it across sessions.
 - Preserve the `docker start`, `docker run`, second `docker start` sequence that closes creation races.
 - Keep credentials in the environment, never in command lines, names or logs.

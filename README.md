@@ -348,9 +348,9 @@ toutes les sessions**. Les paliers lourds sont pilotés par des noms stables dan
 
 | Script | Rôle | Enregistrement MCP |
 |---|---|---|
-| `firecrawl-mcp` | palier 2, pile de `~/.config/firecrawl/compose.yml` | oui |
+| `firecrawl` | palier 2, pile de `~/.config/firecrawl/compose.yml`, appelée en HTTP | non |
 | `cloak` | palier 3, navigateur exposé en CDP | non - consommé par Scrapling |
-| `scrapling-mcp` | client CDP de `cloak` ; aussi `get`, `fetch`, `screenshot` | oui |
+| `scrapling` | client CDP de `cloak` ; un appel d'outil MCP par invocation | non |
 | `postgres-mcp` | hors escalade, même discipline de conteneur | oui |
 
 `stealthy_fetch` de Scrapling est inutilisable : Camoufox est absent de l'image et son
@@ -358,19 +358,24 @@ dépôt amont ne publie aucune release, donc son téléchargeur ne résout aucun
 Voir [ADR-014](docs/adr/014-recuperation-web-par-paliers.md).
 
 Chacun accepte `--stop` et `--status` ; `cloak` ajoute `--start` et `--url`,
-`firecrawl-mcp` ajoute `--start`. Sans argument, les trois serveurs MCP parlent
-stdio : c'est cette forme qu'on enregistre.
+`firecrawl` ajoute `--start`, qui rend la main une fois l'API à l'écoute.
+`scrapling <outil> [arguments-json]` ouvre une session MCP ponctuelle dans son
+conteneur, fait un seul appel et affiche le résultat.
+
+Firecrawl et Scrapling ne sont pas enregistrés comme serveurs MCP : un client lance
+tous les serveurs enregistrés à chaque session, et ces piles tournaient donc en
+permanence pour quelques appels par mois
+([ADR-025](docs/adr/025-paliers-web-sans-enregistrement-mcp.md)). La skill
+`web-fetching` les démarre après un échec du palier 1, puis les arrête.
 
 ```bash
-firecrawl-mcp --start    # une fois : environ 2 Gio d'images à télécharger
+firecrawl --start    # la première fois : environ 2 Gio d'images à télécharger
 ```
 
-```bash
-claude mcp add --scope user firecrawl -- "$HOME/.local/bin/firecrawl-mcp"
-```
+Un poste qui les enregistrait encore les retire, une fois par profil :
 
 ```bash
-claude mcp add --scope user scrapling -- "$HOME/.local/bin/scrapling-mcp"
+claude mcp remove --scope user firecrawl && claude mcp remove --scope user scrapling
 ```
 
 Aucune pile ne redémarre avec le daemon docker, volontairement - elles ne servent

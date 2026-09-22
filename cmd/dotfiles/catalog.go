@@ -89,10 +89,11 @@ func commandList() []Command {
 			Linked:      true,
 		},
 		{
-			Name:    "firecrawl-mcp",
-			Summary: "lance le serveur MCP Firecrawl conteneurisé",
-			Usage:   "firecrawl-mcp",
-			Linked:  true,
+			Name:        "firecrawl",
+			Summary:     "pilote la pile Firecrawl auto-hébergée",
+			Usage:       "firecrawl --start | --stop | --status",
+			Subcommands: []string{"--start", "--stop", "--status"},
+			Linked:      true,
 		},
 		{
 			Name:    "postgres-mcp",
@@ -101,10 +102,11 @@ func commandList() []Command {
 			Linked:  true,
 		},
 		{
-			Name:    "scrapling-mcp",
-			Summary: "lance le serveur MCP Scrapling conteneurisé",
-			Usage:   "scrapling-mcp",
-			Linked:  true,
+			Name:        "scrapling",
+			Summary:     "appelle un outil du serveur MCP Scrapling conteneurisé",
+			Usage:       "scrapling <outil> [arguments-json] | --stop | --status",
+			Subcommands: []string{"--stop", "--status"},
+			Linked:      true,
 		},
 		{
 			Name:        "smartcard-wakeup",
@@ -137,9 +139,9 @@ func runners() map[string]func(commands.Runtime, []string) int {
 		"hindsight":              commands.HindsightBank,
 		"agent-handoff":          commands.AgentHandoff,
 		"cloak":                  commands.Cloak,
-		"firecrawl-mcp":          commands.Firecrawl,
+		"firecrawl":              commands.Firecrawl,
 		"postgres-mcp":           commands.Postgres,
-		"scrapling-mcp":          commands.Scrapling,
+		"scrapling":              commands.Scrapling,
 		"smartcard-wakeup":       commands.SmartcardWakeup,
 	}
 }

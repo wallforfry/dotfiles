@@ -170,45 +170,56 @@ func TestPostgresValidationAndStatus(t *testing.T) {
 }
 
 func TestScraplingRetriesStartAfterCreationRace(t *testing.T) {
-	executor := &fakeExecutor{errors: []error{nil, errors.New("absent"), errors.New("race"), nil, nil}}
+	executor := &fakeExecutor{errors: []error{errors.New("absent"), errors.New("race"), nil}}
 	runtime, _, _ := testRuntime(executor, map[string]string{})
-	if code := Scrapling(runtime, nil); code != 0 {
-		t.Fatalf("Scrapling() = %d", code)
+	if code := ensureScrapling(runtime, "scrapling-mcp", "pyd4vinci/scrapling:latest"); code != 0 {
+		t.Fatalf("ensureScrapling() = %d", code)
 	}
 	want := [][]string{
-		{"info"},
 		{"start", "scrapling-mcp"},
-		{"run", "--detach", "--name", "scrapling-mcp", "--add-host=host.docker.internal:host-gateway", "--volume", "scrapling-profiles:/profiles", "--entrypoint", "sleep", "pyd4vinci/scrapling:latest", "infinity"},
+		{"run", "--detach", "--init", "--name", "scrapling-mcp", "--add-host=host.docker.internal:host-gateway", "--volume", "scrapling-profiles:/profiles", "--entrypoint", "sleep", "pyd4vinci/scrapling:latest", "infinity"},
 		{"start", "scrapling-mcp"},
-		{"exec", "--interactive", "scrapling-mcp", "uv", "run", "scrapling", "mcp"},
 	}
 	assertArgs(t, executor.processes, want)
-	if !executor.processes[4].Replace {
-		t.Fatal("scrapling-mcp must replace the wrapper process")
-	}
 }
 
-func TestFirecrawlStartsOnlyWhenHealthCheckFails(t *testing.T) {
+func TestFirecrawlStartWaitsForTheAPIItself(t *testing.T) {
 	compose := filepath.Join(t.TempDir(), "compose.yml")
 	if err := os.WriteFile(compose, []byte("services: {}\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	executor := &fakeExecutor{errors: []error{nil, errors.New("unhealthy"), nil, nil}}
-	runtime, _, _ := testRuntime(executor, map[string]string{"FIRECRAWL_COMPOSE": compose})
-	if code := Firecrawl(runtime, nil); code != 0 {
+	executor := &fakeExecutor{}
+	runtime, stdout, _ := testRuntime(executor, map[string]string{"FIRECRAWL_COMPOSE": compose})
+	if code := Firecrawl(runtime, []string{"--start"}); code != 0 {
 		t.Fatalf("Firecrawl() = %d", code)
 	}
 	assertArgs(t, executor.processes, [][]string{
 		{"info"},
-		{"-fsS", "--max-time", "2", "http://localhost:3002/v0/health/liveness"},
 		{"compose", "--file", compose, "up", "--detach", "--wait", "--wait-timeout", "90"},
-		{"--yes", "firecrawl-mcp"},
+		{"-fsS", "--output", "/dev/null", "--max-time", "2", "--retry", "90", "--retry-delay", "1", "--retry-all-errors", "--retry-max-time", "90", "http://localhost:3002/v0/health/liveness"},
 	})
-	if process := executor.processes[3]; process.Name != "npx" || !contains(process.Env, "FIRECRAWL_API_URL=http://localhost:3002") {
-		t.Fatalf("npx process = %#v", process)
-	} else if !process.Replace {
-		t.Fatal("firecrawl-mcp must replace the wrapper process")
+	if !strings.Contains(stdout.String(), "écoute sur http://localhost:3002") {
+		t.Fatalf("stdout = %q", stdout.String())
 	}
+
+	silent := &fakeExecutor{errors: []error{nil, nil, errors.New("refused")}}
+	runtime, _, stderr := testRuntime(silent, map[string]string{"FIRECRAWL_COMPOSE": compose})
+	if code := Firecrawl(runtime, []string{"--start"}); code != ExitUnavailable || !strings.Contains(stderr.String(), "ne répond pas") {
+		t.Fatalf("code = %d, stderr = %q", code, stderr.String())
+	}
+}
+
+func TestFirecrawlNeverStartsWithoutAnExplicitOption(t *testing.T) {
+	compose := filepath.Join(t.TempDir(), "compose.yml")
+	if err := os.WriteFile(compose, []byte("services: {}\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	executor := &fakeExecutor{}
+	runtime, _, _ := testRuntime(executor, map[string]string{"FIRECRAWL_COMPOSE": compose})
+	if code := Firecrawl(runtime, nil); code != ExitUsage {
+		t.Fatalf("Firecrawl() = %d, want %d", code, ExitUsage)
+	}
+	assertArgs(t, executor.processes, [][]string{{"info"}})
 }
 
 func TestFirecrawlMissingComposeIsUnavailable(t *testing.T) {
