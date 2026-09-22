@@ -57,3 +57,24 @@ func TestCompletionScriptsAreSyntacticallyValid(t *testing.T) {
 		}
 	}
 }
+
+// Un contrôle de syntaxe ne prouve rien de l'échappement : des apostrophes non
+// échappées se ré-apparient et laissent un script valide mais faux. Seule la
+// valeur rendue par l'interpréteur le prouve.
+func TestQuotedSummariesSurviveTheShell(t *testing.T) {
+	for _, shell := range []string{"zsh", "bash"} {
+		binary, err := exec.LookPath(shell)
+		if err != nil {
+			t.Skipf("%s absent de la machine", shell)
+		}
+		for _, command := range catalog {
+			output, err := exec.Command(binary, "-c", "printf %s "+shellQuote(command.Summary)).Output()
+			if err != nil {
+				t.Fatalf("%s : %v", shell, err)
+			}
+			if string(output) != command.Summary {
+				t.Errorf("%s rend %q pour %q", shell, output, command.Summary)
+			}
+		}
+	}
+}
