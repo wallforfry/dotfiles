@@ -117,8 +117,9 @@ func commandList() []Command {
 }
 
 // runner relie un nom à son exécution. La table est distincte du littéral parce
-// que l'aide et la complétion lisent le catalogue, ce qui interdirait un cycle
-// d'initialisation ; un test exige que les deux tables se recouvrent.
+// que Help et Completion lisent le catalogue : les réunir formerait un cycle
+// d'initialisation que le compilateur refuse. Deux tests exigent qu'elles se
+// recouvrent exactement.
 func runner(name string) (func(commands.Runtime, []string) int, bool) {
 	found, exists := runners()[name]
 	return found, exists
