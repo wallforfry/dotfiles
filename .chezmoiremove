@@ -1,0 +1,4 @@
+# Liens des pilotes renommés par ADR-025 : chezmoi ne retire pas seul une cible
+# dont la source a disparu.
+.local/bin/firecrawl-mcp
+.local/bin/scrapling-mcp

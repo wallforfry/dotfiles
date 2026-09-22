@@ -57,7 +57,7 @@ leurs outils et leurs commandes d'arrêt, qui ne concernent qu'une tâche de ré
 | Palier | Outil | Pour |
 |---|---|---|
 | 1 | fetch et recherche intégrés | le cas courant |
-| 2 | Firecrawl auto-hébergé (`firecrawl-mcp`) | rendu côté client, lots, crawls |
+| 2 | Firecrawl auto-hébergé (`firecrawl`) | rendu côté client, lots, crawls |
 | 3 | CloakBrowser (`cloak`) à travers Scrapling | protections anti-bot |
 
 CloakBrowser n'est pas un serveur MCP : c'est un navigateur exposé en CDP, et Scrapling
@@ -65,8 +65,9 @@ en est le client, par son paramètre `cdp_url`.
 
 **`stealthy_fetch` ne s'utilise pas**, pour les raisons établies plus haut ; l'interdiction
 est portée par la skill `web-fetching` afin qu'aucune session ne recommence le diagnostic. Les
-outils `get`, `fetch`, `screenshot` et de session de Scrapling fonctionnent, et c'est à ce
-titre qu'il reste enregistré - comme client CDP de CloakBrowser.
+outils `make_request`, `fetch` et de session de Scrapling fonctionnent, et c'est à ce titre
+qu'il reste servi - comme client CDP de CloakBrowser, appelé par `scrapling`
+([ADR-025](025-paliers-web-sans-enregistrement-mcp.md)).
 
 Firecrawl est auto-hébergé, jamais l'API publique. Son API tourne sans
 authentification et n'écoute donc que sur `127.0.0.1`.
@@ -82,12 +83,12 @@ Chaque palier est livré par une commande de `~/.local/bin` adossée à un conte
 
 - Le coût suit le besoin : la majorité des lectures ne démarre aucun conteneur.
 - Aucun tiers n'apprend quelles URL sont lues.
-- **Il faut arrêter ce qu'on démarre.** `firecrawl-mcp --stop`, `scrapling-mcp --stop` ;
+- **Il faut arrêter ce qu'on démarre.** `firecrawl --stop`, `scrapling --stop` ;
   CloakBrowser s'arrête seul après cinq minutes d'inactivité. Aucune pile ne
-  redémarre avec le daemon docker, volontairement - d'où l'écart assumé avec le
-  `restart: unless-stopped` de la source.
-- Le premier démarrage télécharge environ 2 Gio d'images, à faire à la main : la
-  poignée de main MCP expirerait avant la fin.
+  redémarre avec le daemon docker, volontairement - d'où le `restart: "no"`, écart
+  assumé avec le `restart: unless-stopped` de la source ([ADR-025](025-paliers-web-sans-enregistrement-mcp.md)).
+- Le premier `firecrawl --start` télécharge environ 2 Gio d'images et peut dépasser
+  son délai d'attente (`FIRECRAWL_WAIT_TIMEOUT`, 90 s) : le relancer suffit.
 - Les images suivent `:latest` pour Firecrawl et Scrapling, comme leur amont le
   recommande. Aucun lockfile ne protège d'une régression ; le recours est d'épingler
   par variable d'environnement.

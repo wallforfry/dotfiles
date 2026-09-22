@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 )
 
 const (
@@ -21,13 +22,14 @@ const (
 )
 
 type Process struct {
-	Name    string
-	Args    []string
-	Env     []string
-	Stdin   io.Reader
-	Stdout  io.Writer
-	Stderr  io.Writer
-	Replace bool
+	Name      string
+	Args      []string
+	Env       []string
+	Stdin     io.Reader
+	Stdout    io.Writer
+	Stderr    io.Writer
+	Replace   bool
+	WaitDelay time.Duration
 }
 
 type Executor interface {
@@ -72,6 +74,7 @@ func (OSExecutor) Run(process Process) error {
 	command.Stdin = process.Stdin
 	command.Stdout = process.Stdout
 	command.Stderr = process.Stderr
+	command.WaitDelay = process.WaitDelay
 	return command.Run()
 }
 
