@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 // mcpServerExecutor answers the docker exec of an MCP server like a stdio
@@ -114,5 +115,38 @@ func TestScraplingRejectsArgumentsThatAreNotAnObject(t *testing.T) {
 			t.Fatalf("Scrapling(%q) = %d, want %d", args, code, ExitUsage)
 		}
 		assertArgs(t, executor.processes, [][]string{{"info"}})
+	}
+}
+
+func TestCallToolReturnsWhenARealServerDiesWithoutAnswering(t *testing.T) {
+	for _, script := range []string{"exit 3", "read line; exit 0"} {
+		runtime, _, stderr := testRuntime(OSExecutor{}, map[string]string{})
+		done := make(chan int, 1)
+		go func() {
+			done <- callTool(runtime, "test", runtime.process("sh", "-c", script), "get", map[string]any{})
+		}()
+		select {
+		case code := <-done:
+			if code == 0 || !strings.Contains(stderr.String(), "sans répondre") {
+				t.Fatalf("%q: code = %d, stderr = %q", script, code, stderr.String())
+			}
+		case <-time.After(5 * time.Second):
+			t.Fatalf("%q: callTool still waiting after the server exited", script)
+		}
+	}
+}
+
+func TestCallToolTreatsAnErrorWithoutIDAsFinal(t *testing.T) {
+	runtime, _, stderr := testRuntime(OSExecutor{}, map[string]string{})
+	server := runtime.process("sh", "-c", `read line; echo '{"jsonrpc":"2.0","id":null,"error":{"message":"parse error"}}'; cat >/dev/null`)
+	done := make(chan int, 1)
+	go func() { done <- callTool(runtime, "test", server, "get", map[string]any{}) }()
+	select {
+	case code := <-done:
+		if code != 1 || stderr.String() != "test: parse error\n" {
+			t.Fatalf("code = %d, stderr = %q", code, stderr.String())
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("callTool still waiting after an error without id")
 	}
 }

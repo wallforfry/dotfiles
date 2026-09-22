@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"io"
 	"os"
 	"strings"
-	"time"
 )
 
 const (
@@ -36,13 +34,18 @@ type toolResult struct {
 }
 
 func callTool(runtime Runtime, command string, server Process, tool string, arguments map[string]any) int {
-	input, requests := io.Pipe()
+	// Un *os.File et non un io.Pipe : os/exec copierait sinon l'entrée dans une
+	// goroutine que Wait attend, bloquée tant que la réponse n'a pas fermé le
+	// tube, donc pour toujours si le serveur meurt sans répondre.
+	input, requests, err := os.Pipe()
+	if err != nil {
+		fprintf(runtime.Stderr, "%s: %v\n", command, err)
+		return 1
+	}
+	defer input.Close()
 	session := &mcpSession{requests: requests, tool: tool, arguments: arguments}
 	server.Stdin = input
 	server.Stdout = session
-	// L'entrée reste ouverte jusqu'à la réponse : un serveur mort avant de
-	// répondre bloquerait sinon Wait sur ce tube.
-	server.WaitDelay = 2 * time.Second
 	go session.send(map[string]any{
 		"jsonrpc": "2.0", "id": initializeID, "method": "initialize",
 		"params": map[string]any{
@@ -51,7 +54,7 @@ func callTool(runtime Runtime, command string, server Process, tool string, argu
 			"clientInfo":      map[string]any{"name": "dotfiles-" + command, "version": "1"},
 		},
 	})
-	err := runtime.Executor.Run(server)
+	err = runtime.Executor.Run(server)
 	_ = requests.Close()
 
 	switch {
@@ -69,7 +72,7 @@ func callTool(runtime Runtime, command string, server Process, tool string, argu
 }
 
 type mcpSession struct {
-	requests  *io.PipeWriter
+	requests  *os.File
 	tool      string
 	arguments map[string]any
 	pending   []byte
@@ -90,10 +93,14 @@ func (session *mcpSession) Write(chunk []byte) (int, error) {
 
 func (session *mcpSession) receive(line []byte) {
 	var message rpcMessage
-	if json.Unmarshal(line, &message) != nil || message.ID == nil || message.Method != "" {
+	if json.Unmarshal(line, &message) != nil || message.Method != "" {
 		return
 	}
 	switch {
+	case message.ID == nil && message.Error != nil:
+		session.response = &message
+		_ = session.requests.Close()
+	case message.ID == nil:
 	case *message.ID == initializeID && message.Error == nil:
 		go session.send(
 			map[string]any{"jsonrpc": "2.0", "method": "notifications/initialized"},
