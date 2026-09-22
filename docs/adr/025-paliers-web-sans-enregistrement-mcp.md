@@ -2,7 +2,7 @@
 
 - **Statut** : accepté
 - **Date** : 2026-09
-- **Commits** : `03a044e`
+- **Commits** : #28 (fusionnée en squash, les SHA de branche ne survivent pas)
 
 ## Contexte
 
