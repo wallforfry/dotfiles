@@ -29,17 +29,28 @@ func run(arguments []string, runtime commands.Runtime) int {
 	name := filepath.Base(arguments[0])
 	args := arguments[1:]
 	if command, exists := directCommands[name]; exists {
+		if len(args) > 0 && isHelpFlag(args[len(args)-1]) {
+			return Help(runtime, []string{name})
+		}
 		return command(runtime, args)
 	}
 	if len(args) == 0 {
 		usage(runtime)
 		return commands.ExitUsage
 	}
+	if isHelpFlag(args[0]) || args[0] == "help" {
+		return Help(runtime, args[1:])
+	}
 	name, args = args[0], args[1:]
+	if len(args) > 0 && isHelpFlag(args[len(args)-1]) {
+		return Help(runtime, []string{name})
+	}
 	if command, exists := directCommands[name]; exists {
 		return command(runtime, args)
 	}
 	switch name {
+	case "completion":
+		return Completion(runtime, args)
 	case "register-claude-hook":
 		return commands.RegisterClaudeHook(runtime, args)
 	case "register-hindsight":
@@ -114,5 +125,5 @@ func repositoryRoot(args []string, runtime commands.Runtime) (string, int) {
 }
 
 func usage(runtime commands.Runtime) {
-	fmt.Fprintln(runtime.Stderr, "dotfiles: commandes - verify, harness-audit, validate-skill-routing, register-claude-hook, register-hindsight, hindsight bank, agent-handoff, cloak, firecrawl-mcp, postgres-mcp, scrapling-mcp, smartcard-wakeup")
+	writeOverview(runtime.Stderr)
 }
