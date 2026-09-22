@@ -12,71 +12,71 @@ import (
 	"github.com/wallforfry/dotfiles/internal/verify"
 )
 
-var directCommands = map[string]func(commands.Runtime, []string) int{
-	"agent-handoff":    commands.AgentHandoff,
-	"cloak":            commands.Cloak,
-	"firecrawl-mcp":    commands.Firecrawl,
-	"postgres-mcp":     commands.Postgres,
-	"scrapling-mcp":    commands.Scrapling,
-	"smartcard-wakeup": commands.SmartcardWakeup,
-}
-
 func main() {
 	os.Exit(run(os.Args, commands.NewRuntime()))
 }
 
+// run route sur le catalogue, que le CLI soit appelé par son nom ou par un lien
+// de ~/.local/bin portant le nom d'une commande.
 func run(arguments []string, runtime commands.Runtime) int {
 	name := filepath.Base(arguments[0])
 	args := arguments[1:]
-	if command, exists := directCommands[name]; exists {
-		return command(runtime, args)
+	if command, exists := lookup(name); exists && command.Linked {
+		return dispatch(command, runtime, args)
 	}
 	if len(args) == 0 {
 		usage(runtime)
 		return commands.ExitUsage
 	}
-	name, args = args[0], args[1:]
-	if command, exists := directCommands[name]; exists {
-		return command(runtime, args)
+	if isHelpFlag(args[0]) || args[0] == "help" {
+		return Help(runtime, args[1:])
 	}
-	switch name {
-	case "register-claude-hook":
-		return commands.RegisterClaudeHook(runtime, args)
-	case "register-hindsight":
-		return commands.RegisterHindsight(runtime, args)
-	case "hindsight":
-		return commands.HindsightBank(runtime, args)
-	case "harness-audit":
-		root, code := requiredRepositoryRoot(args, runtime)
-		if code != 0 {
-			return code
-		}
-		return audit.Run(auditConfig(root), runtime.Stdout, runtime.Stderr)
-	case "verify":
-		root, code := repositoryRoot(args, runtime)
-		if code != 0 {
-			return code
-		}
-		return verify.Run(root, runtime.Stdout, runtime.Stderr)
-	case "validate-skill-routing":
-		if len(args) > 1 {
-			fmt.Fprintln(runtime.Stderr, "dotfiles: usage - validate-skill-routing [corpus.tsv]")
-			return commands.ExitUsage
-		}
-		root, code := repositoryRoot(nil, runtime)
-		if code != 0 {
-			return code
-		}
-		corpus := ""
-		if len(args) == 1 {
-			corpus = args[0]
-		}
-		return verify.RunRouting(root, corpus, runtime.Stdout, runtime.Stderr)
-	default:
-		fmt.Fprintf(runtime.Stderr, "dotfiles: commande inconnue « %s »\n", name)
+	command, exists := lookup(args[0])
+	if !exists {
+		fmt.Fprintf(runtime.Stderr, "dotfiles: commande inconnue « %s »\n", args[0])
 		usage(runtime)
 		return commands.ExitUsage
 	}
+	return dispatch(command, runtime, args[1:])
+}
+
+func dispatch(command Command, runtime commands.Runtime, args []string) int {
+	if len(args) > 0 && isHelpFlag(args[len(args)-1]) {
+		return Help(runtime, []string{command.Name})
+	}
+	return command.Run(runtime, args)
+}
+
+func runVerify(runtime commands.Runtime, args []string) int {
+	root, code := repositoryRoot(args, runtime)
+	if code != 0 {
+		return code
+	}
+	return verify.Run(root, runtime.Stdout, runtime.Stderr)
+}
+
+func runHarnessAudit(runtime commands.Runtime, args []string) int {
+	root, code := requiredRepositoryRoot(args, runtime)
+	if code != 0 {
+		return code
+	}
+	return audit.Run(auditConfig(root), runtime.Stdout, runtime.Stderr)
+}
+
+func runSkillRouting(runtime commands.Runtime, args []string) int {
+	if len(args) > 1 {
+		fmt.Fprintln(runtime.Stderr, "dotfiles: usage - validate-skill-routing [corpus.tsv]")
+		return commands.ExitUsage
+	}
+	root, code := repositoryRoot(nil, runtime)
+	if code != 0 {
+		return code
+	}
+	corpus := ""
+	if len(args) == 1 {
+		corpus = args[0]
+	}
+	return verify.RunRouting(root, corpus, runtime.Stdout, runtime.Stderr)
 }
 
 func auditConfig(root string) audit.Config {
@@ -114,5 +114,5 @@ func repositoryRoot(args []string, runtime commands.Runtime) (string, int) {
 }
 
 func usage(runtime commands.Runtime) {
-	fmt.Fprintln(runtime.Stderr, "dotfiles: commandes - verify, harness-audit, validate-skill-routing, register-claude-hook, register-hindsight, hindsight bank, agent-handoff, cloak, firecrawl-mcp, postgres-mcp, scrapling-mcp, smartcard-wakeup")
+	writeOverview(runtime.Stderr)
 }
