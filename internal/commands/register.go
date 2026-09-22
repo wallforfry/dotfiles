@@ -12,16 +12,39 @@ import (
 
 var errSettingsChanged = errors.New("settings.json modifié pendant l'enregistrement")
 
+type claudeHook struct {
+	event      string
+	matcher    string
+	executable string
+	command    string
+	timeout    int
+}
+
+func claudeHooks(home string) []claudeHook {
+	handoff := filepath.Join(home, ".claude", "hooks", "agent-handoff")
+	wakeup := filepath.Join(home, ".local", "bin", "smartcard-wakeup")
+	return []claudeHook{
+		{event: "Stop", executable: handoff, command: handoff},
+		{event: "PostToolUse", matcher: "^Bash$", executable: wakeup, command: wakeup + " --hook", timeout: 10},
+	}
+}
+
 func RegisterClaudeHook(runtime Runtime, _ []string) int {
 	home := runtime.env("HOME", "")
 	settings := filepath.Join(home, ".claude", "settings.json")
-	hook := filepath.Join(home, ".claude", "hooks", "agent-handoff")
-	if info, err := os.Stat(hook); err != nil || info.Mode()&0o111 == 0 {
-		fprintf(runtime.Stderr, "⚠️   %s absent ou non exécutable : rien à enregistrer\n", hook)
+	hooks := make([]claudeHook, 0, 2)
+	for _, hook := range claudeHooks(home) {
+		if info, err := os.Stat(hook.executable); err != nil || info.Mode()&0o111 == 0 {
+			fprintf(runtime.Stderr, "⚠️   %s absent ou non exécutable : hook ignoré\n", hook.executable)
+			continue
+		}
+		hooks = append(hooks, hook)
+	}
+	if len(hooks) == 0 {
 		return 0
 	}
 	for range 3 {
-		changed, err := registerHook(settings, hook)
+		registered, err := registerHooks(settings, hooks)
 		if errors.Is(err, errSettingsChanged) {
 			continue
 		}
@@ -29,8 +52,8 @@ func RegisterClaudeHook(runtime Runtime, _ []string) int {
 			fprintf(runtime.Stderr, "⚠️   settings.json inchangé : %s\n", err)
 			return 0
 		}
-		if changed {
-			fprintf(runtime.Stdout, "🪝  hook agent-handoff enregistré dans settings.json\n")
+		for _, hook := range registered {
+			fprintf(runtime.Stdout, "🪝  hook %s enregistré dans settings.json\n", filepath.Base(hook.executable))
 		}
 		return 0
 	}
@@ -38,25 +61,34 @@ func RegisterClaudeHook(runtime Runtime, _ []string) int {
 	return 0
 }
 
-func registerHook(settings, hook string) (bool, error) {
+// Une seule réécriture pour tous les hooks : la sauvegarde .bak reste celle de
+// l'état d'origine, et une interruption ne laisse pas un enregistrement partiel.
+func registerHooks(settings string, hooks []claudeHook) ([]claudeHook, error) {
 	content, mode, existed, err := readSettings(settings)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	var document map[string]any
 	if json.Unmarshal(content, &document) != nil {
-		return false, fmt.Errorf("JSON invalide")
+		return nil, fmt.Errorf("JSON invalide")
 	}
-	if hookRegistered(document, hook) {
-		return false, nil
+	missing := make([]claudeHook, 0, len(hooks))
+	for _, hook := range hooks {
+		if hookRegistered(document, hook) {
+			continue
+		}
+		if err := appendHook(document, hook); err != nil {
+			return nil, err
+		}
+		missing = append(missing, hook)
 	}
-	if err := appendStopHook(document, hook); err != nil {
-		return false, err
+	if len(missing) == 0 {
+		return nil, nil
 	}
 	if err := replaceJSON(settings, content, document, mode, existed); err != nil {
-		return false, err
+		return nil, err
 	}
-	return true, nil
+	return missing, nil
 }
 
 func readSettings(path string) ([]byte, os.FileMode, bool, error) {
@@ -74,15 +106,15 @@ func readSettings(path string) ([]byte, os.FileMode, bool, error) {
 	return content, info.Mode().Perm(), true, nil
 }
 
-func hookRegistered(document map[string]any, hook string) bool {
+func hookRegistered(document map[string]any, hook claudeHook) bool {
 	hooks, _ := document["hooks"].(map[string]any)
-	stops, _ := hooks["Stop"].([]any)
-	for _, stop := range stops {
-		group, _ := stop.(map[string]any)
-		commands, _ := group["hooks"].([]any)
-		for _, command := range commands {
-			entry, _ := command.(map[string]any)
-			if entry["command"] == hook {
+	groups, _ := hooks[hook.event].([]any)
+	for _, raw := range groups {
+		group, _ := raw.(map[string]any)
+		entries, _ := group["hooks"].([]any)
+		for _, entry := range entries {
+			command, _ := entry.(map[string]any)
+			if command["command"] == hook.command {
 				return true
 			}
 		}
@@ -90,7 +122,7 @@ func hookRegistered(document map[string]any, hook string) bool {
 	return false
 }
 
-func appendStopHook(document map[string]any, hook string) error {
+func appendHook(document map[string]any, hook claudeHook) error {
 	hooks, present := document["hooks"]
 	if !present {
 		hooks = map[string]any{}
@@ -100,16 +132,23 @@ func appendStopHook(document map[string]any, hook string) error {
 	if !ok {
 		return fmt.Errorf("champ hooks incompatible")
 	}
-	stops, present := hookMap["Stop"]
+	groups, present := hookMap[hook.event]
 	if !present {
-		stops = []any{}
+		groups = []any{}
 	}
-	stopList, ok := stops.([]any)
+	groupList, ok := groups.([]any)
 	if !ok {
-		return fmt.Errorf("champ hooks.Stop incompatible")
+		return fmt.Errorf("champ hooks.%s incompatible", hook.event)
 	}
-	entry := map[string]any{"hooks": []any{map[string]any{"type": "command", "command": hook}}}
-	hookMap["Stop"] = append(stopList, entry)
+	command := map[string]any{"type": "command", "command": hook.command}
+	if hook.timeout > 0 {
+		command["timeout"] = hook.timeout
+	}
+	entry := map[string]any{"hooks": []any{command}}
+	if hook.matcher != "" {
+		entry["matcher"] = hook.matcher
+	}
+	hookMap[hook.event] = append(groupList, entry)
 	return nil
 }
 

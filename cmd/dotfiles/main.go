@@ -13,11 +13,12 @@ import (
 )
 
 var directCommands = map[string]func(commands.Runtime, []string) int{
-	"agent-handoff": commands.AgentHandoff,
-	"cloak":         commands.Cloak,
-	"firecrawl-mcp": commands.Firecrawl,
-	"postgres-mcp":  commands.Postgres,
-	"scrapling-mcp": commands.Scrapling,
+	"agent-handoff":    commands.AgentHandoff,
+	"cloak":            commands.Cloak,
+	"firecrawl-mcp":    commands.Firecrawl,
+	"postgres-mcp":     commands.Postgres,
+	"scrapling-mcp":    commands.Scrapling,
+	"smartcard-wakeup": commands.SmartcardWakeup,
 }
 
 func main() {
@@ -113,5 +114,5 @@ func repositoryRoot(args []string, runtime commands.Runtime) (string, int) {
 }
 
 func usage(runtime commands.Runtime) {
-	fmt.Fprintln(runtime.Stderr, "dotfiles: commandes - verify, harness-audit, validate-skill-routing, register-claude-hook, register-hindsight, hindsight bank, agent-handoff, cloak, firecrawl-mcp, postgres-mcp, scrapling-mcp")
+	fmt.Fprintln(runtime.Stderr, "dotfiles: commandes - verify, harness-audit, validate-skill-routing, register-claude-hook, register-hindsight, hindsight bank, agent-handoff, cloak, firecrawl-mcp, postgres-mcp, scrapling-mcp, smartcard-wakeup")
 }

@@ -15,6 +15,9 @@ import (
 const (
 	ExitUsage       = 64
 	ExitUnavailable = 69
+	// Claude Code ne transmet la sortie d'erreur d'un hook à l'agent que sur ce
+	// code ; en PostToolUse l'outil a déjà tourné, rien n'est bloqué.
+	ExitFeedback = 2
 )
 
 type Process struct {

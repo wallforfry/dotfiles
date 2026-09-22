@@ -486,6 +486,23 @@ sans passer par chezmoi :
 age --decrypt -o ~/.config/chezmoi/key.txt "$(chezmoi source-path)/age-key.txt.age"
 ```
 
+### La clé est branchée mais « indisponible »
+
+Sur macOS, `scdaemon` tient un contexte PC/SC sur `com.apple.ctkpcscd`. Une
+élévation temporaire de privilèges suivie du retour en utilisateur standard fait
+repartir ce service : le contexte devient mort et `scdaemon` ne le rétablit
+jamais, donc toute signature GPG ou SSH échoue alors que la clé est bien là.
+
+```bash
+smartcard-wakeup
+```
+
+La commande sonde `gpg --card-status` et ne redémarre `scdaemon` que si la sonde
+échoue ; `gpg-agent` survit, donc le cache SSH aussi. Les agents n'ont rien à
+retenir : `dotfiles register-claude-hook` enregistre `smartcard-wakeup --hook`
+en `PostToolUse` sur `^Bash$`, qui répare et demande à l'agent de relancer sa
+commande. Là où il n'y a pas de carte, il se tait. Voir [ADR-024](docs/adr/024-reveil-carte-a-puce-par-hook.md).
+
 ### `fork/exec /tmp/....sh: permission denied`
 
 `/tmp` est monté `noexec` (cas de DSM), donc chezmoi ne peut pas exécuter les
