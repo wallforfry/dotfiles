@@ -16,6 +16,7 @@ obsolescence-positive	positive	obsolescence	-	Remove this endpoint and decide wh
 scripts-positive	positive	scripts	-	Add portable error handling to this chezmoi bootstrap hook.
 skill-manager-positive	positive	skill-manager	-	Fix this skill description and rebuild the skills index.
 web-fetching-positive	positive	web-fetching	-	Fetch these twenty pages and return their rendered bodies.
+writing-style-positive	positive	writing-style	-	Rewrite this README introduction so it no longer reads as machine-written.
 adr-negative	negative	-	adr	Implement the already recorded architecture decision without changing its rationale.
 agent-instructions-negative	negative	-	agent-instructions	Correct a typo in the application README.
 business-issue-negative	negative	-	business-issue	Implement this already specified issue without changing its scope or acceptance criteria.
@@ -33,6 +34,7 @@ obsolescence-negative	negative	-	obsolescence	Add a brand-new endpoint with no p
 scripts-negative	negative	-	scripts	Edit this TypeScript utility function.
 skill-manager-negative	negative	-	skill-manager	Use the existing PDF skill to inspect a document without changing the skill.
 web-fetching-negative	negative	-	web-fetching	Fill and submit the logged-in form already open in the browser.
+writing-style-negative	negative	-	writing-style	Rename this Go function and update its callers.
 fetch-mcp-docs-ambiguous	ambiguous	web-fetching	containerized-mcp	Fetch the Docker MCP server documentation page; do not configure the server.
 register-from-pasted-docs-ambiguous	ambiguous	containerized-mcp	web-fetching	Using the documentation pasted below, register this containerized MCP server locally.
 global-rule-ambiguous	ambiguous	agent-instructions	skill-manager	Shorten the always-loaded AGENTS.md rule without editing any skill.
