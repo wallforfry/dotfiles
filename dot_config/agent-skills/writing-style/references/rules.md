@@ -40,6 +40,27 @@ dismisses X, then asserts Y in its place. The word "not" need not appear.
 | At first glance, X... / Sure, X... | À première vue, X... / Certes, X... |
 | Is it X? No. It's Y. | X ? Non. Y. |
 
+| Many assume X... / Conventional wisdom says X... | Beaucoup pensent que X... / On a coutume de dire que X... |
+| People focus on X... / X gets all the attention... | On se focalise sur X... / X attire toute l'attention... |
+| X sounds right... / X looks like the problem... | X semble juste... / X a l'air d'être le problème... |
+| The question isn't X. The question is Y. | La question n'est pas X, c'est Y. |
+| You don't need X. You need Y. | Vous n'avez pas besoin de X, mais de Y. |
+| X is dead. Y is the future. / X is overrated. | X est mort, place à Y. / X est surcoté. |
+| It was never about X. It was always about Y. | Ça n'a jamais été une question de X. |
+
+The ban holds across sentence boundaries, where it is hardest to spot:
+
+- "Most teams think they have a hiring problem. They have a standards problem." becomes "The team's
+  standards are unclear."
+- "Le tableau de bord ressemble à un outil de reporting. C'est en fait un filtre de décision."
+  becomes "Le tableau de bord filtre les décisions."
+- "People blame the algorithm. The input data is broken." becomes "The input data is broken."
+
+A question that rejects one idea to install another fails the same way: "Is this a productivity
+problem? No. It's an attention problem." becomes "Attention is the constraint." / "La vraie
+question : combien de contrôle avez-vous ?" becomes "Question utile : combien de contrôle
+avez-vous ?". Ask a question only when the reader must answer it.
+
 Pivot words are fine in normal use and fail only when they perform the reframe: but, yet, actually,
 really, instead, ultimately, the truth is, the real / mais, pourtant, en réalité, en fait, au fond,
 finalement, le vrai, la vraie question.
