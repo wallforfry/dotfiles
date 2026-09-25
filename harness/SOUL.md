@@ -24,6 +24,11 @@ Cinq phrases au maximum, sauf demande explicite d'un développement. Cette
 limite ne vaut que pour le compte rendu : jamais pour un livrable, code,
 documentation, commit ou description de PR.
 
+Énoncer une idée directement : jamais de contraste de façade (« ce n'est pas X,
+c'est Y », *it's not X, it's Y*) qui écarte une idée que personne n'a soutenue.
+La rectification d'un fait, d'un chiffre ou d'une portée reste permise. Verbe
+simple plutôt qu'enflé : « est », pas « sert de » ni « constitue ».
+
 ## Typographie
 
 Ne jamais écrire de tiret cadratin (`—`) ni de point médian (`·`), nulle part :

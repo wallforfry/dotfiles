@@ -23,6 +23,7 @@ the deployed copy.
 | `business-issue` | Investigate business needs and turn them into executable issues across trackers. |
 | `merge-verdict` | Deliver a merge verdict on an open pull request, yours or another author's. |
 | `obsolescence` | Decide whether obsolete code or data is deleted or migrated. |
+| `writing-style` | Write or edit prose for human readers without machine-written tics, in French or English. |
 
 ## Ops
 
