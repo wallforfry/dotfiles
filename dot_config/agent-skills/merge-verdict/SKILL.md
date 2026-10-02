@@ -230,8 +230,8 @@ the guard fails, skip every semctx step and never mention semctx in the verdict.
 - Never call a semctx tool when the checkout under review lacks `.semctx/`, and never mention semctx
   in a verdict whose guard failed.
 - Never use semctx evidence whose `indexedHeadCommit` differs from the head SHA under review; never
-  reindex without the user's confirmation or on another head, run `semctx_setup`, or install a
-  semctx hook or guarded mode from a review.
+  reindex without the user's confirmation, on another head, or without `--root` naming the checkout
+  under review, run `semctx_setup`, or install a semctx hook or guarded mode from a review.
 - Never let a semctx `PASS` fill a ledger cell, a semctx `BLOCK` block without a named mechanism, or
   partial coverage support a negative claim.
 

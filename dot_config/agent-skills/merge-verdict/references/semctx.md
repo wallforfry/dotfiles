@@ -15,7 +15,7 @@ follow them when this file is silent.
 Both conditions, tested on the capability itself, in this order:
 
 1. The checkout holding the exact head of phase 1 has a `.semctx/` directory at its root:
-   `test -d "<checkout>/.semctx"`. Test that checkout, never the primary one.
+   `test -d "<checkout>/.semctx"`. Test that checkout, and never substitute another one for it.
 2. The semctx MCP tools answer: `semctx_control_status` with the absolute `repositoryRoot` returns a
    report. A tool the host does not list, or a call that errors, fails the guard.
 
@@ -24,9 +24,9 @@ no further call, no field, and no mention of semctx anywhere in the verdict. Nei
 profile nor the forge decides; only these two tests do. That silence hides no limit: semctx fills
 no ledger cell, so its absence removes no evidence the verdict relies on.
 
-`.semctx/` is mostly ignored state, so a worktree created for the review usually lacks it and the
-guard fails there. The guard holds mainly when the review runs in a checkout that already carried
-`.semctx/`, often the author's own.
+`.semctx/` is mostly ignored state: a worktree created for the review carries only what the
+repository versions, such as `.semctx/config.json` and `.semctx/semantic/`, and no index. The guard
+can then hold on a checkout that was never indexed, which phase 1 reports as `unavailable`.
 
 ## Phase 1 - anchor the index
 
@@ -38,24 +38,27 @@ guard fails there. The guard holds mainly when the review runs in a checkout tha
    - control freshness is `FRESH`;
    - index binding is `valid`;
    - coverage is `complete` or `partial`, never `insufficient`.
-3. When `indexedHeadCommit` differs from the head, control freshness reads `STALE` with
-   `HEAD_MISMATCH`, possibly beside the other mismatches a head change entails. The evidence is then
-   `unavailable` by default, with the reported reasons. A reindex of this head replaces it only when
-   every condition below holds:
+3. When `indexedHeadCommit` is null, as on a checkout never indexed (`UNSEALED`), the evidence is
+   `unavailable` and no reindex is offered: a first index is setup work, not a review's. When it
+   names another commit, control freshness reads `STALE` with `HEAD_MISMATCH`, possibly beside the
+   other mismatches a head change entails. The evidence is then `unavailable` by default, with the
+   reported reasons. A reindex of this head replaces it only when every condition below holds:
    - the user confirms it for this review, after being told that it rebuilds the index of that
      checkout and that the index then describes the reviewed head;
    - the checkout's `HEAD` is the reviewed SHA and `git status --porcelain` is empty;
    - no handoff state sits under `.semctx/working/`, since a capsule awaiting resume would go stale;
    - the repository's instructions do not restrict execution to a container; silent instructions
      mean ask, never assume.
-   Run the CLI `index --json` command from the rung `semctx:semctx-control` selects, under a
-   wall-clock limit set before starting, then repeat steps 1 and 2. Record the new seal hash and the
-   words "reindexed during this review".
+   Run `index --json --root "<checkout>"`, with the absolute path of the checkout under review, from
+   the CLI rung `semctx:semctx-control` selects, under a wall-clock limit set before starting. Never
+   omit `--root`: the CLI otherwise indexes its working directory, and an agent shell may have
+   returned to the primary checkout, which none of the conditions above examined. Then repeat steps
+   1 and 2, and record the new seal hash and the words "reindexed during this review".
 4. Any other failed condition, an overrun limit, a failed index, or a step 2 still failing after the
    reindex makes the evidence `unavailable`. Never retry on another commit.
 
-`unavailable` concerns this optional surface only: it is reported in the barrier paragraph and
-never turns a ledger row `absent`.
+`unavailable` concerns this optional surface only: phases 2 to 4 then make no semctx call, the
+barrier paragraph states it with its reason, and it never turns a ledger row `absent`.
 
 The plugin forbids reindexing merely to make a stale state green, and limits audits to read-only
 surfaces. This reindex binds the index to the head under review before any verdict is read, never
@@ -77,10 +80,11 @@ rewrite a versioned `.gitignore`. Never enable guarded mode or install a semctx 
 4. Count three numbers for the barrier paragraph: candidates proposed, candidates retained, and
    retained candidates that the inventory of step 1 did not already hold.
 
-Plane B (`semctx_semantic_check`, `semctx_semantic_slice`, `semctx_change_verify`) runs only when
-`.semctx/semantic/` holds authored, non-empty invariants; a model with no node, as left by setup,
-gets no call. Stay in the read-only lane: open, update or close no change contract. Plane C never
-runs in a review.
+Plane B runs only when `.semctx/semantic/` holds authored, non-empty invariants; a model with no
+node, as left by setup, gets no call. Then call `semctx_semantic_check`, and `semctx_semantic_slice`
+on each impacted symbol: every authored invariant of a slice is one more candidate under step 3,
+counted with the others. Stay in the read-only lane: call no change-contract tool, since a review
+holds no change contract of its own. Plane C never runs in a review.
 
 ## Phase 3 - BLOCK as a question
 
@@ -99,11 +103,15 @@ row without a negative witness is `absent`, and blocks through the ledger, not t
    merged into the gate counts, and name every recommended test the gate does not run or that could
    not be run.
 2. A Plane A `PASS` fills no ledger cell, neither positive evidence nor negative witness.
-3. Write one semctx clause in the barrier paragraph, fields kept separate and never merged into one
+3. Before writing the clause, call `semctx_control_status` again. A seal hash or indexed commit
+   that differs from the one recorded in phase 1 means the index moved under the review, perhaps by
+   another session in the same checkout: the evidence becomes `unavailable` and every candidate it
+   proposed is dropped or re-confirmed by reading the code.
+4. Write one semctx clause in the barrier paragraph, fields kept separate and never merged into one
    health claim: index binding, index freshness and coverage from `semctx_index_health`, control
    freshness with its seal hash and indexed commit, and the Plane A verdict. Then give the three
    candidate counts and the recommended tests run beyond the gate.
-4. Coverage `partial` forbids every negative claim: no "nothing else is impacted", "no other
+5. Coverage `partial` forbids every negative claim: no "nothing else is impacted", "no other
    contract is touched", "the blast radius stops here". `complete` permits "semctx reports no
    further impact", attributed, never as a fact about the system.
 

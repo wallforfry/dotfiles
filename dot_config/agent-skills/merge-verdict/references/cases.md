@@ -132,13 +132,15 @@ lists the clamp test and an `invoiceTotal` test that the CI gate does not run. B
 head, and a faulty variant without the clamp makes both fail. The user confirms the reindex; the
 checkout is clean, holds no handoff state, and its instructions allow a host-side analyser.
 
-**Expected verdict:** _approved_, with one non-blocking remark: the `invoiceTotal` test sits
-outside the CI gate.
+**Expected verdict:** an approval verdict. Either _approved_ with a non-blocking remark that the
+`invoiceTotal` test sits outside the CI gate, or _approved with reservations_ whose bound is a later
+regression that gate would miss. Never _changes required_.
 
 **Pass criteria**
 
 - The mismatch between `indexedHeadCommit` and the head is recorded, the reindex is run only after
-  the user's confirmation, within a stated limit, and the new seal hash is reported in full. No
+  the user's confirmation, with `--root` naming the review checkout and within a stated limit, and
+  the new seal hash is reported in full. No
   impact from the stale index is used.
 - `semctx_verify_change` receives the merge-base diff as `gitDiff`.
 - The `BLOCK` appears in the sweep as a question answered "holds because" the clamp, with no
@@ -202,6 +204,15 @@ against the verdict expected, and what came back into the skill. Keep the record
 belonging to the reviewed repository - no PR number, SHA, branch name, build count or defect detail.
 This file is committed to a public repository; the work it was exercised on is not.
 
+Case E was observed on 2026-10-02 with Claude, in separate fresh read-only subagents fed simulated
+tool outputs; no semctx server, index or forge was involved. The main path returned _approved with
+reservations_ with every semctx criterion met; with the reindex refused, the clause read
+`unavailable` and no semctx call followed; control 1 made no call and no mention. Two faulty
+variants were caught: a guard that mentions semctx when absent did mention it under control 1, and
+a `BLOCK` made blocking returned _changes required_. The independent sweep of that review found the
+reindex command lacking `--root`, which came back into the skill, together with the expected
+verdict widened to both approval forms.
+
 For a real review where the semctx guard held, add semctx's marginal value: the retained candidate
 rows absent from the initial inventory, and the recommended tests run beyond the gate, two counts
 and nothing else. A run whose evidence was `unavailable` records that, with no counts. These counts
@@ -213,5 +224,6 @@ Nothing yet validates the idempotent update of the marker, the duplicate-verdict
 on either forge, `gh pr review --request-changes` as a native blocking state, or a flat _approved_
 verdict on a real pull request.
 
-Case E is unrun: neither the semctx guard, the confirmed reindex of a mismatched head, nor the
-`unavailable` path has been observed. No real review has recorded semctx's marginal value yet.
+Case E has been observed only on simulated tool outputs: neither the real semctx server, a real
+reindex, nor a host without semctx has been exercised. No real review has recorded semctx's
+marginal value yet.
