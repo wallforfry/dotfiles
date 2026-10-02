@@ -45,14 +45,16 @@ can then hold on a checkout that was never indexed, which phase 1 reports as `un
    reported reasons. A reindex of this head replaces it only when every condition below holds:
    - the user confirms it for this review, after being told that it rebuilds the index of that
      checkout and that the index then describes the reviewed head;
-   - the checkout's `HEAD` is the reviewed SHA and `git status --porcelain` is empty;
-   - no handoff state sits under `.semctx/working/`, since a capsule awaiting resume would go stale;
+   - `git -C "<checkout>" rev-parse HEAD` is the reviewed SHA and
+     `git -C "<checkout>" status --porcelain` is empty;
+   - no handoff state sits under `<checkout>/.semctx/working/`, since a capsule awaiting resume
+     would go stale;
    - the repository's instructions do not restrict execution to a container; silent instructions
      mean ask, never assume.
    Run `index --json --root "<checkout>"`, with the absolute path of the checkout under review, from
    the CLI rung `semctx:semctx-control` selects, under a wall-clock limit set before starting. Never
-   omit `--root`: the CLI otherwise indexes its working directory, and an agent shell may have
-   returned to the primary checkout, which none of the conditions above examined. Then repeat steps
+   omit `--root` or `-C`: the CLI and git otherwise act on their working directory, and an agent
+   shell may have returned to the primary checkout. Then repeat steps
    1 and 2, and record the new seal hash and the words "reindexed during this review".
 4. Any other failed condition, an overrun limit, a failed index, or a step 2 still failing after the
    reindex makes the evidence `unavailable`. Never retry on another commit.
@@ -81,9 +83,12 @@ rewrite a versioned `.gitignore`. Never enable guarded mode or install a semctx 
    retained candidates that the inventory of step 1 did not already hold.
 
 Plane B runs only when `.semctx/semantic/` holds authored, non-empty invariants; a model with no
-node, as left by setup, gets no call. Then call `semctx_semantic_check`, and `semctx_semantic_slice`
-on each impacted symbol: every authored invariant of a slice is one more candidate under step 3,
-counted with the others. Stay in the read-only lane: call no change-contract tool, since a review
+node, as left by setup, gets no call. Then call `semctx_semantic_check`; a report with an invalid
+or stale reason ends Plane B, and the clause names that reason. Otherwise call
+`semctx_semantic_slice` with `symbolRef` set to each `changedSymbols[].id` of the Plane A report:
+a name matches no repository link and returns an empty slice without error, so an empty slice
+proves nothing. Every authored invariant of a slice is one more candidate under step 3, counted
+with the others. Stay in the read-only lane: call no change-contract tool, since a review
 holds no change contract of its own. Plane C never runs in a review.
 
 ## Phase 3 - BLOCK as a question

@@ -204,14 +204,24 @@ against the verdict expected, and what came back into the skill. Keep the record
 belonging to the reviewed repository - no PR number, SHA, branch name, build count or defect detail.
 This file is committed to a public repository; the work it was exercised on is not.
 
-Case E was observed on 2026-10-02 with Claude, in separate fresh read-only subagents fed simulated
-tool outputs; no semctx server, index or forge was involved. The main path returned _approved with
-reservations_ with every semctx criterion met; with the reindex refused, the clause read
-`unavailable` and no semctx call followed; control 1 made no call and no mention. Two faulty
-variants were caught: a guard that mentions semctx when absent did mention it under control 1, and
-a `BLOCK` made blocking returned _changes required_. The independent sweep of that review found the
-reindex command lacking `--root`, which came back into the skill, together with the expected
-verdict widened to both approval forms.
+Case E was observed on 2026-10-02 with Claude, in fresh read-only subagents fed simulated tool
+outputs written by the skill's author; no semctx server, index or forge was involved, and some
+scenarios gave the expected answer away, such as the `PASS` returned without `gitDiff`.
+
+- First round, before `--root`, the seal re-read, the UNSEALED branch and the Plane B slice rules
+  existed. The main path returned _approved with reservations_; with the reindex refused, the clause
+  read `unavailable` and no semctx call followed; control 1 made no call and no mention. Its
+  independent sweep found the reindex command lacking `--root`, which came back into the skill with
+  the expected verdict widened to both approval forms.
+- Second round, on the current rules, with the agent shell in another checkout. The main path
+  passed `--root` on the review checkout and re-read the seal before the clause; a never-indexed
+  checkout gave `unavailable` with no reindex and no setup.
+- Faulty variants caught: a guard that mentions semctx when absent, a `BLOCK` made blocking, a
+  handoff capture without a planning bundle, and the missing seal re-read.
+- Faulty variants not caught, so these rules stay unwitnessed: the missing `--root`, which the agent
+  compensated with a `cd`; one variant without the `gitDiff`, `PASS`, separate-field, partial
+  coverage, setup and UNSEALED rules together, which behaved as the head; and a `harness-audit`
+  without its step 8, which gave the same answer.
 
 For a real review where the semctx guard held, add semctx's marginal value: the retained candidate
 rows absent from the initial inventory, and the recommended tests run beyond the gate, two counts
@@ -225,5 +235,8 @@ on either forge, `gh pr review --request-changes` as a native blocking state, or
 verdict on a real pull request.
 
 Case E has been observed only on simulated tool outputs: neither the real semctx server, a real
-reindex, nor a host without semctx has been exercised. No real review has recorded semctx's
-marginal value yet.
+reindex, nor a host without semctx has been exercised. No scenario free of hints has yet shown a
+variant fail without `--root`, `gitDiff`, the `PASS` rule, separate fields, the partial coverage
+rule, the setup ban or the UNSEALED branch; they are kept because each guards a side effect or a
+false claim, not because a witness proved them. No real review has recorded semctx's marginal value
+yet.
