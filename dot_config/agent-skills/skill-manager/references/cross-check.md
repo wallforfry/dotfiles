@@ -11,7 +11,7 @@ with a malformed description or no `Constraints` section poisons D1 and D4 with 
 2. Extract, per skill: `name`, `description`, the trigger phrases after `Use when` and
    `Make sure to use it whenever`, the `## Constraints` entries, the other skills it mentions, its
    functional domain, and the file names under `references/` without reading them yet.
-3. Run the five detectors below, reading reference bodies only where a detector demands it.
+3. Run the six detectors below, reading reference bodies only where a detector demands it.
 4. Produce the report, present it, and stop.
 
 ## D1 - Trigger overlap
