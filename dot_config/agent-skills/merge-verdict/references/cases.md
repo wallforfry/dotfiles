@@ -1,8 +1,8 @@
 # Verdict cases
 
-Four behavioural cases. Each names what is reviewed, the verdict it must reach, and the criteria
+Five behavioural cases. Each names what is reviewed, the verdict it must reach, and the criteria
 that decide pass or fail. Cases A and B target different forges so both command sets in
-`references/forges.md` get exercised.
+`references/forges.md` get exercised. Case E isolates the semctx evidence rules.
 
 Run A and B against real pull requests: a case that never touched a forge proves nothing about a
 skill whose first phase is anchoring. A scratch repository is fine - the domain does not matter, the
@@ -117,6 +117,63 @@ the ledger retains AC-2 with result `excluded`, its identifier and that decision
 `not required - excluded` in implementation and evidence cells. AC-1 still requires its full proof;
 a documented deferral without an authoritative exclusion must keep AC-2 `absent` and block.
 
+## Case E - semctx BLOCK on a correct change
+
+**Evidence package.** A repository whose review checkout holds `.semctx/`, with the semctx MCP
+tools reachable and one authored invariant: an order total is never negative. The PR changes the
+discount function so that a discount larger than the subtotal is clamped. The index was sealed on
+the head's parent, so `indexedHeadCommit` differs from the reviewed SHA. Once the head is
+reindexed, `semctx_verify_change` on the merge-base diff returns `BLOCK`: the invariant's function
+changed with no covering test in the index, because the PR's regression test sits in a file outside
+the analysed coverage. Coverage is `partial`. The reviewer's own inventory holds the clamping
+behaviour. semctx also proposes the exported `invoiceTotal` contract, which consumes the discount
+and whose output for an oversized discount changes; the inventory missed it. `recommendedTests`
+lists the clamp test and an `invoiceTotal` test that the CI gate does not run. Both pass on the
+head, and a faulty variant without the clamp makes both fail. The user confirms the reindex; the
+checkout is clean, holds no handoff state, and its instructions allow a host-side analyser.
+
+**Expected verdict:** _approved_, with one non-blocking remark: the `invoiceTotal` test sits
+outside the CI gate.
+
+**Pass criteria**
+
+- The mismatch between `indexedHeadCommit` and the head is recorded, the reindex is run only after
+  the user's confirmation, within a stated limit, and the new seal hash is reported in full. No
+  impact from the stale index is used.
+- `semctx_verify_change` receives the merge-base diff as `gitDiff`.
+- The `BLOCK` appears in the sweep as a question answered "holds because" the clamp, with no
+  blocker; the invariant row is filled by the reviewer's test and faulty variant, never by semctx.
+- The `invoiceTotal` candidate becomes its own row after reading the code, filled by the
+  recommended test and the faulty variant, and is counted as retained and absent from the
+  inventory.
+- Both recommended tests are counted in the semctx clause, apart from the gate counts, and the one
+  outside the CI gate is named.
+- The barrier paragraph reports binding, index freshness, coverage, control freshness with its seal,
+  and the Plane A verdict as separate fields, plus the candidate counts, and makes no negative claim
+  such as "nothing else is impacted".
+
+**Fail signals**
+
+- _changes required_ on the semctx `BLOCK` alone, with no mechanism.
+- A semctx `PASS` or `BLOCK` cited as positive evidence or as a negative witness.
+- One "semctx is healthy" claim in place of the separate fields.
+- A reindex run without confirmation or on any commit but the reviewed head, or any call to
+  `semctx_setup`.
+
+**Discriminating controls.**
+
+1. Remove `.semctx/` from the review checkout, or run on a host without the semctx tools. No semctx
+   tool is called and the word semctx appears nowhere in the verdict. The expected verdict stays
+   _approved_, reached only if the reviewer's own inventory finds the `invoiceTotal` behaviour and
+   proves it; an approval whose ledger omits that row is the miss semctx exists to catch. Without the recommended test,
+   the `invoiceTotal` row is found only if the reviewer's own inventory finds it.
+2. Refuse the reindex. The semctx clause reads `unavailable` with the commit mismatch as its reason
+   and nothing else; no `semctx_verify_change` call follows, and the verdict rests on the other
+   evidence exactly as in control 1.
+
+This case is built so that semctx adds one row and one test: it checks that the rules are
+followed, and its counts say nothing about semctx's value on real reviews.
+
 ## Execution record
 
 **Evidence status:** observation only, not reproducible evidence for either approval verdict.
@@ -145,8 +202,16 @@ against the verdict expected, and what came back into the skill. Keep the record
 belonging to the reviewed repository - no PR number, SHA, branch name, build count or defect detail.
 This file is committed to a public repository; the work it was exercised on is not.
 
+For a real review where the semctx guard held, add semctx's marginal value: the retained candidate
+rows absent from the initial inventory, and the recommended tests run beyond the gate, two counts
+and nothing else. A run whose evidence was `unavailable` records that, with no counts. These counts
+are the only measure of semctx's value in this skill; `harness-audit` reads them here.
+
 ## Declared gaps
 
 Nothing yet validates the idempotent update of the marker, the duplicate-verdict guard, publication
 on either forge, `gh pr review --request-changes` as a native blocking state, or a flat _approved_
 verdict on a real pull request.
+
+Case E is unrun: neither the semctx guard, the confirmed reindex of a mismatched head, nor the
+`unavailable` path has been observed. No real review has recorded semctx's marginal value yet.
