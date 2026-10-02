@@ -37,11 +37,12 @@ No options. The output is a single fenced block for the user to paste into a new
 2. Finish making the work durable: save unsaved files and, if a change is complete and the user asked
    for it, commit it. A resume prompt pointing at lost edits is worthless.
 3. Only when this session obtained a semctx planning bundle from `semctx_control_plan_change`, in a
-   repository holding `.semctx/`: make one `semctx_control_handoff` call with that bundle and the
-   current progress, without loading any other skill or tool. Keep the returned capsule hash; when
-   the call is refused or errors, keep its reason instead and do not retry. In any other session,
-   including one resumed from a capsule that did not plan again, make no semctx call and skip this
-   step.
+   repository holding `.semctx/`, for a write task the user authorized: make one
+   `semctx_control_handoff` call with that bundle and the current progress, without loading any
+   other skill or tool. Keep the returned capsule hash; when the call is refused or errors, keep its
+   reason instead and do not retry. In any other session, including a read-only one, whose lane
+   forbids a handoff write, or one resumed from a capsule that did not plan again, make no semctx
+   call and skip this step.
 4. Write the resume prompt as one fenced block, addressed to the next agent, in the language of the
    conversation, covering exactly:
    - **Goal** - the task in one or two sentences, including the user's own constraints.
