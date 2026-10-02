@@ -7,7 +7,7 @@ description: >
   "look at this PR".
 compatibility: >
   Authenticated `gh` (GitHub) or `bkt` (Bitbucket), plus an issue tracker CLI or MCP when a blocking
-  defect needs a fix ticket.
+  defect needs a fix ticket. The semctx MCP tools are optional; without them the skill is unchanged.
 metadata:
   category: dev
 ---
@@ -43,13 +43,19 @@ is an opinion. This skill and its references are English; the published verdict 
 of the PR. Publishing in phase 6 is outward-facing and visible to the team - ask for confirmation
 first, unless the request explicitly says to post directly.
 
+semctx evidence applies only when the checkout under review holds `.semctx/` and the semctx MCP
+tools answer; `references/semctx.md` defines that guard and the semctx step of phases 1 to 4. When
+the guard fails, skip every semctx step and never mention semctx in the verdict.
+
 ## Steps
 
 1. **Anchor.** Resolve the PR number, head SHA, real destination branch and checks state with
    `references/forges.md`, then check out that exact head. A repository that has its own forge skill
    or wrapper wins over those raw commands. If the PR is stacked on another unmerged PR, say so and
    make retargeting after the parent merges part of the verdict: the diff you are reading is not the
-   diff that will land. A review not anchored on a named SHA is invalid.
+   diff that will land. A review not anchored on a named SHA is invalid. When semctx evidence
+   applies, anchor its index on that same SHA, or declare it `unavailable`, with
+   `references/semctx.md`.
 
 2. **Understand before judging.** Read the PR description, the design documents and ADRs it cites, and
    the whole diff. Read the linked issue and its authoritative parent requirements, including acceptance
@@ -77,6 +83,8 @@ first, unless the request explicitly says to post directly.
    link that decision, and set its result to `excluded`. Only that row is exempt from implementation
    and evidence; mark those cells `not required - excluded`. A stated deferral or reviewer assumption
    is not an exclusion, and exclusion never waives defects in behaviour the head actually changes.
+   When semctx evidence applies, its impacted contracts and invariants, computed from the base of
+   phase 1, are candidate rows to confirm or drop, never evidence (`references/semctx.md`).
 
 3. **Sweep the failure classes.** Put all ten questions in `references/failure-classes.md` to the diff.
    Record, per class, one of: not applicable, holds because `<evidence>`, or broken by `<mechanism>`.
@@ -88,7 +96,8 @@ first, unless the request explicitly says to post directly.
    rules forbid it - run the sweep here and write its provenance into the barrier paragraph as a
    declared limit of the evidence. Skipping the sweep is not the alternative, and neither is claiming
    an independence you did not have. The sweep can add findings; it can neither replace a ledger row nor turn `absent`
-   behaviour-level evidence into `holds`.
+   behaviour-level evidence into `holds`. A semctx `BLOCK` or `WARN` is one more question for this
+   sweep, and blocks only once a mechanism is named.
 
 4. **Run the barrier, then declare its holes.** Run lint, typecheck and tests the way the project runs
    them - including inside a container when the project requires it, since numbers from the wrong
@@ -99,7 +108,9 @@ first, unless the request explicitly says to post directly.
    barrier does not reach: sequential tests say nothing about a race, jsdom nothing about a browser,
    an in-memory database nothing about PostgreSQL, one platform nothing about the others. If nothing
    exercises the changed code, that absence is the review's first finding, not a reason to announce
-   green.
+   green. When semctx evidence applies, its `recommendedTests` run beyond the gate and are counted
+   apart, a semctx `PASS` fills no ledger cell, and its fields go into this paragraph as
+   `references/semctx.md` states.
 
    Then attribute every piece of evidence: measured here, supplied by the author and not reproduced
    here, or absent. The three are not interchangeable. "Not observed" written over evidence sitting
@@ -172,6 +183,20 @@ first, unless the request explicitly says to post directly.
   decision, next action and status short, then retain the complete ledger and the barrier limits.
 - **Numbers copied from the PR's own pipeline** - a green pipeline is context for phase 1, never the
   barrier of phase 4. The barrier is what you ran, authenticated, on the head you checked out.
+- **`semctx_verify_change` called without a diff** - it then analyses the working tree against
+  `HEAD`, empty on the clean checkout of phase 1, and returns a `PASS` over nothing. Pass the diff
+  from the recomputed base as `gitDiff`.
+- **A semctx index sealed on another commit** - the index stays on the commit it was built from
+  while the branch moves on, and its impact then describes a tree that is not the head. Compare
+  `indexedHeadCommit` with the head SHA, then declare the evidence `unavailable`, or reindex that
+  head once the user confirms it.
+- **A semctx `BLOCK` promoted to a blocker** - it reports an authored invariant, or a contract
+  tagged critical or security, changed without a covering test: a static fact with no sequence.
+  Put it to the diff in phase 3; it blocks only with a named mechanism, and the missing test is a
+  ledger gap.
+- **Partial coverage read as a clean blast radius** - semctx analysed only part of the repository,
+  so a negative claim drawn from it, such as "nothing else is impacted", asserts what was never
+  examined. Write only what semctx reported, attributed.
 - **The package script mistaken for the CI gate** - the repository's `lint` script may walk the whole
   tree while the pipeline lints only changed files. Its count then measures a backlog that predates
   the head under review. Take the command from the CI configuration, and name which one you ran.
@@ -180,7 +205,8 @@ first, unless the request explicitly says to post directly.
 
 - Never approve without having executed the barrier on the exact head under review.
 - Never write "everything is green": report counts, or report that nothing ran.
-- Never report a count from a command the pipeline does not run; name the gate you executed.
+- Never report a count from a command the pipeline does not run as a gate count; name the gate you
+  executed. Tests run beyond it, such as semctx's recommended tests, are counted in their own clause.
 - Never publish a blocking finding without a named failure mechanism and a lift criterion.
 - Never block on style, naming or structure preference; label it non-blocking.
 - Never open a review that is not anchored on a head SHA.
@@ -201,6 +227,13 @@ first, unless the request explicitly says to post directly.
 - Never create or update a fix ticket outside `business-issue`; pass it the PR relation and intended
   closing effect instead of maintaining a second publication procedure here.
 - Never publish without confirmation, unless the request explicitly says to post directly.
+- Never call a semctx tool when the checkout under review lacks `.semctx/`, and never mention semctx
+  in a verdict whose guard failed.
+- Never use semctx evidence whose `indexedHeadCommit` differs from the head SHA under review; never
+  reindex without the user's confirmation, on another head, or without `--root` naming the checkout
+  under review, run `semctx_setup`, or install a semctx hook or guarded mode from a review.
+- Never let a semctx `PASS` fill a ledger cell, a semctx `BLOCK` block without a named mechanism, or
+  partial coverage support a negative claim.
 
 ## References
 
@@ -210,5 +243,7 @@ first, unless the request explicitly says to post directly.
   to put to the diff. Read in phase 3.
 - [assets/verdict-template.md](assets/verdict-template.md) - the verdict skeleton with its required
   slots, ledger included. Filled in phase 5, published in phase 6.
-- [references/cases.md](references/cases.md) - four behavioural cases with their expected verdicts,
+- [references/semctx.md](references/semctx.md) - the semctx guard and its step in phases 1 to 4.
+  Read in phase 1, only once `.semctx/` is found in the checkout under review.
+- [references/cases.md](references/cases.md) - five behavioural cases with their expected verdicts,
   and the record of what they have never validated.

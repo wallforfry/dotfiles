@@ -54,6 +54,10 @@ that did not run is reported as not done, never as green.
    re-run.
 7. Map every promise to a rejecting mutant, an accepting anti-mutant, or an explicit observation.
    A promise absent from the matrix is unmeasured.
+8. Measure an external evidence surface wired into a skill by its marginal value, not by its calls,
+   and read it by hand: the command does not produce it. For semctx in `merge-verdict`, read the
+   counts its `references/cases.md` execution record defines for real reviews; a designed case
+   measures adherence, never value. No recorded review means unmeasured.
 
 ## Gotchas
 
@@ -72,6 +76,9 @@ that did not run is reported as not done, never as green.
   clone", and every count describes whatever commit the clone last pulled.
 - **Dropping a dirty tree from the capture** - the audit validates the current tracked and untracked
   state. Any failed patch or copy makes the measurement unavailable instead of falling back to HEAD.
+- **Counting semctx calls as its value** - a call proves that it ran, and every row or test it
+  proposed may already have been in the reviewer's own inventory. Credit it only with the marginal
+  counts that `merge-verdict` records for real reviews.
 - **Treating a missing host signal as zero** - Codex transcripts expose no explicit skill event.
   Report activation as unknown for that host instead of inventing zero activations.
 
@@ -83,3 +90,4 @@ that did not run is reported as not done, never as green.
 - Never store raw transcript content or paths in the cache; persist aggregate counters and hashes.
 - Never claim a rule works from its wording; cite the count, or say the rule is unmeasured.
 - Never remove a component on an activation count alone, without naming what it protects.
+- Never credit an external evidence surface with value its recorded marginal counts did not show.

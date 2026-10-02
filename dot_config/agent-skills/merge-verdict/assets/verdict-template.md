@@ -35,7 +35,9 @@ Blockers: <location, cause, failure mechanism and lift criterion>
 
 <Barrier paragraph - REQUIRED. Open with "Authenticated local validation on this exact head:" and give
 counts, never adjectives. Then, in the same paragraph, REQUIRED: what this evidence does not cover. The
-verdict is invalid without that second half.>
+verdict is invalid without that second half. REQUIRED only when the semctx guard holds: the semctx
+clause of `references/semctx.md`, its fields kept separate; when the guard fails, no clause and no
+mention.>
 
 <Non-blocking remarks - three lines at most, one per remark, each prefixed "Non-blocking:". Keep the
 ones that would change a reviewer's decision, drop the rest: past three, the section is a second review
@@ -112,7 +114,11 @@ Do not approve or merge this head.
 - Evidence the author supplied is attributed to them, never counted as reproduced.
 - Every clause in the blocking paragraph names a sequence of steps, not a quality judgement.
 - The barrier paragraph contains digits, and a sentence saying what those digits do not prove.
-- The barrier paragraph names the command it ran, and that command is the one CI runs.
+- The barrier paragraph names the command it ran, and that command is the one CI runs; semctx's
+  recommended tests run beyond it are counted in the semctx clause, never in the gate counts.
+- A semctx clause appears only when its guard held. It names an indexed commit equal to the head,
+  or declares the evidence `unavailable` with its reason, and makes no negative claim under partial
+  coverage.
 - The closing sentence tells the reader what to do, not how the reviewer feels.
 - At most three non-blocking lines; a fourth means the section is competing with the verdict.
 - No re-review ticket and no `Re-review:` slot; the head-specific verdict is the re-review record.
