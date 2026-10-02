@@ -33,19 +33,29 @@ No options. The output is a single fenced block for the user to paste into a new
 
 ## Steps
 
-1. Stop the current work - do not start a new edit, search, or tool loop.
+1. Stop the current work - do not start a new edit, search, or tool loop beyond steps 2 and 3.
 2. Finish making the work durable: save unsaved files and, if a change is complete and the user asked
    for it, commit it. A resume prompt pointing at lost edits is worthless.
-3. Write the resume prompt as one fenced block, addressed to the next agent, in the language of the
+3. Only when this session obtained a semctx planning bundle from `semctx_control_plan_change`, in a
+   repository holding `.semctx/`: make one `semctx_control_handoff` call with that bundle and the
+   current progress, without loading any other skill or tool. Keep the returned capsule hash; when
+   the call is refused or errors, keep its reason instead and do not retry. In any other session,
+   including one resumed from a capsule that did not plan again, make no semctx call and skip this
+   step.
+4. Write the resume prompt as one fenced block, addressed to the next agent, in the language of the
    conversation, covering exactly:
    - **Goal** - the task in one or two sentences, including the user's own constraints.
    - **Done** - what is already done and verified, with file paths.
    - **Next step** - the single next concrete action.
    - **Files** - the paths the next session needs to read first.
-4. Keep it under ~200 words. Name files instead of quoting them; the next session can read them.
-5. When the work happens in a git worktree, name the worktree path and branch under **Files** - the
+   - **semctx** - only after step 3: the capsule hash and the repository root it was captured in,
+     with the instruction to run `semctx_semantic_check`, then `semctx_control_resume` on that hash,
+     before any edit, as `semctx:semctx-control` requires of a fresh context; or the refusal reason.
+     Omit the line otherwise.
+5. Keep it under ~200 words. Name files instead of quoting them; the next session can read them.
+6. When the work happens in a git worktree, name the worktree path and branch under **Files** - the
    next session starts in the primary working directory otherwise.
-6. End your turn immediately after the block. Do not add follow-up work or offer to continue.
+7. End your turn immediately after the block. Do not add follow-up work or offer to continue.
 
 ## Gotchas
 
@@ -63,6 +73,15 @@ No options. The output is a single fenced block for the user to paste into a new
   `HANDOFF_TOKEN_THRESHOLD`. Invoke the skill manually when neither is set.
 - **Waiting for the hook on another host** - no host but Claude arms it. Waiting there means
   compacting instead of handing off.
+- **Calling `semctx_control_handoff` without a planning bundle** - the request requires the bundle
+  that `semctx_control_plan_change` returned; one assembled for the occasion binds the capsule to
+  no reviewed plan and resumes as a false continuity. Skip the step instead.
+- **Passing the capsule hash without its repository root** - the capsule lives in the ignored
+  working state of the checkout that captured it, so a resume against another worktree finds
+  nothing. Name that root next to the hash.
+- **Reading a resumed capsule as completed work** - its progress is a requested boundary, not an
+  execution history, and a stale state resumes as a null capsule. The next session revalidates
+  the capsule before trusting its progress.
 - **Writing the block in English out of habit** - the section labels above are English because this
   file is; the block itself follows the conversation's language.
 
@@ -71,5 +90,8 @@ No options. The output is a single fenced block for the user to paste into a new
 - Never keep working after emitting the handoff block - end the turn there.
 - Never invent progress: only claim what was actually run and verified in this session.
 - Keep the block self-contained - the next session sees no part of this conversation.
-- Do not write the handoff to a file unless the user asks; the deliverable is text to paste.
+- Do not write the resume prompt to a file unless the user asks; the deliverable is text to paste.
+  The semctx capsule of step 3 is semctx working state, not the resume prompt, and needs no request.
 - Do not attempt to disable or block compaction from the skill - that is the hook's job.
+- Never call a semctx tool unless this session holds a semctx planning bundle, and never invent one
+  to obtain a capsule hash.
