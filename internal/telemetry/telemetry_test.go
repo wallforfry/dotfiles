@@ -38,6 +38,48 @@ func TestClaudeNormalizesTextActivationAndAllEditors(t *testing.T) {
 	assertCount(t, summary.UninspectableWrites, "bash", 1)
 }
 
+func TestClaudeCountsWorktreeGuardRefusalsPerShellCall(t *testing.T) {
+	refusal := "This session is isolated in the worktree /w but this command is too complex to verify that it stays inside the worktree; break it into plain, separate commands."
+	records := []map[string]any{
+		{
+			"type": "assistant", "timestamp": "2026-08-18T00:00:00Z", "cwd": "/repo/.claude/worktrees/task",
+			"message": map[string]any{"role": "assistant", "content": []any{
+				map[string]any{"type": "tool_use", "id": "a", "name": "Bash", "input": map[string]any{"command": "cd /w && git status"}},
+				map[string]any{"type": "tool_use", "id": "b", "name": "Bash", "input": map[string]any{"command": "git status"}},
+			}},
+		},
+		{
+			"type": "assistant", "timestamp": "2026-08-18T00:00:00Z", "cwd": "/repo",
+			"message": map[string]any{"role": "assistant", "content": []any{
+				map[string]any{"type": "tool_use", "id": "d", "name": "Bash", "input": map[string]any{"command": "ls"}},
+			}},
+		},
+		{
+			"type": "user", "timestamp": "2026-08-18T00:00:01Z", "cwd": "/repo/.claude/worktrees/task",
+			"message": map[string]any{"role": "user", "content": []any{
+				map[string]any{"type": "tool_result", "tool_use_id": "a", "is_error": true, "content": refusal},
+				map[string]any{"type": "tool_result", "tool_use_id": "b", "is_error": true, "content": []any{map[string]any{"type": "text", "text": "Exit code 1"}}},
+			}},
+		},
+		{
+			"type": "user", "timestamp": "2026-08-16T00:00:00Z",
+			"message": map[string]any{"role": "user", "content": []any{
+				map[string]any{"type": "tool_result", "tool_use_id": "c", "is_error": false, "content": refusal},
+			}},
+		},
+		{
+			"type": "user", "timestamp": "2026-08-18T00:00:02Z", "cwd": "/repo",
+			"message": map[string]any{"role": "user", "content": []any{
+				map[string]any{"type": "tool_result", "tool_use_id": "d", "is_error": true, "content": refusal},
+			}},
+		},
+	}
+	summary := summarizeRecords(t, "claude", records)
+	assertCount(t, summary.ShellCalls, "depuis", 2)
+	assertCount(t, summary.GuardRefusals, "depuis", 1)
+	assertCount(t, summary.GuardRefusals, "avant", 0)
+}
+
 func TestCodexNormalizesMessagesWithoutCompletedProjection(t *testing.T) {
 	records := []map[string]any{
 		{"type": "response_item", "timestamp": "2026-08-16T00:00:00Z", "payload": map[string]any{

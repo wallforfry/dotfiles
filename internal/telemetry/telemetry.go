@@ -10,7 +10,9 @@ import (
 	"strings"
 )
 
-const CacheVersion = 14
+const CacheVersion = 18
+
+const worktreeGuardRefusal = "too complex to verify that it stays inside the worktree"
 
 var summaryFields = []func(*Summary) map[string]int{
 	func(summary *Summary) map[string]int { return summary.Skills },
@@ -20,6 +22,8 @@ var summaryFields = []func(*Summary) map[string]int{
 	func(summary *Summary) map[string]int { return summary.MiddleDot },
 	func(summary *Summary) map[string]int { return summary.Lines },
 	func(summary *Summary) map[string]int { return summary.Comments },
+	func(summary *Summary) map[string]int { return summary.ShellCalls },
+	func(summary *Summary) map[string]int { return summary.GuardRefusals },
 	func(summary *Summary) map[string]int { return summary.WriteTools },
 	func(summary *Summary) map[string]int { return summary.UninspectableWrites },
 	func(summary *Summary) map[string]int { return summary.ReadRecords },
@@ -38,6 +42,8 @@ type Summary struct {
 	MiddleDot           map[string]int `json:"middle_dot"`
 	Lines               map[string]int `json:"lines"`
 	Comments            map[string]int `json:"comments"`
+	ShellCalls          map[string]int `json:"shell_calls"`
+	GuardRefusals       map[string]int `json:"guard_refusals"`
 	WriteTools          map[string]int `json:"write_tools"`
 	UninspectableWrites map[string]int `json:"uninspectable_writes"`
 	ReadRecords         map[string]int `json:"read_records"`
@@ -50,7 +56,7 @@ func EmptySummary(source string) Summary {
 	return Summary{
 		Source: source, Days: []string{}, Skills: map[string]int{}, Agents: map[string]int{},
 		Blocks: map[string]int{}, Dash: map[string]int{}, MiddleDot: map[string]int{}, Lines: map[string]int{},
-		Comments: map[string]int{}, WriteTools: map[string]int{}, UninspectableWrites: map[string]int{},
+		Comments: map[string]int{}, ShellCalls: map[string]int{}, GuardRefusals: map[string]int{}, WriteTools: map[string]int{}, UninspectableWrites: map[string]int{},
 		ReadRecords: map[string]int{}, RecognizedRecords: map[string]int{},
 		UnknownRecords: map[string]int{}, InvalidRecords: map[string]int{},
 	}
@@ -109,11 +115,21 @@ func summarizeEvent(summary *Summary, since string, value event) {
 		}
 		return
 	}
+	if value.kind == "error" {
+		if value.isolated && strings.Contains(stringValue(value.text), worktreeGuardRefusal) {
+			increment(summary.GuardRefusals, period, 1)
+		}
+		return
+	}
 	if value.kind != "tool" {
 		return
 	}
 	name := strings.ToLower(stringValue(value.name))
 	switch name {
+	case "bash":
+		if value.isolated {
+			increment(summary.ShellCalls, period, 1)
+		}
 	case "skill":
 		increment(summary.Skills, labelled(value.payload, "skill", "name"), 1)
 	case "agent", "task", "spawn_agent":

@@ -3,10 +3,10 @@ package telemetry
 import "slices"
 
 var claudeRecordTypes = []string{
-	"assistant", "atis-latch", "artifact-autoreact-ledger", "artifact-comment-monitor",
-	"attachment", "bridge-session", "custom-title", "frame-link", "last-prompt", "mode",
-	"pr-link", "queue-operation", "relocated", "result", "started", "system", "user",
-	"worktree-state",
+	"agent-name", "assistant", "atis-latch", "artifact-autoreact-ledger", "artifact-comment-monitor",
+	"attachment", "bridge-session", "cost-state", "custom-title", "failed", "file-history-delta",
+	"file-history-snapshot", "frame-link", "last-prompt", "launched", "mode", "pr-link",
+	"queue-operation", "relocated", "result", "started", "system", "user", "worktree-state",
 }
 
 var codexRecordTypes = []string{
@@ -15,15 +15,16 @@ var codexRecordTypes = []string{
 }
 
 var codexPayloadTypes = []any{
-	"agent_message", "custom_tool_call", "custom_tool_call_output", "function_call",
+	"additional_tools", "agent_message", "custom_tool_call", "custom_tool_call_output", "function_call",
 	"function_call_output", "item_completed", "message", "reasoning", "task_complete",
 	"task_started", "thread_settings_applied", "token_count", "turn_aborted",
 	nil,
 }
 
 var codexItemTypes = []string{
-	"AgentMessage", "CollabAgentToolCall", "CommandExecution", "Extension", "FileChange",
-	"ContextCompaction", "McpToolCall", "Reasoning", "SubAgentActivity", "UserMessage",
+	"AgentMessage", "CollabAgentToolCall", "CommandExecution", "ContextCompaction",
+	"EnteredReviewMode", "ExitedReviewMode", "Extension", "FileChange", "McpToolCall",
+	"Reasoning", "SubAgentActivity", "UserMessage",
 }
 
 func validBlocks(value any, textTypes, passiveTypes []string) bool {
@@ -162,6 +163,9 @@ func validCodexPayload(payload map[string]any) bool {
 		role, ok := payload["role"].(string)
 		return ok && slices.Contains([]string{"assistant", "developer", "user"}, role) &&
 			validBlocks(payload["content"], []string{"input_text", "output_text"}, nil)
+	case "additional_tools":
+		_, toolsOK := payload["tools"].([]any)
+		return stringFields(payload, "role") && toolsOK
 	case "agent_message":
 		return validBlocks(payload["content"], []string{"input_text"}, []string{"encrypted_content"})
 	case "function_call":
@@ -175,8 +179,8 @@ func validCodexPayload(payload map[string]any) bool {
 	case "item_completed":
 		return validItem(payload["item"])
 	case "turn_aborted":
-		return stringFields(payload, "turn_id", "reason") &&
-			integerFields(payload, "started_at", "completed_at", "duration_ms")
+		return stringFields(payload, "turn_id", "reason") && integerFields(payload, "started_at") &&
+			(integerFields(payload, "completed_at", "duration_ms") || stringFields(payload, "root_turn_id"))
 	default:
 		return true
 	}

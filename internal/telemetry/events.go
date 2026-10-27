@@ -22,6 +22,8 @@ var codeExtensions = []string{
 	".yml",
 }
 
+const isolatedWorktreeMarker = "/.claude/worktrees/"
+
 var explicitWriters = []string{"write", "edit", "multiedit", "notebookedit", "apply_patch", "filechange"}
 var shellWriters = []string{"bash", "exec_command", "commandexecution"}
 var nestedToolPattern = regexp.MustCompile(`\btools\.([A-Za-z][A-Za-z0-9_]*)\s*\(`)
@@ -42,6 +44,7 @@ type event struct {
 	text      any
 	name      any
 	payload   any
+	isolated  bool
 }
 
 func normalizedEvents(source string, record map[string]any) []event {
@@ -60,6 +63,7 @@ func claudeEvents(record map[string]any) []event {
 	if !ok {
 		return nil
 	}
+	isolated := strings.Contains(stringValue(record["cwd"]), isolatedWorktreeMarker)
 	events := make([]event, 0, len(content))
 	for _, rawBlock := range content {
 		block, ok := object(rawBlock)
@@ -70,7 +74,11 @@ func claudeEvents(record map[string]any) []event {
 		case "text":
 			events = append(events, event{source: "claude", kind: "text", timestamp: record["timestamp"], role: message["role"], text: block["text"]})
 		case "tool_use":
-			events = append(events, event{source: "claude", kind: "tool", timestamp: record["timestamp"], name: block["name"], payload: block["input"]})
+			events = append(events, event{source: "claude", kind: "tool", timestamp: record["timestamp"], name: block["name"], payload: block["input"], isolated: isolated})
+		case "tool_result":
+			if block["is_error"] == true {
+				events = append(events, event{source: "claude", kind: "error", timestamp: record["timestamp"], text: resultText(block["content"]), isolated: isolated})
+			}
 		}
 	}
 	return events
@@ -134,6 +142,20 @@ func codexMessageEvents(record, payload map[string]any) []event {
 		}
 	}
 	return events
+}
+
+func resultText(content any) string {
+	if text, ok := content.(string); ok {
+		return text
+	}
+	blocks, _ := content.([]any)
+	parts := make([]string, 0, len(blocks))
+	for _, rawBlock := range blocks {
+		if block, ok := object(rawBlock); ok {
+			parts = append(parts, stringValue(block["text"]))
+		}
+	}
+	return strings.Join(parts, "\n")
 }
 
 func decodeJSON(value any) any {

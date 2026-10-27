@@ -93,7 +93,7 @@ What it cannot decide, verify by hand:
 
 `dotfiles harness-audit --repository "$HOME/dotfiles"` is the measurement counterpart, run by hand and never in
 CI: the always-loaded byte total, how far the chezmoi source clone lags `origin/main`, the real activation
-count of every observable skill and subagent, the violation rate of the two observable rules before
+count of every observable skill and subagent, the violation rate of the three observable rules before
 and after their introduction, and a promise-to-control matrix with mutants and anti-mutants. It
 exits non-zero when `dotfiles verify` violates an expectation or a measurement could not be made. The
 `harness-audit` skill carries how to read its counts.

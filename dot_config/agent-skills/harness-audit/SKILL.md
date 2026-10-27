@@ -49,7 +49,12 @@ that did not run is reported as not done, never as green.
 4. Read every zero-activation skill against its denominator. A skill scoped to this repository is
    measured on the sessions in this repository, and a skill created days ago is measured on days.
 5. Read the adherence rates as correlational only. The model and the host prompt changed over the
-   same period, so the split proves an association, never a cause.
+   same period, so the split proves an association, never a cause. Each rate is split at
+   `HARNESS_RULES_SINCE`, so read it with the date of the rule it measures: the worktree-guard
+   refusal rate per Bash call measures the `Shell Calls` rule, introduced on 2026-10-27, so run the
+   audit once per date. That rate covers Claude sessions under `.claude/worktrees/` only, and
+   matches the host's refusal text literally: a zero after a host update may be a reworded message,
+   not adherence.
 6. Treat a mutant accepted or an anti-mutant rejected as a barrier regression: fix `dotfiles verify`, then
    re-run.
 7. Map every promise to a rejecting mutant, an accepting anti-mutant, or an explicit observation.

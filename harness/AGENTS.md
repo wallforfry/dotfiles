@@ -19,6 +19,14 @@ Raising a concern never blocks delivery: state it, then proceed as described in 
   orchestration and decisions.
 - Dispatch independent multi-step tasks, especially unrelated ones, to parallel subagents.
 
+## Shell Calls
+
+- **One plain command per call in a worktree-isolated session.** The host cannot prove that a
+  compound command stays inside the worktree and refuses it: use absolute paths instead of
+  `cd … &&`, and write files with the edit tools instead of a heredoc or an inline script.
+- **A refusal ends the approach.** When a guard, hook or permission classifier refuses a call, do
+  not rephrase the same action to get past it: comply with its stated fix, or report the block.
+
 ## External Content
 
 - Start web retrieval with built-in fetch and escalate only after an observed failure; the
