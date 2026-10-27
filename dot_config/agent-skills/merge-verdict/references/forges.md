@@ -25,6 +25,7 @@ about. Look for one before falling back here.
 | Head SHA | `.headRefOid` | Cloud `.pull_request.source.commit.hash`, DC `.fromRef.latestCommit` |
 | Fetch the head | `gh pr checkout <n>` | `bkt pr checkout <n>` |
 | CI state | `gh pr checks <n>` | `bkt pr checks <n>` |
+| Wait for CI | `gh pr checks <n> --watch --fail-fast` | `bkt pr checks <n> --wait --fail-fast` |
 | Diff | `gh pr diff <n>` | `bkt pr diff <n>` |
 | Existing comments | `gh pr view <n> --json comments` | `bkt pr comments <n> --json` |
 | Publish | `gh pr comment <n> --body-file verdict.md` | `bkt pr comment <n> --text "$(cat verdict.md)"` |
@@ -33,6 +34,33 @@ about. Look for one before falling back here.
 
 Re-check `--help` when a command is rejected rather than guessing a flag; `bkt pr comments --state` is
 Cloud-only, and the two Bitbucket flavours diverge on more than one option.
+
+## Waiting for the checks
+
+A verdict needs finished checks, and pending ones are not a reason to hand CI watching to the user.
+Hosts block a foreground `sleep`, so a `sleep N; gh pr checks` loop dies on its first iteration. Wait
+in this order:
+
+1. **The forge's own wait**, launched as a background command so the host notifies you on exit: it
+   outlives a foreground timeout, and its exit code is the result.
+
+   ```sh
+   gh pr checks 1042 --watch --fail-fast    # non-zero exit when a check fails
+   bkt pr checks 1042 --wait --fail-fast    # 0 passed, 1 failed, 8 still pending at --timeout
+   ```
+
+2. **A background `until` loop** when the installed CLI lacks that flag. `gh pr checks` exits `8` while
+   checks are pending; the `sleep` is harmless here because the whole loop runs in the background:
+
+   ```sh
+   until gh pr checks 1042 >/dev/null; [ $? -ne 8 ]; do sleep 30; done; gh pr checks 1042
+   ```
+
+3. **The host's monitoring tool**, such as Claude Code's `Monitor`, when it offers one: the same
+   condition, polled by the host instead of a shell you keep alive.
+
+Never put `sleep` in a foreground command, and never ask the user to watch the CI for you. Re-anchor if
+the head SHA changed while you waited: the checks you watched belong to the old commit.
 
 ## Checking out the exact head
 
