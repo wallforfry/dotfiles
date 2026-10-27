@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const CacheVersion = 14
+const CacheVersion = 15
 
 var summaryFields = []func(*Summary) map[string]int{
 	func(summary *Summary) map[string]int { return summary.Skills },

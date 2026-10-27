@@ -1,0 +1,4 @@
+{"type":"response_item","payload":{"type":"additional_tools","id":"tools-1","role":"developer","tools":[]}}
+{"type":"event_msg","payload":{"type":"item_completed","thread_id":"thread-1","turn_id":"turn-1","started_at_ms":1000,"completed_at_ms":2000,"item":{"type":"EnteredReviewMode"}}}
+{"type":"event_msg","payload":{"type":"item_completed","thread_id":"thread-1","turn_id":"turn-1","started_at_ms":2000,"completed_at_ms":3000,"item":{"type":"ExitedReviewMode"}}}
+{"type":"event_msg","payload":{"type":"turn_aborted","turn_id":"turn-2","root_turn_id":"turn-1","reason":"interrupted","started_at":4000}}

@@ -1,0 +1,6 @@
+{"type":"agent-name","agentName":"agent-1","sessionId":"session-1"}
+{"type":"cost-state","sessionId":"session-1","hasUnknownModelCost":false,"modelUsage":{},"startTime":1000,"totalAPIDuration":10,"totalAPIDurationWithoutRetries":10,"totalCostUSD":0.5,"totalDuration":20,"totalLinesAdded":1,"totalLinesRemoved":0,"totalToolDuration":5}
+{"type":"file-history-snapshot","messageId":"message-1","isSnapshotUpdate":false,"snapshot":{}}
+{"type":"file-history-delta","messageId":"message-2","snapshotMessageId":"message-1","trackingPath":"file.txt","backup":{},"timestamp":"2026-10-01T00:00:00Z"}
+{"type":"launched"}
+{"type":"failed","agentId":"agent-1","key":"step-1"}

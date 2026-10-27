@@ -23,6 +23,38 @@ func TestRealtimeFixtureIsFullyRecognized(t *testing.T) {
 	}
 }
 
+func TestMetadataFixturesAreFullyRecognizedAndProduceNoEvent(t *testing.T) {
+	for source, fixture := range map[string]string{"claude": "claude-metadata.jsonl", "codex": "codex-review-mode.jsonl"} {
+		summary, err := SummarizeFile(source, filepath.Join("testdata", fixture), "2026-08-17")
+		if err != nil {
+			t.Fatal(err)
+		}
+		read := summary.ReadRecords[source]
+		if read == 0 {
+			t.Fatalf("%s: empty fixture", source)
+		}
+		assertCount(t, summary.RecognizedRecords, source, read)
+		if len(summary.UnknownRecords) != 0 || len(summary.Blocks) != 0 || len(summary.Agents) != 0 || len(summary.WriteTools) != 0 {
+			t.Fatalf("%s: unknown=%v blocks=%v agents=%v writes=%v", source, summary.UnknownRecords, summary.Blocks, summary.Agents, summary.WriteTools)
+		}
+	}
+}
+
+func TestMalformedMetadataRecordsAreUnknown(t *testing.T) {
+	codex := summarizeRecords(t, "codex", []map[string]any{
+		{"type": "response_item", "payload": map[string]any{"type": "additional_tools", "role": "developer", "tools": "not-a-list"}},
+		{"type": "response_item", "payload": map[string]any{"type": "additional_tools", "tools": []any{}}},
+		{"type": "event_msg", "payload": map[string]any{"type": "item_completed", "item": map[string]any{"type": "FutureReviewMode"}}},
+		{"type": "event_msg", "payload": map[string]any{"type": "turn_aborted", "turn_id": "turn-1", "reason": "interrupted", "started_at": 1000}},
+	})
+	assertCount(t, codex.UnknownRecords, "codex", 4)
+	claude := summarizeRecords(t, "claude", []map[string]any{{"type": "future-state"}})
+	assertCount(t, claude.UnknownRecords, "claude", 1)
+	if len(codex.RecognizedRecords) != 0 || len(claude.RecognizedRecords) != 0 {
+		t.Fatalf("recognized records: codex=%v claude=%v", codex.RecognizedRecords, claude.RecognizedRecords)
+	}
+}
+
 func TestMalformedRealtimeRecordsAreUnknown(t *testing.T) {
 	records := []map[string]any{
 		{"type": "realtime_item", "payload": map[string]any{"type": "transcript_segment", "id": "event-1", "realtime_session_id": "session-1", "role": "speaker", "text": "future role"}},
