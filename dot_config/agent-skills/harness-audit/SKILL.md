@@ -54,7 +54,9 @@ that did not run is reported as not done, never as green.
    refusal rate per Bash call measures the `Shell Calls` rule, introduced on 2026-10-27, so run the
    audit once per date. That rate covers Claude sessions under `.claude/worktrees/` only, and
    matches the host's refusal text literally: a zero after a host update may be a reworded message,
-   not adherence.
+   not adherence. Codex has no counterpart: its host has no compound-command guard, so a Codex rate
+   would read zero by construction. Its own refusals surface as `policy_denied`, too rare in the
+   transcripts so far to bear a rate; measure them only once they recur.
 6. Treat a mutant accepted or an anti-mutant rejected as a barrier regression: fix `dotfiles verify`, then
    re-run.
 7. Map every promise to a rejecting mutant, an accepting anti-mutant, or an explicit observation.
