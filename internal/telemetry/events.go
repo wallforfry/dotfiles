@@ -77,7 +77,7 @@ func claudeEvents(record map[string]any) []event {
 			events = append(events, event{source: "claude", kind: "tool", timestamp: record["timestamp"], name: block["name"], payload: block["input"], isolated: isolated})
 		case "tool_result":
 			if block["is_error"] == true {
-				events = append(events, event{source: "claude", kind: "error", timestamp: record["timestamp"], text: resultText(block["content"])})
+				events = append(events, event{source: "claude", kind: "error", timestamp: record["timestamp"], text: resultText(block["content"]), isolated: isolated})
 			}
 		}
 	}

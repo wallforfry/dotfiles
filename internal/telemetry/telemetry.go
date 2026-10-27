@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const CacheVersion = 17
+const CacheVersion = 18
 
 const worktreeGuardRefusal = "too complex to verify that it stays inside the worktree"
 
@@ -116,7 +116,7 @@ func summarizeEvent(summary *Summary, since string, value event) {
 		return
 	}
 	if value.kind == "error" {
-		if strings.Contains(stringValue(value.text), worktreeGuardRefusal) {
+		if value.isolated && strings.Contains(stringValue(value.text), worktreeGuardRefusal) {
 			increment(summary.GuardRefusals, period, 1)
 		}
 		return
