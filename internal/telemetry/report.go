@@ -103,6 +103,12 @@ func printMeasurements(writer io.Writer, total Summary) {
 		comments := total.Comments[period]
 		fmt.Fprintf(writer, "    %-8s %6d lignes  %6d commentaires  %s\n", period, lines, comments, Rate(comments, lines))
 	}
+	fmt.Fprintln(writer, "  refus de la garde d'isolation worktree par appel Bash :")
+	for _, period := range Eras {
+		calls := total.ShellCalls[period]
+		refusals := total.GuardRefusals[period]
+		fmt.Fprintf(writer, "    %-8s %6d appels  %6d refus  %s\n", period, calls, refusals, Rate(refusals, calls))
+	}
 	printCounter(writer, "canaux d'écriture observés", total.WriteTools, 0)
 	if len(total.UninspectableWrites) > 0 {
 		printCounter(writer, "écritures au contenu inconnu", total.UninspectableWrites, 0)
