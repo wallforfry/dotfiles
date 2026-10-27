@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const CacheVersion = 16
+const CacheVersion = 17
 
 const worktreeGuardRefusal = "too complex to verify that it stays inside the worktree"
 
