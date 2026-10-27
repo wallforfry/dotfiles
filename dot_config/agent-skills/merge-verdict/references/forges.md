@@ -41,7 +41,11 @@ A verdict needs finished checks, and pending ones are not a reason to hand CI wa
 Hosts block a foreground `sleep`, so a `sleep N; gh pr checks` loop dies on its first iteration. Wait
 in this order:
 
-1. **The forge's own wait**, launched as a background command so the host notifies you on exit: it
+1. **The host's own PR or CI monitor** when it offers one, such as a pull-request status tool or
+   Claude Code's `Monitor`. Some hosts forbid polling the forge yourself once their monitor tracks
+   the PR; their rule wins over the two fallbacks below.
+
+2. **The forge's own wait**, launched as a background command so the host notifies you on exit: it
    outlives a foreground timeout, and its exit code is the result.
 
    ```sh
@@ -49,15 +53,12 @@ in this order:
    bkt pr checks 1042 --wait --fail-fast    # 0 passed, 1 failed, 8 still pending at --timeout
    ```
 
-2. **A background `until` loop** when the installed CLI lacks that flag. `gh pr checks` exits `8` while
+3. **A background `until` loop** when the installed CLI lacks that flag. `gh pr checks` exits `8` while
    checks are pending; the `sleep` is harmless here because the whole loop runs in the background:
 
    ```sh
    until gh pr checks 1042 >/dev/null; [ $? -ne 8 ]; do sleep 30; done; gh pr checks 1042
    ```
-
-3. **The host's monitoring tool**, such as Claude Code's `Monitor`, when it offers one: the same
-   condition, polled by the host instead of a shell you keep alive.
 
 Never put `sleep` in a foreground command, and never ask the user to watch the CI for you. Re-anchor if
 the head SHA changed while you waited: the checks you watched belong to the old commit.
