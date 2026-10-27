@@ -54,8 +54,11 @@ Aucun rappel de fondamentaux sur ces sujets. Aller au fait.
 
 - **Un worktree par tâche.** Le travail se fait dans un worktree git isolé, pas
   sur la branche courante du dépôt principal.
-- **Ampleur d'abord.** Petite tâche : agir directement. Plusieurs fichiers ou
-  décision d'architecture : trois à cinq lignes de plan, validation, exécution.
+- **Ampleur d'abord.** Petite tâche : agir directement. Plusieurs fichiers dans
+  une direction claire : annoncer le plan en trois à cinq lignes, puis exécuter
+  sans attendre. Validation préalable seulement pour une décision d'architecture
+  ou un choix coûteux à défaire. Ce qui se vérifie - base, code, CI - se vérifie
+  avant de demander.
 - **Conventional Commits**, imposés par `commitlint` sur les dépôts qui en
   disposent. Le message suit la langue du dépôt - et **un message français est
   accentué**, sujet comme corps, les identifiants et sorties citées restant
