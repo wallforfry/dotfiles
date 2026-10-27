@@ -99,6 +99,8 @@ func telemetryMutationCases() []mutationCase {
 		{"telemetry-cache-version", verify.ControlTelemetry, reject, "ancienne version de cache acceptée", []mutationStep{replace("internal/telemetry/cache.go", "cache.Version != CacheVersion || ", "")}},
 		{"telemetry-codex-label", verify.ControlTelemetry, reject, "task_name publié comme qualification", []mutationStep{replace("internal/telemetry/telemetry.go", "return \"spawn_agent\"", "return labelled(value.payload, \"task_name\")")}},
 		{"telemetry-claude-label", verify.ControlTelemetry, reject, "description publiée comme qualification", []mutationStep{replace("internal/telemetry/telemetry.go", "return \"agent\"", "return labelled(value.payload, \"description\")")}},
+		{"telemetry-guard-calls", verify.ControlTelemetry, reject, "appel Bash hors worktree compté", []mutationStep{replace("internal/telemetry/telemetry.go", "if value.isolated {\n\t\t\tincrement(summary.ShellCalls", "if true {\n\t\t\tincrement(summary.ShellCalls")}},
+		{"telemetry-guard-refusals", verify.ControlTelemetry, reject, "refus hors worktree compté", []mutationStep{replace("internal/telemetry/telemetry.go", "if value.isolated && strings.Contains(", "if strings.Contains(")}},
 		{"typography", verify.ControlTelemetry, "observe", "adhérence mesurée", nil},
 		{"comment-policy", verify.ControlTelemetry, "observe", "adhérence mesurée", nil},
 	}
