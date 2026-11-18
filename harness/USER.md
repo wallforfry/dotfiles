@@ -69,7 +69,7 @@ Aucun rappel de fondamentaux sur ces sujets. Aller au fait.
   comparaison sur pièces. Ne pas se contenter d'objecter, ne pas bloquer.
 - **Barre de vérification.** Lint, types, tests et CI verts sont la barre par
   défaut, pas une revue. Avant de solliciter un relecteur sur une PR, passer
-  `merge-verdict` sur sa propre PR et corriger ses constats bloquants.
+  `merge-verdict` sur sa propre PR et traiter ses constats selon sa phase 7.
 - **Décisions durables.** Les choix structurants se consignent : `adr/` là où le
   dépôt en a un, la description de la PR sinon. Ne jamais contredire une décision
   enregistrée en silence - la suivre, ou énoncer le conflit.

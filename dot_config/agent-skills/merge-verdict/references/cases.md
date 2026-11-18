@@ -230,6 +230,15 @@ are the only measure of semctx's value in this skill; `harness-audit` reads them
 
 ## Declared gaps
 
+Phase 7 is a trial, placed on 2026-11-18. A first rule, which fixed only findings inside the diff
+and ticketed the rest, was replayed blind on 10 past sessions and matched the user's own choice in
+3 of them: it was dropped. The current wording was derived from those same 10 sessions, so they
+cannot validate it. Baseline: 9 of 216 sessions that ran this skill had the user dictate the
+disposition of non-blocking findings. A failed session is one after deployment where the user
+still dictates that disposition on an unmerged PR, or reverts a fix made under this phase. Promote
+after three independent sessions that close a PR under phase 7 with no failure; remove the phase
+after two failed sessions. Disposition after the merge is left to the user because the sessions disagree.
+
 Nothing yet validates the idempotent update of the marker, the duplicate-verdict guard, publication
 on either forge, `gh pr review --request-changes` as a native blocking state, or a flat _approved_
 verdict on a real pull request.

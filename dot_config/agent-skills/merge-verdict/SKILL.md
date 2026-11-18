@@ -27,7 +27,7 @@ not test.
 Not for re-reading your own diff before committing: that is `superpowers:requesting-code-review` and
 `superpowers:verification-before-completion`. This skill judges an open pull request and engages a
 decision the team will act on. That the PR is your own changes nothing about the verdict, only about
-how it is enforced - see phase 6.
+how it is enforced and what follows it - see phases 6 and 7.
 
 ## Usage
 
@@ -38,9 +38,9 @@ its real size), "review this PR before I approve it" (phase 3 turns a vague unea
 mechanism, or drops it), "they pushed the fixes, re-review" (phase 6 finds the previous marker, sees
 a new SHA, and publishes a second verdict rather than editing the first).
 
-Run the six phases in order; phase 4 precedes phase 5 because a verdict without an executed barrier
-is an opinion. This skill and its references are English; the published verdict follows the language
-of the PR. Publishing in phase 6 is outward-facing and visible to the team - ask for confirmation
+Run the phases in order; phase 7 applies only to a PR you authored or were asked to drive. Phase 4
+precedes phase 5 because a verdict without an executed barrier is an opinion. This skill and its
+references are English; the published verdict follows the language of the PR. Publishing in phase 6 is outward-facing and visible to the team - ask for confirmation
 first, unless the request explicitly says to post directly.
 
 semctx evidence applies only when the checkout under review holds `.semctx/` and the semctx MCP
@@ -150,6 +150,17 @@ the guard fails, skip every semctx step and never mention semctx in the verdict.
    the comment _is_ the verdict and its closing sentence carries the whole enforcement - say so, so
    the reader knows nothing mechanical is holding the merge button.
 
+7. **Close out your own PR.** When you authored the PR or were asked to drive it and it is not merged
+   yet, the verdict is your work list, not a question for the user. Fix every non-blocking finding
+   in the same PR, including one in code the diff did not write - that one in a commit of its own,
+   so it reverts apart from the feature - then rerun this skill on the new head unless the user
+   waived the re-review. Open a ticket through `business-issue` only for a product decision or a
+   separate concern, and name which in the report. Never merge while a non-blocking finding has
+   neither a fixing commit nor a ticket. Once the PR is merged, list the
+   leftover findings and let the user choose between a follow-up PR and tickets: past sessions asked
+   for both. An explicit instruction from the user on a finding wins over this phase, and it never
+   applies to another author's PR.
+
 ## Gotchas
 
 - **The base the forge reports is not the base to review** - and it errs in both directions. A PR that
@@ -200,6 +211,9 @@ the guard fails, skip every semctx step and never mention semctx in the verdict.
 - **The package script mistaken for the CI gate** - the repository's `lint` script may walk the whole
   tree while the pipeline lints only changed files. Its count then measures a backlog that predates
   the head under review. Take the command from the CI configuration, and name which one you ran.
+- **Non-blocking findings on your own PR handed back to the user** - asking which to fix, ticketing
+  them by default, or merging over them leaves the user to dictate the disposition, which happened
+  in 9 of 216 past sessions that ran this skill. Apply phase 7: fix them in the PR before the merge.
 
 ## Constraints
 
@@ -227,6 +241,8 @@ the guard fails, skip every semctx step and never mention semctx in the verdict.
 - Never create or update a fix ticket outside `business-issue`; pass it the PR relation and intended
   closing effect instead of maintaining a second publication procedure here.
 - Never publish without confirmation, unless the request explicitly says to post directly.
+- Never merge a PR you authored or drive while a non-blocking finding has neither a fixing commit
+  nor a ticket.
 - Never call a semctx tool when the checkout under review lacks `.semctx/`, and never mention semctx
   in a verdict whose guard failed.
 - Never use semctx evidence whose `indexedHeadCommit` differs from the head SHA under review; never
@@ -246,4 +262,4 @@ the guard fails, skip every semctx step and never mention semctx in the verdict.
 - [references/semctx.md](references/semctx.md) - the semctx guard and its step in phases 1 to 4.
   Read in phase 1, only once `.semctx/` is found in the checkout under review.
 - [references/cases.md](references/cases.md) - five behavioural cases with their expected verdicts,
-  and the record of what they have never validated.
+  the record of what they have never validated, and the phase 7 trial record.
