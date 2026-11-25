@@ -60,8 +60,9 @@ or behaviour nobody has decided yet; steps 1 and 4 exist to force that decision.
    and seed, and decide with the developer whether the code or the law is wrong.
 6. **Fix oracle first.** A confirmed bug is fixed while its law fails, until it passes. Pin the
    shrunk counterexample so it survives later runs: as a fixed case (`examples` in `fc.assert`) for
-   a plain property; for an `fc.commands` sequence, as a dedicated law that replays it, passing the
-   printed `replayPath` to `fc.commands` and the failure's `seed` and `path` to `fc.assert`. For
+   a plain property; for an `fc.commands` sequence, as a dedicated `it()` that writes the shrunk
+   commands out by hand and runs them with `fc.modelRun`. A `seed` with `replayPath` replays the
+   same case only while every generator stays unchanged, then silently tests something else. For
    `/oracles new`, the implementation starts only after step 4.
 7. **Measure what no law judges.** Run mutation testing on the module with the oracle file as the
    only suite. Report each survivor as a missing law, dead code, or a speed-only shortcut, and
