@@ -13,6 +13,7 @@ i-have-adhd-positive	positive	i-have-adhd	-	Use i-have-adhd for this conversatio
 merge-verdict-positive	positive	merge-verdict	-	Review this open pull request and decide whether it is safe to merge.
 neovim-positive	positive	neovim	-	Disable this LazyVim plugin and update its keymaps.
 obsolescence-positive	positive	obsolescence	-	Remove this endpoint and decide whether its legacy alias must survive.
+oracles-positive	positive	oracles	-	Pin what this cache module promises as laws checked against a simple model, then verify the implementation.
 scripts-positive	positive	scripts	-	Add portable error handling to this chezmoi bootstrap hook.
 skill-manager-positive	positive	skill-manager	-	Fix this skill description and rebuild the skills index.
 web-fetching-positive	positive	web-fetching	-	Fetch these twenty pages and return their rendered bodies.
@@ -31,6 +32,7 @@ i-have-adhd-negative	negative	-	i-have-adhd	Give a concise answer to this questi
 merge-verdict-negative	negative	-	merge-verdict	Review my uncommitted local diff without making a merge decision.
 neovim-negative	negative	-	neovim	Change the Visual Studio Code theme settings.
 obsolescence-negative	negative	-	obsolescence	Add a brand-new endpoint with no predecessor or compatibility path.
+oracles-negative	negative	-	oracles	Add one example-based unit test for this date formatting helper.
 scripts-negative	negative	-	scripts	Edit this TypeScript utility function.
 skill-manager-negative	negative	-	skill-manager	Use the existing PDF skill to inspect a document without changing the skill.
 web-fetching-negative	negative	-	web-fetching	Fill and submit the logged-in form already open in the browser.
