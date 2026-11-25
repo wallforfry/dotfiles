@@ -29,7 +29,7 @@ not a mathematical proof: say so, because a wrong law gives a green light on the
 
 Typical targets: a store, a cache, a queue, a state machine, permissions, parsing and serialisation,
 or business rules such as shares that must always sum to the whole. Not pure UI, integration glue,
-or behaviour nobody has decided yet; step 2 exists to force that decision.
+or behaviour nobody has decided yet; steps 1 and 4 exist to force that decision.
 
 ## Steps
 
@@ -59,7 +59,9 @@ or behaviour nobody has decided yet; step 2 exists to force that decision.
 5. **Run the laws on the implementation.** For each failure, keep fast-check's shrunk counterexample
    and seed, and decide with the developer whether the code or the law is wrong.
 6. **Fix oracle first.** A confirmed bug is fixed while its law fails, until it passes. Pin the
-   shrunk counterexample as a fixed case (`examples` in `fc.assert`) so it survives later runs. For
+   shrunk counterexample so it survives later runs: as a fixed case (`examples` in `fc.assert`) for
+   a plain property; for an `fc.commands` sequence, as a dedicated law that replays it, passing the
+   printed `replayPath` to `fc.commands` and the failure's `seed` and `path` to `fc.assert`. For
    `/oracles new`, the implementation starts only after step 4.
 7. **Measure what no law judges.** Run mutation testing on the module with the oracle file as the
    only suite. Report each survivor as a missing law, dead code, or a speed-only shortcut, and
