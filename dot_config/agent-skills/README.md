@@ -23,6 +23,7 @@ the deployed copy.
 | `business-issue` | Investigate business needs and turn them into executable issues across trackers. |
 | `merge-verdict` | Deliver a merge verdict on an open pull request, yours or another author's. |
 | `obsolescence` | Decide whether obsolete code or data is deleted or migrated. |
+| `oracles` | Write a TypeScript module's spec as executable laws checked against an independent model, have the developer approve their plain-language reading, then verify the implementation against them. |
 | `writing-style` | Write or edit prose for human readers without machine-written tics, in French or English. |
 
 ## Ops
