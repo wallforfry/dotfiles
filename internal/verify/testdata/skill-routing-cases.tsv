@@ -13,11 +13,11 @@ i-have-adhd-positive	positive	i-have-adhd	-	Use i-have-adhd for this conversatio
 merge-verdict-positive	positive	merge-verdict	-	Review this open pull request and decide whether it is safe to merge.
 neovim-positive	positive	neovim	-	Disable this LazyVim plugin and update its keymaps.
 obsolescence-positive	positive	obsolescence	-	Remove this endpoint and decide whether its legacy alias must survive.
+oracles-positive	positive	oracles	-	Pin what this cache module promises as laws checked against a simple model, then verify the implementation.
 scripts-positive	positive	scripts	-	Add portable error handling to this chezmoi bootstrap hook.
 skill-manager-positive	positive	skill-manager	-	Fix this skill description and rebuild the skills index.
 web-fetching-positive	positive	web-fetching	-	Fetch these twenty pages and return their rendered bodies.
 writing-style-positive	positive	writing-style	-	Rewrite this README introduction so it no longer reads as machine-written.
-oracles-positive	positive	oracles	-	Pin what this cache module promises as laws checked against a simple model, then verify the implementation.
 adr-negative	negative	-	adr	Implement the already recorded architecture decision without changing its rationale.
 agent-instructions-negative	negative	-	agent-instructions	Correct a typo in the application README.
 business-issue-negative	negative	-	business-issue	Implement this already specified issue without changing its scope or acceptance criteria.
@@ -32,11 +32,11 @@ i-have-adhd-negative	negative	-	i-have-adhd	Give a concise answer to this questi
 merge-verdict-negative	negative	-	merge-verdict	Review my uncommitted local diff without making a merge decision.
 neovim-negative	negative	-	neovim	Change the Visual Studio Code theme settings.
 obsolescence-negative	negative	-	obsolescence	Add a brand-new endpoint with no predecessor or compatibility path.
+oracles-negative	negative	-	oracles	Add one example-based unit test for this date formatting helper.
 scripts-negative	negative	-	scripts	Edit this TypeScript utility function.
 skill-manager-negative	negative	-	skill-manager	Use the existing PDF skill to inspect a document without changing the skill.
 web-fetching-negative	negative	-	web-fetching	Fill and submit the logged-in form already open in the browser.
 writing-style-negative	negative	-	writing-style	Rename this Go function and update its callers.
-oracles-negative	negative	-	oracles	Add one example-based unit test for this date formatting helper.
 fetch-mcp-docs-ambiguous	ambiguous	web-fetching	containerized-mcp	Fetch the Docker MCP server documentation page; do not configure the server.
 register-from-pasted-docs-ambiguous	ambiguous	containerized-mcp	web-fetching	Using the documentation pasted below, register this containerized MCP server locally.
 global-rule-ambiguous	ambiguous	agent-instructions	skill-manager	Shorten the always-loaded AGENTS.md rule without editing any skill.
